@@ -4,10 +4,10 @@
    touch strip that plays the current chord like a harp, three pots (chord level, harp level, and one that does something
    different in each preset) and twelve presets shown by the colour of the big lamp. Its own layout and sound engine;
    the idea and the arrangement of the controls are Benjamin Poilve's minichord (minichord.com). */
-var MCPOS = { x:-2.45, z:ROOM.z1 - 0.72 }, MCW = 230, MCD = 136, MCH = 1.1, MCTILT = 0.56;
+var MCW = 230, MCD = 136, MCH = 1.1, MCTILT = 0.56;
 function mcx(u){ return (u - MCW / 2) * SC; }
 function mcz(u){ return (u - MCD / 2) * SC; }
-var MCY = new THREE.Group(); MCY.position.set(MCPOS.x, MCH, MCPOS.z); MCY.rotation.y = Math.PI; scene.add(MCY);
+var MCY = new THREE.Group(); MCY.position.set(MCPOS.x, MCH, MCPOS.z); MCY.rotation.y = MCPOS.r; scene.add(MCY);
 var MCG = new THREE.Group(); MCG.rotation.x = MCTILT; MCY.add(MCG);
 var MCROOT = [5, 0, 7, 2, 9, 4, 11], MCNAME = ['F', 'C', 'G', 'D', 'A', 'E', 'B'], MCTYPE = [[0, 4, 7], [0, 3, 7], [0, 4, 7, 10]], MCTN = ['major', 'minor', '7th'];
 /* presets: lamp colour, chord wave, filter, attack, release, harp wave, harp decay, what the third pot does */
@@ -37,7 +37,7 @@ var MCLED = {};
   sh.moveTo(X(43), Yv(52)); sh.lineTo(X(150), Yv(52)); sh.lineTo(X(150), Yv(122)); sh.lineTo(X(43), Yv(122)); sh.absarc(X(43), Yv(87), 35 * SC, -Math.PI / 2, Math.PI / 2, true);
   var neck = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth:TH, bevelEnabled:false, curveSegments:18 }), pink); neck.rotation.x = -Math.PI / 2; neck.position.y = -TH; MCG.add(neck);
   var bulb = new THREE.Mesh(new THREE.CylinderGeometry(63 * SC, 63 * SC, TH, 48), pink); bulb.position.set(mcx(160), -TH / 2 - 0.0004, mcz(68)); MCG.add(bulb);   // the wide end: strip, pots, presets
-  standFor(MCY, MCG, MCW * SC * 0.92, MCD * SC * 0.8, TH, MCH, MCTILT, 0.14); devBody(MCY, 'mc'); BLOCKS.push([MCPOS.x - 0.4, MCPOS.x + 0.4, ROOM.z1 - 1.06, ROOM.z1]);
+  standFor(MCY, MCG, MCW * SC * 0.92, MCD * SC * 0.8, TH, MCH, MCTILT, 0.14); devBody(MCY, 'mc'); BLOCKS.push(devBlock(MCPOS, 0.4));
   var strip = new THREE.Mesh(new THREE.BoxGeometry(84 * SC, 0.003, 18 * SC), new THREE.MeshLambertMaterial({ color:0x15161A })); strip.position.set(mcx(168), 0.0016, mcz(45)); MCG.add(strip);
   var lamp = new THREE.PointLight(0xFF6AB0, 0.5, 2.6, 1.6); lamp.position.set(0, 0.6, 0.25); MCY.add(lamp); MC.lamp = lamp;
 })();

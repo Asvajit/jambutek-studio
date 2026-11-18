@@ -6,7 +6,7 @@
 var MBW = 130, MBD = 124, MBH = 1.1, MBTILT = 0.56;
 function mbx(u){ return (u - MBW / 2) * SC; }
 function mbz(u){ return (u - MBD / 2) * SC; }
-var MBY = new THREE.Group(); MBY.position.set(MBPOS.x, MBH, MBPOS.z); scene.add(MBY);
+var MBY = new THREE.Group(); MBY.position.set(MBPOS.x, MBH, MBPOS.z); MBY.rotation.y = MBPOS.r; scene.add(MBY);
 var MBG = new THREE.Group(); MBG.rotation.x = MBTILT; MBY.add(MBG);
 var MB = { p:{ vol:0.8, adec:0.45, fdec:0.4, cut:0.45, res:0.35, glide:0.1, det:0.3, rate:0.4, depth:0.15, sus:1, sub:1, wave:0, dest:1 }, stack:[], kb:{}, kbOct:0, vis:[], gate:0 };
 function mbRestore(){ try { var s = JSON.parse(store('jambutek-studio-blip-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(MB.p).forEach(function(k){ if (typeof s.p[k] === 'number') MB.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} } mbRestore();
@@ -37,7 +37,7 @@ var MBLED = {};
   var W2 = MBW * SC, D2 = MBD * SC, TH = 0.07;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x808080, map:mbTex, emissive:0xffffff, emissiveMap:mbTex, emissiveIntensity:0.3, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; MBG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.008, TH, D2 + 0.008), new THREE.MeshPhongMaterial({ color:0xB81A20, shininess:30, specular:0x331111, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MBG.add(body);
-  standFor(MBY, MBG, W2, D2, TH, MBH, MBTILT, 0.11); devBody(MBY, 'mb'); BLOCKS.push([MBPOS.x - 0.34, MBPOS.x + 0.34, ROOM.z0, MBPOS.z + 0.34]);
+  standFor(MBY, MBG, W2, D2, TH, MBH, MBTILT, 0.11); devBody(MBY, 'mb'); BLOCKS.push(devBlock(MBPOS, 0.34));
 })();
 HOST = MBG; LX = mbx; LZ = mbz; DEV = 'mb';
 knob('mbvol', 94, 26.5, 6.3, 'Volume', MB.p.vol, { h:11, sides:16, color:0x0E0F11 }).pk = 'vol'; ledAt(MBLED, 'on', 106.2, 26.5, 0.0028, 0x3BFF6A);

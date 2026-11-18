@@ -16,7 +16,8 @@ var PADCOL = [0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF8A2A, 0xFF8A2A, 0xFF8A
 var COLCOL = ['#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FFE15A', '#FFE15A', '#FFE15A'];
 var TILT = 0.56, TRH = 1.1;
 
-var TRG = new THREE.Group(); TRG.position.set(TRPOS.x, TRH, TRPOS.z); TRG.rotation.x = TILT; scene.add(TRG);
+var TRY = new THREE.Group(); TRY.position.set(TRPOS.x, 0, TRPOS.z); TRY.rotation.y = TRPOS.r; scene.add(TRY);
+var TRG = new THREE.Group(); TRG.position.set(0, TRH, 0); TRG.rotation.x = TILT; TRY.add(TRG);
 var CT = {}, CTLIST = [];                            // every control, by id
 
 /* ---- the printed panel ---- */
@@ -86,7 +87,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   // the stand: a tilted tray with a front lip, on two A-frame legs
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; tray.castShadow = true; TRG.add(tray); solid(tray, 'trbody');
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); TRG.add(lip);
-  var st = new THREE.Group(); st.position.set(TRPOS.x, 0, TRPOS.z); scene.add(st);
+  var st = new THREE.Group(); TRY.add(st);
   [-1, 1].forEach(function(s){
     var x = s * 0.36;
     var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, TRH - 0.12, 0.045), metalMat); post.position.set(x, (TRH - 0.12) / 2, -0.02); post.castShadow = true; st.add(post);
@@ -96,7 +97,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   });
   var bar = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.03), metalMat); bar.position.set(0, 0.28, -0.02); st.add(bar);
   solid(st, 'trbody');
-  BLOCKS.push([TRPOS.x - 0.52, TRPOS.x + 0.52, ROOM.z0, TRPOS.z + 0.34]);
+  BLOCKS.push(devBlock(TRPOS, 0.52));
 })();
 
 /* ---- control builders (HOST / LX / LZ / DEV say which instrument they are building on) ---- */

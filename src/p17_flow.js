@@ -4,10 +4,10 @@
    picture on its own small panel. The patterns are Patternflow's own (vendor/patternflow-patterns.js, CC BY-SA 4.0),
    each one computed live every frame. Knobs follow Patternflow's model: 48 clicks cross a knob's range, patterns that
    name their knobs set the ranges, the rest get Hue / Speed / Mode / Freq. */
-var PFPOS = { x:2.45, z:ROOM.z1 - 0.72 }, PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
+var PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
 function fx(u){ return (u - PFW / 2) * SC; }
 function fz(u){ return (u - PFD / 2) * SC; }
-var PFY = new THREE.Group(); PFY.position.set(PFPOS.x, PFH, PFPOS.z); PFY.rotation.y = Math.PI; scene.add(PFY);
+var PFY = new THREE.Group(); PFY.position.set(PFPOS.x, PFH, PFPOS.z); PFY.rotation.y = PFPOS.r; scene.add(PFY);
 var PFG = new THREE.Group(); PFG.rotation.x = PFTILT; PFY.add(PFG);
 var PFLIST = (typeof PFPATS !== 'undefined' && PFPATS) || [];
 var PFDEF = { ranges:[[0, 1], [0.1, 10], [0, 4.9], [0, 1]], vals:[0, 2, 0, 0.06], wrap:[true, false, false, true], names:['Hue', 'Speed', 'Mode', 'Freq'] };
@@ -39,7 +39,7 @@ var PFKX = [70, 136, 204, 270];
   var W2 = PFW * SC, D2 = PFD * SC, TH = 0.07;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x707070, map:pfPanT, emissive:0xffffff, emissiveMap:pfPanT, emissiveIntensity:1.0, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; PFG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, TH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x121316, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; PFG.add(body);
-  standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, 'pf'); BLOCKS.push([PFPOS.x - 0.46, PFPOS.x + 0.46, ROOM.z1 - 1.06, ROOM.z1]);
+  standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, 'pf'); BLOCKS.push(devBlock(PFPOS, 0.46));
   var led = new THREE.Mesh(new THREE.PlaneGeometry(300 * SC, 150 * SC), new THREE.MeshBasicMaterial({ map:pfTex })); led.rotation.x = -Math.PI / 2; led.position.set(fx(170), 0.002, fz(84)); led.userData.noShadow = true; led.userData.ia = 'trbody'; led.userData.dev = 'pf'; PFG.add(led); solids.push(led);
   var d = new THREE.Mesh(new THREE.PlaneGeometry(220 * SC, 24 * SC * 0.72), new THREE.MeshBasicMaterial({ map:pfDispT })); d.rotation.x = -Math.PI / 2; d.position.set(fx(170), 0.002, fz(176)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = 'pf'; PFG.add(d); solids.push(d);
 })();

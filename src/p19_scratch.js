@@ -4,10 +4,10 @@
    cut it in and out, and four corner buttons (previous / next sample, play, cue). The sample is played by a small
    variable-speed reader, so dragging the platter really does drag the sound. Samples are made in code.
    The idea and the arrangement follow rasteri's open-source SC1000; the model and the sound engine here are original. */
-var SCPOS = { x:-3.4, z:ROOM.z1 - 0.72 }, SCW = 170, SCD = 196, SCH = 1.1, SCTILT = 0.56;
+var SCW = 170, SCD = 196, SCH = 1.1, SCTILT = 0.56;
 function skx(u){ return (u - SCW / 2) * SC; }
 function skz(u){ return (u - SCD / 2) * SC; }
-var SCY = new THREE.Group(); SCY.position.set(SCPOS.x, SCH, SCPOS.z); SCY.rotation.y = Math.PI; scene.add(SCY);
+var SCY = new THREE.Group(); SCY.position.set(SCPOS.x, SCH, SCPOS.z); SCY.rotation.y = SCPOS.r; scene.add(SCY);
 var SCG = new THREE.Group(); SCG.rotation.x = SCTILT; SCY.add(SCG);
 var SCN = ['Ahh', 'Fresh', 'Stab', 'Zap'];
 var SK = { sample:0, xf:1, motor:0, pos:0, rate:0, rateT:1, touch:false, acc:0, push:0, cut:false, ang:0, g:0, bufs:null, rmtUntil:0, sentAt:0, quiet:0 };
@@ -22,7 +22,7 @@ var SKLED = {};
   var deck = new THREE.Mesh(new THREE.PlaneGeometry(W2 - 0.024, D2 - 0.024), new THREE.MeshPhongMaterial({ color:0x0C0D0F, shininess:20, specular:0x111111 })); deck.rotation.x = -Math.PI / 2; deck.position.y = 0.0002; SCG.add(deck);
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(p){ var sc = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.004, 8), new THREE.MeshLambertMaterial({ color:0x050506 })); sc.position.set(p[0] * (W2 / 2 - 0.008), 0.001, p[1] * (D2 / 2 - 0.008)); SCG.add(sc); });
   [[-0.03, 0.02, 0.012], [0.01, 0.014, 0.014], [0.04, 0.014, 0.014], [0.07, 0.014, 0.014]].forEach(function(j){ var m = new THREE.Mesh(new THREE.BoxGeometry(j[1], j[2], 0.012), new THREE.MeshLambertMaterial({ color:0x0A0A0B })); m.position.set(j[0], -0.03, D2 / 2 + 0.004); SCG.add(m); });   // the sockets along the front edge
-  standFor(SCY, SCG, W2, D2, TH, SCH, SCTILT, 0.13); devBody(SCY, 'sc'); BLOCKS.push([SCPOS.x - 0.36, SCPOS.x + 0.36, ROOM.z1 - 1.06, ROOM.z1]);
+  standFor(SCY, SCG, W2, D2, TH, SCH, SCTILT, 0.13); devBody(SCY, 'sc'); BLOCKS.push(devBlock(SCPOS, 0.36));
 })();
 HOST = SCG; LX = skx; LZ = skz; DEV = 'sc';
 var skPlat = knob('skplat', 88, 114, 70, 'Platter', 0, { h:3.2, endless:true, sides:48, color:0x08090A });

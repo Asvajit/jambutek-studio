@@ -46,7 +46,7 @@ var DK = 'sn' + K, PX = 'sn' + K + '_';
 function snDef(){ var d = snDefaults(), x = DEF && DEF.snakes && DEF.snakes[K];      // this Snake's own factory pattern, when the set has one
   if (x && Array.isArray(x.lanes) && (x.lanes.length === 4 || x.lanes.length === 5) && x.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })){ var cl = d.lanes[4]; d.lanes = defCopy(x.lanes); if (d.lanes.length < 5) d.lanes.push(cl); d.root = clamp(x.root | 0, 0, 11); d.scale = clamp(x.scale | 0, 0, SCALES.length - 1); d.swing = clamp(+x.swing || 0, 0, 1); }
   return d; }
-var SNY = new THREE.Group(); SNY.position.set(HP.x, SNH, SNZ); scene.add(SNY);
+var SNY = new THREE.Group(); SNY.position.set(HP.x - Math.sin(HP.r) * 0.5, SNH, HP.z - Math.cos(HP.r) * 0.5); SNY.rotation.y = HP.r; scene.add(SNY);   // on its shelf just behind the synth, towards the middle of the rig
 var SNG = new THREE.Group(); SNG.rotation.x = SNTILT; SNY.add(SNG);
 var SN = snDef(); SN.out = DEFOUT; SN.cc = null; SN.learn = false; SN.cell = [0, 0, 0, 0, 0]; SN.vis = []; SN.cv = 0; SN.msgA = ''; SN.msgB = ''; SN.msgUntil = 0; SN.dirty = true; SN.run = false;
 var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes, cc:SN.cc || null })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
@@ -62,7 +62,6 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), woodMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
   [-1, 1].forEach(function(s){ var post = new THREE.Mesh(new THREE.BoxGeometry(0.04, SNH - 0.06, 0.04), metalMat); post.position.set(s * 0.25, -(SNH - 0.06) / 2 - 0.06, -0.13); SNY.add(post); });
   devBody(SNY, DK);
-  cable([[HP.x + 0.2, SNH - 0.12, SNZ - 0.1], [HP.x + 0.24, 1.25, SNZ + 0.02], [HP.x + 0.2, 1.02, HP.z - 0.24]], 0.005).material.color.setHex(0x8E0036);
   var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
   SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });
   var d = new THREE.Mesh(new THREE.PlaneGeometry(68 * SC, 28 * SC), new THREE.MeshBasicMaterial({ map:snDispT })); d.rotation.x = -Math.PI / 2; d.position.set(sx(118), 0.002, sz(31)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; SNG.add(d); solids.push(d);
@@ -199,7 +198,7 @@ function update(now, dt){
 DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
 function patterns(def){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; } if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
-return { SN:SN, G:SNG, key:DK, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
+return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });

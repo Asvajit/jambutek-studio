@@ -181,17 +181,26 @@ function pendant(x, z, drop, color, intensity, tx, ty, tz, angle, shadow){
   return { light:l, bulb:bulb, base:intensity };
 }
 var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
-var TRPOS = { x:-3.44, z:-0.72 }, MFPOS = { x:-2.2, z:-0.72 }, BSPOS = { x:-0.95, z:-0.72 }, AMPOS = { x:0.12, z:-0.72 }, TPPOS = { x:1.04, z:-0.72 }, MBPOS = { x:1.83, z:-0.72 }, SHPOS = { x:2.55, z:-0.72 }, MXPOS = { x:3.52, z:-0.72 };
-var trLamp = pendant(TRPOS.x, 0.3, 0.62, 0xFFE7C8, 2.4, TRPOS.x, 1.0, TRPOS.z, 0.8, true);
+/* The gear stands in a square in the middle of the room, a row along each side, every instrument facing outwards, so the
+   players stand around the outside and look at each other across it. Each position is where the instrument stands and
+   which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
+var RIG = { x:0, z:2.9, R:1.8 };
+var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
+    BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:1.1, z:RIG.z + RIG.R, r:0 },              // south row
+    MXPOS = { x:-RIG.R, z:2.0, r:-Math.PI / 2 }, TPPOS = { x:-RIG.R, z:3.05, r:-Math.PI / 2 }, MCPOS = { x:-RIG.R, z:3.95, r:-Math.PI / 2 }, // west row
+    SHPOS = { x:RIG.R, z:1.9, r:Math.PI / 2 }, SCPOS = { x:RIG.R, z:2.75, r:Math.PI / 2 }, PFPOS = { x:RIG.R, z:3.75, r:Math.PI / 2 };       // east row
+function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
+function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
+var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, true);            // one lamp over each side of the rig
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);
-var sideLampL = pendant(-2.2, 0.35, 0.62, 0xFFE7C8, 2.4, -2.2, 1.0, MFPOS.z, 0.95, false);
-var sideLampR = pendant(-0.5, 0.35, 0.62, 0xFFE7C8, 2.4, -0.5, 1.0, BSPOS.z, 0.95, false);
-var backLamp = pendant(1.2, 0.35, 0.62, 0xFFE7C8, 2.4, 1.2, 1.0, BSPOS.z, 0.95, false);
-var endLamp = pendant(2.9, 0.35, 0.62, 0xFFE7C8, 1.6, 2.9, 1.0, BSPOS.z, 0.95, false);
+var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false);
+var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false);
+var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.z, 1.05, false);
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
+BLOCKS.push([RIG.x - 1.5, RIG.x + 1.5, RIG.z - 1.5, RIG.z + 1.5]);          // nobody walks through the middle of the rig
 // acoustic foam: low-poly wedge tiles in the Jambutek colours, in blocks along the side walls and behind the gear
 (function(){
   var cols = [0xC00048, 0x1878C0, 0x16202E, 0x16202E, 0x30A8F0, 0x16202E];
@@ -239,15 +248,6 @@ function logoPower(now){                        // mostly steady; every so often
   if (now < logoFx.until){ var f = Math.sin(now * 0.09) + Math.sin(now * 0.23); return f > 0.4 ? 1 : f > -0.2 ? 0.35 : 0.05; }
   return 0.92 + 0.08 * Math.sin(now * 0.004);
 }
-// a rug under the rig
-(function(){
-  var c = mk(128, 96), g = c.getContext('2d');
-  g.fillStyle = '#2A1A3A'; g.fillRect(0, 0, 128, 96);
-  g.strokeStyle = '#C00048'; g.lineWidth = 4; g.strokeRect(6, 6, 116, 84); g.strokeStyle = '#1878C0'; g.lineWidth = 2; g.strokeRect(13, 13, 102, 70);
-  for (var i = 0; i < 600; i++){ g.fillStyle = 'rgba(0,0,0,' + rnd(.05, .22) + ')'; g.fillRect((Math.random()*128)|0, (Math.random()*96)|0, 2, 1); }
-  var m = new THREE.Mesh(new THREE.PlaneGeometry(8.4, 2.4), new THREE.MeshLambertMaterial({ map:canvasTex(c) })); m.rotation.x = -Math.PI / 2; m.position.set(0, 0.004, 0.15); m.receiveShadow = true; m.userData.noShadow = true; scene.add(m);
-  solid(m, 'floor');
-})();
 // two monitors on stands, faced with the Jambutek speaker art
 var monitors = (function(){
   var tl = tex(A.spkL), tr = tex(A.spkR); tl.minFilter = tr.minFilter = THREE.LinearFilter;
@@ -263,27 +263,4 @@ var monitors = (function(){
     BLOCKS.push([s[0] - 0.4, s[0] + 0.4, 0.5, 1.3]);
     return { g:g, face:face, box:box, y0:face.position.y };
   });
-})();
-// taped-out spots on the floor where the next instruments will go
-(function(){
-  var tape = new THREE.MeshBasicMaterial({ color:0xFFE15A });
-  function corner(x, z, sx, sz){
-    [[0.16, 0.03, sx * 0.08, 0], [0.03, 0.16, 0, sz * 0.08]].forEach(function(b){
-      var m = new THREE.Mesh(new THREE.PlaneGeometry(b[0], b[1]), tape); m.rotation.x = -Math.PI / 2; m.position.set(x + b[2], 0.006, z + b[3]); m.userData.noShadow = true; scene.add(m); });
-  }
-  [[-3.5, 4.4], [3.5, 4.4]].forEach(function(p){
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(s){ corner(p[0] + s[0] * 0.5, p[1] + s[1] * 0.35, -s[0], -s[1]); });
-    var hb = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.02, 0.8), new THREE.MeshBasicMaterial({ visible:false })); hb.position.set(p[0], 0.012, p[1]); scene.add(hb); solid(hb, 'spot');
-  });
-})();
-// a couch at the back to listen from
-(function(){
-  var g = new THREE.Group(); g.position.set(0, 0, ROOM.z1 - 0.5); scene.add(g);
-  var red = new THREE.MeshLambertMaterial({ color:0x8E0036 }), dk = new THREE.MeshLambertMaterial({ color:0x5E0022 });
-  var seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.26, 0.8), red); seat.position.y = 0.33; g.add(seat);
-  var base = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.2, 0.86), dk); base.position.y = 0.1; g.add(base);
-  var back = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.62, 0.22), red); back.position.set(0, 0.62, 0.34); back.rotation.x = 0.12; g.add(back);
-  [-1, 1].forEach(function(s){ var a = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.86), dk); a.position.set(s * 1.05, 0.35, 0); g.add(a); });
-  solid(g, 'couch');
-  BLOCKS.push([-1.2, 1.2, ROOM.z1 - 0.98, ROOM.z1]);
 })();

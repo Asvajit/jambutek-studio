@@ -1,6 +1,6 @@
 
 /* ================= camera: a person standing in the room (same eye height, speed and feel as the arcade) ================= */
-var HOME = { x:0, z:2.35, yaw:0, pitch:-0.1 };
+var HOME = { x:-3.3, z:-0.5, yaw:-2.38, pitch:-0.12 };       // in the corner by the pattern buttons, looking across the rig
 var cam = { x:HOME.x, z:HOME.z, yaw:HOME.yaw, pitch:HOME.pitch, ty:HOME.yaw, tp:HOME.pitch, homing:false, walkTo:null };
 var running = false, EYE = 1.5, keys = {}, crouch = { on:false, k:0 }, JUMP = { y:0, v:0 };
 function collide(){
@@ -23,19 +23,19 @@ var xh = document.getElementById('xh'), xhLab = document.getElementById('xhLab')
 
 /* ================= leaning over an instrument ================= */
 var DEVS = {
-  tr:{ key:'tr', g:TRG, name:'drum machine', stand:{ x:TRPOS.x, z:TRPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.71, asp:1.6, off:0.06, lookz:0.03, hud:'hudTr' },
-  mf:{ key:'mf', g:MFG, name:'synth', stand:{ x:MFPOS.x, z:MFPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.69, asp:1.78, off:0.04, lookz:0.02, hud:'hudMf', keys:{ down:mfKbDown, up:mfKbUp, play:function(){ press(CT.mfplay); release(CT.mfplay); } } },
-  bs:{ key:'bs', g:BSG, name:'bass synth', stand:{ x:BSPOS.x, z:BSPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.66, asp:1.6, off:0.05, lookz:0.025, hud:'hudBs', keys:{ down:bsKbDown, up:bsKbUp, play:function(){ press(CT.bson); release(CT.bson); } } },
-  mb:{ key:'mb', g:MBG, name:'Blip synth', stand:{ x:MBPOS.x, z:MBPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.36, asp:1.1, off:0.04, lookz:0.005, hud:'hudMb', keys:{ down:mbKbDown, up:mbKbUp, play:function(){ toggleSeq(); } } },
-  sh:{ key:'sh', g:SHG, name:'Shru synth', stand:{ x:SHPOS.x, z:SHPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
-  am:{ key:'am', g:AMG, name:'Ambi synth', stand:{ x:AMPOS.x, z:AMPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
-  tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:{ x:TPPOS.x, z:TPPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
-  mx:{ key:'mx', g:MXG, name:'mixer', stand:{ x:MXPOS.x, z:MXPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.66, asp:1.84, off:0.05, lookz:0.03, hud:'hudMx' }
+  tr:{ key:'tr', g:TRG, name:'drum machine', stand:devStand(TRPOS), yaw:TRPOS.r, pitch:-0.42, d:0.71, asp:1.6, off:0.06, lookz:0.03, hud:'hudTr' },
+  mf:{ key:'mf', g:MFG, name:'synth', stand:devStand(MFPOS), yaw:MFPOS.r, pitch:-0.42, d:0.69, asp:1.78, off:0.04, lookz:0.02, hud:'hudMf', keys:{ down:mfKbDown, up:mfKbUp, play:function(){ press(CT.mfplay); release(CT.mfplay); } } },
+  bs:{ key:'bs', g:BSG, name:'bass synth', stand:devStand(BSPOS), yaw:BSPOS.r, pitch:-0.42, d:0.66, asp:1.6, off:0.05, lookz:0.025, hud:'hudBs', keys:{ down:bsKbDown, up:bsKbUp, play:function(){ press(CT.bson); release(CT.bson); } } },
+  mb:{ key:'mb', g:MBG, name:'Blip synth', stand:devStand(MBPOS), yaw:MBPOS.r, pitch:-0.42, d:0.36, asp:1.1, off:0.04, lookz:0.005, hud:'hudMb', keys:{ down:mbKbDown, up:mbKbUp, play:function(){ toggleSeq(); } } },
+  sh:{ key:'sh', g:SHG, name:'Shru synth', stand:devStand(SHPOS), yaw:SHPOS.r, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
+  am:{ key:'am', g:AMG, name:'Ambi synth', stand:devStand(AMPOS), yaw:AMPOS.r, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
+  tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:devStand(TPPOS), yaw:TPPOS.r, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
+  mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.66, asp:1.84, off:0.05, lookz:0.03, hud:'hudMx' }
 };
-DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:{ x:MCPOS.x, z:MCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
-DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:{ x:SCPOS.x, z:SCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
-DEVS.pf = { key:'pf', g:PFG, name:'Pattern synth', stand:{ x:PFPOS.x, z:PFPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.6, asp:1.5, off:0.04, lookz:0.05, hud:'hudPf' };
-SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:{ x:s.x, z:s.z + 0.95 }, yaw:0, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
+DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
+DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
+DEVS.pf = { key:'pf', g:PFG, name:'Pattern synth', stand:devStand(PFPOS), yaw:PFPOS.r, pitch:-0.42, d:0.6, asp:1.5, off:0.04, lookz:0.05, hud:'hudPf' };
+SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:devStand(s.hp), yaw:s.hp.r, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
 var LEAN = DEVS.tr, trBlend = 0;
 function trPose(eye, look){
   var d = LEAN.d * Math.max(1, LEAN.asp / camera.aspect);
@@ -239,7 +239,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.8 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.9 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -288,7 +288,7 @@ function frame(now){
 
   /* what the crosshair (or mouse) is on */
   var cen = centred(), xs = cen && mode === 'walk'; if (xh.hidden === xs) xh.hidden = !xs;
-  var ns = mode === 'walk' && cam.z < 1.5; if (ns !== nearSharp){ nearSharp = ns; resize(); }
+  var ns = mode === 'walk' && Math.hypot(cam.x - RIG.x, cam.z - RIG.z) < 3.7; if (ns !== nearSharp){ nearSharp = ns; resize(); }
   if (!drag){
     var hit = cen ? aim() : (pointer.in && !look ? aim(new THREE.Vector2(pointer.x, pointer.y)) : null);
     var hc = touchOnly && mode === 'walk' ? null : ctlOf(hit), lab = hit ? labelFor(hit) : null, scrolly = hc && (hc.kind === 'knob' || hc.kind === 'fader');

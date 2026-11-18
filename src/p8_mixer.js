@@ -3,7 +3,7 @@
 var MXW = 490, MXD = 270, MXH = 1.1, MXTILT = 0.56;
 function qx(u){ return (u - MXW / 2) * SC; }
 function qz(u){ return (u - MXD / 2) * SC; }
-var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); scene.add(MXY);
+var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotation.y = MXPOS.r; scene.add(MXY);
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU', 'CHORD', 'SCRATCH'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF', '#FF6AB0', '#35D8B8'], MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416], MXMX = 464, MXNC = 9;
 var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, vol:0.75, mute:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
@@ -35,7 +35,7 @@ var MXMET = [];
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:mxTex, emissive:0xffffff, emissiveMap:mxTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; MXG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MXG.add(body);
   standFor(MXY, MXG, W2, D2, TH, MXH, MXTILT, 0.4); devBody(MXY, 'mx');
-  BLOCKS.push([MXPOS.x - 0.6, MXPOS.x + 0.6, ROOM.z0, MXPOS.z + 0.34]);
+  BLOCKS.push(devBlock(MXPOS, 0.6));
   // level meters: a column of segments beside each fader
   var geo = new THREE.BoxGeometry(0.007, 0.002, 0.009);
   MXX.concat([MXMX]).forEach(function(x, i){ var segs = []; for (var k = 0; k < 10; k++){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(qx(x + 13), 0.0012, qz(250 - k * 7.6)); m.userData.noShadow = true; MXG.add(m); segs.push(m.material); } MXMET.push(segs); });
@@ -82,11 +82,5 @@ function mxUpdate(now, dt){
 var NOP = function(){};
 var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, turn:mfTurn }, bs:{ label:bsLabel, press:bsPress, release:bsRelease, ctl:bsCtl, turn:bsTurn }, mx:{ label:mxLabel, press:mxPress, release:NOP, ctl:mxCtl, turn:NOP },
   am:{ label:amLabel, press:amPress, release:NOP, ctl:amCtl, turn:amTurn }, tp:{ label:tpLabel, press:tpPress, release:tpRelease, ctl:tpCtl, turn:NOP } };
-// everything is plugged into the mixer, and the mixer into the monitors
-(function(){
-  var zb = ROOM.z0 + 0.18, mxB = [MXPOS.x, 0.86, MXPOS.z - 0.3];
-  [[TRPOS.x, -0.03], [MFPOS.x, 0], [BSPOS.x, 0.03], [MBPOS.x, 0.05], [AMPOS.x, 0.07], [TPPOS.x, 0.09], [SHPOS.x, 0.11]].forEach(function(d, i){ cable([[d[0], 0.8, TRPOS.z - 0.28], [d[0], 0.3, zb + 0.05], [d[0] + 0.1, 0.012, zb + i * 0.03], [MXPOS.x - 0.3 + i * 0.05, 0.012, zb + i * 0.03], [MXPOS.x - 0.12 + i * 0.06, 0.35, zb + 0.04], [mxB[0] - 0.14 + i * 0.05, mxB[1], mxB[2]]], 0.006); });
-  [-1, 1].forEach(function(s){ cable([[mxB[0] + 0.26 + s * 0.03, mxB[1], mxB[2]], [MXPOS.x + 0.2, 0.3, zb + 0.03], [MXPOS.x + (s > 0 ? 0.3 : -0.4), 0.012, zb - 0.06 + s * 0.03], [s * 4.3, 0.012, zb - 0.06 + s * 0.03], [s * 4.35, 0.012, 0.6], [s * 4.3, 0.5, 0.95], [s * 4.25, 1.05, 0.98]], 0.007); });
-})();
 
 RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);

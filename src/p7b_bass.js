@@ -5,7 +5,7 @@ function bx(px){ return (px - 991) * BSS; }
 function bz(py){ return (py - 676.5) * BSS; }
 function bmm(px){ return px * BSS / SC; }
 var BSH = 1.0, BSTILT = 0.45;
-var BSY = new THREE.Group(); BSY.position.set(BSPOS.x, BSH, BSPOS.z); scene.add(BSY);
+var BSY = new THREE.Group(); BSY.position.set(BSPOS.x, BSH, BSPOS.z); BSY.rotation.y = BSPOS.r; scene.add(BSY);
 var BSG = new THREE.Group(); BSG.rotation.x = BSTILT; BSY.add(BSG);
 var BSRANGE = ["16'", "8'", "4'", "2'"], BSWAVE = ['Sine', 'Triangle', 'Saw', 'Pulse'], BSNM = ['Up', 'Down', 'UpDn 1', 'UpDn 2', 'Played', 'Random', 'Record', 'Play'], BSLW = ['Tri', 'Saw', 'Square', 'S+H'];
 
@@ -60,7 +60,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:bsTex, emissive:0xffffff, emissiveMap:bsTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; BSG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x121316, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; BSG.add(body);
   standFor(BSY, BSG, W2, D2, TH, BSH, BSTILT, 0.4); devBody(BSY, 'bs');
-  BLOCKS.push([BSPOS.x - 0.57, BSPOS.x + 0.57, ROOM.z0, BSPOS.z + 0.34]);
+  BLOCKS.push(devBlock(BSPOS, 0.57));
 })();
 
 HOST = BSG; LX = bx; LZ = bz; DEV = 'bs'; FACE = { bg:'#3A3D43', fg:'#F0F0EC' };

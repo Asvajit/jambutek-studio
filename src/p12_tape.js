@@ -5,7 +5,7 @@
 var TPW = 300, TPD = 100, TPH = 1.1, TPTILT = 0.56;
 function tx(u){ return (u - TPW / 2) * SC; }
 function tz(u){ return (u - TPD / 2) * SC; }
-var TPY = new THREE.Group(); TPY.position.set(TPPOS.x, TPH, TPPOS.z); scene.add(TPY);
+var TPY = new THREE.Group(); TPY.position.set(TPPOS.x, TPH, TPPOS.z); TPY.rotation.y = TPPOS.r; scene.add(TPY);
 var TPG = new THREE.Group(); TPG.rotation.x = TPTILT; TPY.add(TPG);
 var TPEN = ['SPEED', 'START', 'END', 'MAGIC', 'TAPE', 'VOLUME'], TPSN = ['Kalimba', 'Choir', 'Tape Piano', 'Glass Bell', 'Pluck', 'Flute', 'Chord', 'Wash'];
 var TPPG = [[['Speed', 0.75], ['Gain', 0.7], ['Pan', 0.5]], [['Start point', 0], ['Attack', 0.02]], [['End point', 1], ['Decay', 0.35]], [['Space (delay < > reverb)', 0.62], ['Lo-fi', 0.15], ['Filter', 0.5]], [['Tape speed', 0.75]], [['Volume', 0.75], ['Loop level', 0.8]]];
@@ -49,7 +49,7 @@ var TPLED = {};
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.008, TH, D2 + 0.008), blk); body.position.y = -TH / 2 - 0.0015; TPG.add(body);
   // the carry handle across the back
   [[-0.105, 0.03, 0.054], [0.105, 0.03, 0.054], [0, 0.24, 0.03]].forEach(function(h, i){ var m = new THREE.Mesh(new THREE.BoxGeometry(h[1], 0.03, h[2]), blk); m.position.set(tx(142.5) + h[0], -0.017, -D2 / 2 - (i < 2 ? 0.027 : 0.054 - 0.015)); TPG.add(m); });
-  standFor(TPY, TPG, W2, D2 + 0.06, TH, TPH, TPTILT, 0.26); devBody(TPY, 'tp'); BLOCKS.push([TPPOS.x - 0.42, TPPOS.x + 0.42, ROOM.z0, TPPOS.z + 0.34]);
+  standFor(TPY, TPG, W2, D2 + 0.06, TH, TPH, TPTILT, 0.26); devBody(TPY, 'tp'); BLOCKS.push(devBlock(TPPOS, 0.42));
 })();
 HOST = TPG; LX = tx; LZ = tz; DEV = 'tp';
 TPEP.forEach(function(p, k){ var c = knob('tpe' + k, p[0], p[1], p[2], TPEN[k].charAt(0) + TPEN[k].slice(1).toLowerCase(), TP.v[k][0], { h:k === 4 ? 9 : 10, sides:k === 4 ? 20 : 12, color:k === 4 ? 0x4E2C96 : 0xA8A8A4 }); c.ei = k; c.click = function(){ tpClick(k); }; ledAt(TPLED, 'pg' + k, k === 4 ? 186 : k === 5 ? 279.7 : p[0] + (k ? 0 : 0.8), k === 4 ? 10 : 12, k === 4 ? 0.0034 : 0.0055); });

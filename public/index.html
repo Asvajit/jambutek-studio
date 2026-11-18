@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.8</span>
+    <span id="verFps">studio v1.9</span>
   </div>
 </div>
 
@@ -4404,17 +4404,26 @@ function pendant(x, z, drop, color, intensity, tx, ty, tz, angle, shadow){
   return { light:l, bulb:bulb, base:intensity };
 }
 var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
-var TRPOS = { x:-3.44, z:-0.72 }, MFPOS = { x:-2.2, z:-0.72 }, BSPOS = { x:-0.95, z:-0.72 }, AMPOS = { x:0.12, z:-0.72 }, TPPOS = { x:1.04, z:-0.72 }, MBPOS = { x:1.83, z:-0.72 }, SHPOS = { x:2.55, z:-0.72 }, MXPOS = { x:3.52, z:-0.72 };
-var trLamp = pendant(TRPOS.x, 0.3, 0.62, 0xFFE7C8, 2.4, TRPOS.x, 1.0, TRPOS.z, 0.8, true);
+/* The gear stands in a square in the middle of the room, a row along each side, every instrument facing outwards, so the
+   players stand around the outside and look at each other across it. Each position is where the instrument stands and
+   which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
+var RIG = { x:0, z:2.9, R:1.8 };
+var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
+    BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:1.1, z:RIG.z + RIG.R, r:0 },              // south row
+    MXPOS = { x:-RIG.R, z:2.0, r:-Math.PI / 2 }, TPPOS = { x:-RIG.R, z:3.05, r:-Math.PI / 2 }, MCPOS = { x:-RIG.R, z:3.95, r:-Math.PI / 2 }, // west row
+    SHPOS = { x:RIG.R, z:1.9, r:Math.PI / 2 }, SCPOS = { x:RIG.R, z:2.75, r:Math.PI / 2 }, PFPOS = { x:RIG.R, z:3.75, r:Math.PI / 2 };       // east row
+function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
+function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
+var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, true);            // one lamp over each side of the rig
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);
-var sideLampL = pendant(-2.2, 0.35, 0.62, 0xFFE7C8, 2.4, -2.2, 1.0, MFPOS.z, 0.95, false);
-var sideLampR = pendant(-0.5, 0.35, 0.62, 0xFFE7C8, 2.4, -0.5, 1.0, BSPOS.z, 0.95, false);
-var backLamp = pendant(1.2, 0.35, 0.62, 0xFFE7C8, 2.4, 1.2, 1.0, BSPOS.z, 0.95, false);
-var endLamp = pendant(2.9, 0.35, 0.62, 0xFFE7C8, 1.6, 2.9, 1.0, BSPOS.z, 0.95, false);
+var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false);
+var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false);
+var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.z, 1.05, false);
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
+BLOCKS.push([RIG.x - 1.5, RIG.x + 1.5, RIG.z - 1.5, RIG.z + 1.5]);          // nobody walks through the middle of the rig
 // acoustic foam: low-poly wedge tiles in the Jambutek colours, in blocks along the side walls and behind the gear
 (function(){
   var cols = [0xC00048, 0x1878C0, 0x16202E, 0x16202E, 0x30A8F0, 0x16202E];
@@ -4462,15 +4471,6 @@ function logoPower(now){                        // mostly steady; every so often
   if (now < logoFx.until){ var f = Math.sin(now * 0.09) + Math.sin(now * 0.23); return f > 0.4 ? 1 : f > -0.2 ? 0.35 : 0.05; }
   return 0.92 + 0.08 * Math.sin(now * 0.004);
 }
-// a rug under the rig
-(function(){
-  var c = mk(128, 96), g = c.getContext('2d');
-  g.fillStyle = '#2A1A3A'; g.fillRect(0, 0, 128, 96);
-  g.strokeStyle = '#C00048'; g.lineWidth = 4; g.strokeRect(6, 6, 116, 84); g.strokeStyle = '#1878C0'; g.lineWidth = 2; g.strokeRect(13, 13, 102, 70);
-  for (var i = 0; i < 600; i++){ g.fillStyle = 'rgba(0,0,0,' + rnd(.05, .22) + ')'; g.fillRect((Math.random()*128)|0, (Math.random()*96)|0, 2, 1); }
-  var m = new THREE.Mesh(new THREE.PlaneGeometry(8.4, 2.4), new THREE.MeshLambertMaterial({ map:canvasTex(c) })); m.rotation.x = -Math.PI / 2; m.position.set(0, 0.004, 0.15); m.receiveShadow = true; m.userData.noShadow = true; scene.add(m);
-  solid(m, 'floor');
-})();
 // two monitors on stands, faced with the Jambutek speaker art
 var monitors = (function(){
   var tl = tex(A.spkL), tr = tex(A.spkR); tl.minFilter = tr.minFilter = THREE.LinearFilter;
@@ -4486,29 +4486,6 @@ var monitors = (function(){
     BLOCKS.push([s[0] - 0.4, s[0] + 0.4, 0.5, 1.3]);
     return { g:g, face:face, box:box, y0:face.position.y };
   });
-})();
-// taped-out spots on the floor where the next instruments will go
-(function(){
-  var tape = new THREE.MeshBasicMaterial({ color:0xFFE15A });
-  function corner(x, z, sx, sz){
-    [[0.16, 0.03, sx * 0.08, 0], [0.03, 0.16, 0, sz * 0.08]].forEach(function(b){
-      var m = new THREE.Mesh(new THREE.PlaneGeometry(b[0], b[1]), tape); m.rotation.x = -Math.PI / 2; m.position.set(x + b[2], 0.006, z + b[3]); m.userData.noShadow = true; scene.add(m); });
-  }
-  [[-3.5, 4.4], [3.5, 4.4]].forEach(function(p){
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(s){ corner(p[0] + s[0] * 0.5, p[1] + s[1] * 0.35, -s[0], -s[1]); });
-    var hb = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.02, 0.8), new THREE.MeshBasicMaterial({ visible:false })); hb.position.set(p[0], 0.012, p[1]); scene.add(hb); solid(hb, 'spot');
-  });
-})();
-// a couch at the back to listen from
-(function(){
-  var g = new THREE.Group(); g.position.set(0, 0, ROOM.z1 - 0.5); scene.add(g);
-  var red = new THREE.MeshLambertMaterial({ color:0x8E0036 }), dk = new THREE.MeshLambertMaterial({ color:0x5E0022 });
-  var seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.26, 0.8), red); seat.position.y = 0.33; g.add(seat);
-  var base = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.2, 0.86), dk); base.position.y = 0.1; g.add(base);
-  var back = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.62, 0.22), red); back.position.set(0, 0.62, 0.34); back.rotation.x = 0.12; g.add(back);
-  [-1, 1].forEach(function(s){ var a = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.86), dk); a.position.set(s * 1.05, 0.35, 0); g.add(a); });
-  solid(g, 'couch');
-  BLOCKS.push([-1.2, 1.2, ROOM.z1 - 0.98, ROOM.z1]);
 })();
 
 /* ================= the drum machine: an 11-voice rhythm box on an angled stand =================
@@ -4528,7 +4505,8 @@ var PADCOL = [0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF8A2A, 0xFF8A2A, 0xFF8A
 var COLCOL = ['#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FFE15A', '#FFE15A', '#FFE15A'];
 var TILT = 0.56, TRH = 1.1;
 
-var TRG = new THREE.Group(); TRG.position.set(TRPOS.x, TRH, TRPOS.z); TRG.rotation.x = TILT; scene.add(TRG);
+var TRY = new THREE.Group(); TRY.position.set(TRPOS.x, 0, TRPOS.z); TRY.rotation.y = TRPOS.r; scene.add(TRY);
+var TRG = new THREE.Group(); TRG.position.set(0, TRH, 0); TRG.rotation.x = TILT; TRY.add(TRG);
 var CT = {}, CTLIST = [];                            // every control, by id
 
 /* ---- the printed panel ---- */
@@ -4598,7 +4576,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   // the stand: a tilted tray with a front lip, on two A-frame legs
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; tray.castShadow = true; TRG.add(tray); solid(tray, 'trbody');
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); TRG.add(lip);
-  var st = new THREE.Group(); st.position.set(TRPOS.x, 0, TRPOS.z); scene.add(st);
+  var st = new THREE.Group(); TRY.add(st);
   [-1, 1].forEach(function(s){
     var x = s * 0.36;
     var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, TRH - 0.12, 0.045), metalMat); post.position.set(x, (TRH - 0.12) / 2, -0.02); post.castShadow = true; st.add(post);
@@ -4608,7 +4586,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   });
   var bar = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.03), metalMat); bar.position.set(0, 0.28, -0.02); st.add(bar);
   solid(st, 'trbody');
-  BLOCKS.push([TRPOS.x - 0.52, TRPOS.x + 0.52, ROOM.z0, TRPOS.z + 0.34]);
+  BLOCKS.push(devBlock(TRPOS, 0.52));
 })();
 
 /* ---- control builders (HOST / LX / LZ / DEV say which instrument they are building on) ---- */
@@ -5241,7 +5219,7 @@ function mx(px){ return (px - 1060) * MS; }
 function mz(py){ return (py - 429) * MS; }
 function mm(px){ return px * MS / SC; }              // photo pixels -> the builders' millimetre units
 var MFH = 1.0, MFTILT = 0.42;
-var MFY = new THREE.Group(); MFY.position.set(MFPOS.x, MFH, MFPOS.z); scene.add(MFY);
+var MFY = new THREE.Group(); MFY.position.set(MFPOS.x, MFH, MFPOS.z); MFY.rotation.y = MFPOS.r; scene.add(MFY);
 var MFG = new THREE.Group(); MFG.rotation.x = MFTILT; MFY.add(MFG);
 function devBody(o, dev){ solid(o, 'trbody'); o.traverse(function(m){ m.userData.dev = dev; }); }
 
@@ -5327,7 +5305,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   });
   var bar = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.03), metalMat); bar.position.set(0, -MFH + 0.28, -0.02); MFY.add(bar);
   devBody(MFY, 'mf');
-  BLOCKS.push([MFPOS.x - 0.7, MFPOS.x + 0.7, ROOM.z0, MFPOS.z + 0.34]);
+  BLOCKS.push(devBlock(MFPOS, 0.7));
 })();
 
 /* ---- controls ---- */
@@ -6022,7 +6000,7 @@ function bx(px){ return (px - 991) * BSS; }
 function bz(py){ return (py - 676.5) * BSS; }
 function bmm(px){ return px * BSS / SC; }
 var BSH = 1.0, BSTILT = 0.45;
-var BSY = new THREE.Group(); BSY.position.set(BSPOS.x, BSH, BSPOS.z); scene.add(BSY);
+var BSY = new THREE.Group(); BSY.position.set(BSPOS.x, BSH, BSPOS.z); BSY.rotation.y = BSPOS.r; scene.add(BSY);
 var BSG = new THREE.Group(); BSG.rotation.x = BSTILT; BSY.add(BSG);
 var BSRANGE = ["16'", "8'", "4'", "2'"], BSWAVE = ['Sine', 'Triangle', 'Saw', 'Pulse'], BSNM = ['Up', 'Down', 'UpDn 1', 'UpDn 2', 'Played', 'Random', 'Record', 'Play'], BSLW = ['Tri', 'Saw', 'Square', 'S+H'];
 
@@ -6077,7 +6055,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:bsTex, emissive:0xffffff, emissiveMap:bsTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; BSG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x121316, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; BSG.add(body);
   standFor(BSY, BSG, W2, D2, TH, BSH, BSTILT, 0.4); devBody(BSY, 'bs');
-  BLOCKS.push([BSPOS.x - 0.57, BSPOS.x + 0.57, ROOM.z0, BSPOS.z + 0.34]);
+  BLOCKS.push(devBlock(BSPOS, 0.57));
 })();
 
 HOST = BSG; LX = bx; LZ = bz; DEV = 'bs'; FACE = { bg:'#3A3D43', fg:'#F0F0EC' };
@@ -6379,7 +6357,7 @@ RESTORE[BSSAVE] = function(){ bsRestore(); CT.bsvol.show(); bsSync(); bsApply();
 var MXW = 490, MXD = 270, MXH = 1.1, MXTILT = 0.56;
 function qx(u){ return (u - MXW / 2) * SC; }
 function qz(u){ return (u - MXD / 2) * SC; }
-var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); scene.add(MXY);
+var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotation.y = MXPOS.r; scene.add(MXY);
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU', 'CHORD', 'SCRATCH'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF', '#FF6AB0', '#35D8B8'], MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416], MXMX = 464, MXNC = 9;
 var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, vol:0.75, mute:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
@@ -6411,7 +6389,7 @@ var MXMET = [];
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:mxTex, emissive:0xffffff, emissiveMap:mxTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; MXG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MXG.add(body);
   standFor(MXY, MXG, W2, D2, TH, MXH, MXTILT, 0.4); devBody(MXY, 'mx');
-  BLOCKS.push([MXPOS.x - 0.6, MXPOS.x + 0.6, ROOM.z0, MXPOS.z + 0.34]);
+  BLOCKS.push(devBlock(MXPOS, 0.6));
   // level meters: a column of segments beside each fader
   var geo = new THREE.BoxGeometry(0.007, 0.002, 0.009);
   MXX.concat([MXMX]).forEach(function(x, i){ var segs = []; for (var k = 0; k < 10; k++){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(qx(x + 13), 0.0012, qz(250 - k * 7.6)); m.userData.noShadow = true; MXG.add(m); segs.push(m.material); } MXMET.push(segs); });
@@ -6458,12 +6436,6 @@ function mxUpdate(now, dt){
 var NOP = function(){};
 var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, turn:mfTurn }, bs:{ label:bsLabel, press:bsPress, release:bsRelease, ctl:bsCtl, turn:bsTurn }, mx:{ label:mxLabel, press:mxPress, release:NOP, ctl:mxCtl, turn:NOP },
   am:{ label:amLabel, press:amPress, release:NOP, ctl:amCtl, turn:amTurn }, tp:{ label:tpLabel, press:tpPress, release:tpRelease, ctl:tpCtl, turn:NOP } };
-// everything is plugged into the mixer, and the mixer into the monitors
-(function(){
-  var zb = ROOM.z0 + 0.18, mxB = [MXPOS.x, 0.86, MXPOS.z - 0.3];
-  [[TRPOS.x, -0.03], [MFPOS.x, 0], [BSPOS.x, 0.03], [MBPOS.x, 0.05], [AMPOS.x, 0.07], [TPPOS.x, 0.09], [SHPOS.x, 0.11]].forEach(function(d, i){ cable([[d[0], 0.8, TRPOS.z - 0.28], [d[0], 0.3, zb + 0.05], [d[0] + 0.1, 0.012, zb + i * 0.03], [MXPOS.x - 0.3 + i * 0.05, 0.012, zb + i * 0.03], [MXPOS.x - 0.12 + i * 0.06, 0.35, zb + 0.04], [mxB[0] - 0.14 + i * 0.05, mxB[1], mxB[2]]], 0.006); });
-  [-1, 1].forEach(function(s){ cable([[mxB[0] + 0.26 + s * 0.03, mxB[1], mxB[2]], [MXPOS.x + 0.2, 0.3, zb + 0.03], [MXPOS.x + (s > 0 ? 0.3 : -0.4), 0.012, zb - 0.06 + s * 0.03], [s * 4.3, 0.012, zb - 0.06 + s * 0.03], [s * 4.35, 0.012, 0.6], [s * 4.3, 0.5, 0.95], [s * 4.25, 1.05, 0.98]], 0.007); });
-})();
 
 RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);
 
@@ -6473,7 +6445,7 @@ RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i <
 var AMW = 320, AMD = 170, AMH = 1.1, AMTILT = 0.56;
 function ax(u){ return (u - AMW / 2) * SC; }
 function az(u){ return (u - AMD / 2) * SC; }
-var AMY = new THREE.Group(); AMY.position.set(AMPOS.x, AMH, AMPOS.z); scene.add(AMY);
+var AMY = new THREE.Group(); AMY.position.set(AMPOS.x, AMH, AMPOS.z); AMY.rotation.y = AMPOS.r; scene.add(AMY);
 var AMG = new THREE.Group(); AMG.rotation.x = AMTILT; AMY.add(AMG);
 var AMWAVE = ['saw', 'square', 'triang', 'sine', 'pwm', 'pad', 'fm', '8bits', 'noise', 'vowel'], AMSUB = ['sq1', 'tr1', 'pl1', 'sq2', 'tr2', 'pl2', 'click', 'glitch', 'blow', 'metal', 'pop'], AMX = ['off', 'ring', 'xor', 'fold', 'bits'];
 var AMSRC = ['env1', 'env2', 'env3', 'lfo1', 'lfo2', 'lfo3', 'velo', 'note'], AMDST = ['osc1+2', 'vibr', 'prm1', 'prm2', 'mix', 'freq', 'vca'], AMLW = ['tri', 'sqr', 's&h', 'ramp', 'sine'], AMGRID = [[4, '1/4'], [2, '1/8'], [1, '1/16'], [0.5, '1/32']];
@@ -6545,7 +6517,7 @@ var AMLED = {}, amDispC = mk(800, 96), amDispT = canvasTex(amDispC); amDispT.min
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:amTex, emissive:0xffffff, emissiveMap:amTex, emissiveIntensity:0.22, shininess:10, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; AMG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.002, TH, D2 + 0.004), new THREE.MeshPhongMaterial({ color:0xBDBDB8, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; AMG.add(body);
   [-1, 1].forEach(function(s){ var ck = new THREE.Mesh(new THREE.BoxGeometry(0.024, TH + 0.012, D2 + 0.02), woodMat); ck.position.set(s * (W2 / 2 + 0.012), -TH / 2 + 0.004, 0); ck.castShadow = true; AMG.add(ck); });   // the wooden cheeks
-  standFor(AMY, AMG, W2 + 0.05, D2, TH, AMH, AMTILT, 0.3); devBody(AMY, 'am'); BLOCKS.push([AMPOS.x - 0.48, AMPOS.x + 0.48, ROOM.z0, AMPOS.z + 0.34]);
+  standFor(AMY, AMG, W2 + 0.05, D2, TH, AMH, AMTILT, 0.3); devBody(AMY, 'am'); BLOCKS.push(devBlock(AMPOS, 0.48));
   var d = new THREE.Mesh(new THREE.PlaneGeometry(157 * SC, 20 * SC), new THREE.MeshBasicMaterial({ map:amDispT })); d.rotation.x = -Math.PI / 2; d.position.set(ax(164.5), 0.002, az(82.5)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = 'am'; AMG.add(d); solids.push(d);
 })();
 HOST = AMG; LX = ax; LZ = az; DEV = 'am'; FACE = { bg:'#101113', fg:'#101113' };
@@ -6707,7 +6679,7 @@ RESTORE['jambutek-studio-ambi-v1'] = function(){ amRestore(); amSync(); amApply(
 var TPW = 300, TPD = 100, TPH = 1.1, TPTILT = 0.56;
 function tx(u){ return (u - TPW / 2) * SC; }
 function tz(u){ return (u - TPD / 2) * SC; }
-var TPY = new THREE.Group(); TPY.position.set(TPPOS.x, TPH, TPPOS.z); scene.add(TPY);
+var TPY = new THREE.Group(); TPY.position.set(TPPOS.x, TPH, TPPOS.z); TPY.rotation.y = TPPOS.r; scene.add(TPY);
 var TPG = new THREE.Group(); TPG.rotation.x = TPTILT; TPY.add(TPG);
 var TPEN = ['SPEED', 'START', 'END', 'MAGIC', 'TAPE', 'VOLUME'], TPSN = ['Kalimba', 'Choir', 'Tape Piano', 'Glass Bell', 'Pluck', 'Flute', 'Chord', 'Wash'];
 var TPPG = [[['Speed', 0.75], ['Gain', 0.7], ['Pan', 0.5]], [['Start point', 0], ['Attack', 0.02]], [['End point', 1], ['Decay', 0.35]], [['Space (delay < > reverb)', 0.62], ['Lo-fi', 0.15], ['Filter', 0.5]], [['Tape speed', 0.75]], [['Volume', 0.75], ['Loop level', 0.8]]];
@@ -6751,7 +6723,7 @@ var TPLED = {};
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.008, TH, D2 + 0.008), blk); body.position.y = -TH / 2 - 0.0015; TPG.add(body);
   // the carry handle across the back
   [[-0.105, 0.03, 0.054], [0.105, 0.03, 0.054], [0, 0.24, 0.03]].forEach(function(h, i){ var m = new THREE.Mesh(new THREE.BoxGeometry(h[1], 0.03, h[2]), blk); m.position.set(tx(142.5) + h[0], -0.017, -D2 / 2 - (i < 2 ? 0.027 : 0.054 - 0.015)); TPG.add(m); });
-  standFor(TPY, TPG, W2, D2 + 0.06, TH, TPH, TPTILT, 0.26); devBody(TPY, 'tp'); BLOCKS.push([TPPOS.x - 0.42, TPPOS.x + 0.42, ROOM.z0, TPPOS.z + 0.34]);
+  standFor(TPY, TPG, W2, D2 + 0.06, TH, TPH, TPTILT, 0.26); devBody(TPY, 'tp'); BLOCKS.push(devBlock(TPPOS, 0.42));
 })();
 HOST = TPG; LX = tx; LZ = tz; DEV = 'tp';
 TPEP.forEach(function(p, k){ var c = knob('tpe' + k, p[0], p[1], p[2], TPEN[k].charAt(0) + TPEN[k].slice(1).toLowerCase(), TP.v[k][0], { h:k === 4 ? 9 : 10, sides:k === 4 ? 20 : 12, color:k === 4 ? 0x4E2C96 : 0xA8A8A4 }); c.ei = k; c.click = function(){ tpClick(k); }; ledAt(TPLED, 'pg' + k, k === 4 ? 186 : k === 5 ? 279.7 : p[0] + (k ? 0 : 0.8), k === 4 ? 10 : 12, k === 4 ? 0.0034 : 0.0055); });
@@ -6928,7 +6900,7 @@ RESTORE['jambutek-studio-tape-v1'] = function(){ tpRestore(); TPEP.forEach(funct
 var MBW = 130, MBD = 124, MBH = 1.1, MBTILT = 0.56;
 function mbx(u){ return (u - MBW / 2) * SC; }
 function mbz(u){ return (u - MBD / 2) * SC; }
-var MBY = new THREE.Group(); MBY.position.set(MBPOS.x, MBH, MBPOS.z); scene.add(MBY);
+var MBY = new THREE.Group(); MBY.position.set(MBPOS.x, MBH, MBPOS.z); MBY.rotation.y = MBPOS.r; scene.add(MBY);
 var MBG = new THREE.Group(); MBG.rotation.x = MBTILT; MBY.add(MBG);
 var MB = { p:{ vol:0.8, adec:0.45, fdec:0.4, cut:0.45, res:0.35, glide:0.1, det:0.3, rate:0.4, depth:0.15, sus:1, sub:1, wave:0, dest:1 }, stack:[], kb:{}, kbOct:0, vis:[], gate:0 };
 function mbRestore(){ try { var s = JSON.parse(store('jambutek-studio-blip-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(MB.p).forEach(function(k){ if (typeof s.p[k] === 'number') MB.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} } mbRestore();
@@ -6959,7 +6931,7 @@ var MBLED = {};
   var W2 = MBW * SC, D2 = MBD * SC, TH = 0.07;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x808080, map:mbTex, emissive:0xffffff, emissiveMap:mbTex, emissiveIntensity:0.3, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; MBG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.008, TH, D2 + 0.008), new THREE.MeshPhongMaterial({ color:0xB81A20, shininess:30, specular:0x331111, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MBG.add(body);
-  standFor(MBY, MBG, W2, D2, TH, MBH, MBTILT, 0.11); devBody(MBY, 'mb'); BLOCKS.push([MBPOS.x - 0.34, MBPOS.x + 0.34, ROOM.z0, MBPOS.z + 0.34]);
+  standFor(MBY, MBG, W2, D2, TH, MBH, MBTILT, 0.11); devBody(MBY, 'mb'); BLOCKS.push(devBlock(MBPOS, 0.34));
 })();
 HOST = MBG; LX = mbx; LZ = mbz; DEV = 'mb';
 knob('mbvol', 94, 26.5, 6.3, 'Volume', MB.p.vol, { h:11, sides:16, color:0x0E0F11 }).pk = 'vol'; ledAt(MBLED, 'on', 106.2, 26.5, 0.0028, 0x3BFF6A);
@@ -7032,7 +7004,7 @@ RESTORE['jambutek-studio-blip-v1'] = function(){ mbRestore(); CTLIST.forEach(fun
 var SHW = 150, SHD = 122, SHH = 1.1, SHTILT = 0.56;
 function hx(u){ return (u - SHW / 2) * SC; }
 function hz(u){ return (u - SHD / 2) * SC; }
-var SHY = new THREE.Group(); SHY.position.set(SHPOS.x, SHH, SHPOS.z); scene.add(SHY);
+var SHY = new THREE.Group(); SHY.position.set(SHPOS.x, SHH, SHPOS.z); SHY.rotation.y = SHPOS.r; scene.add(SHY);
 var SHG = new THREE.Group(); SHG.rotation.x = SHTILT; SHY.add(SHG);
 var SHSHAPE = ['saw', 'sqr', 'tri', 'zsaw', 'fm', '8bit'], SHLFO = ['tri', 'sqr', 's&h', 'ramp'], SHSUB = ['sq1', 'tr1', 'sq2', 'tr2'];
 function shPct(v){ return String(Math.round(v * 127)); }
@@ -7094,7 +7066,7 @@ var SHLED = {}, shDispC = mk(520, 128), shDispT = canvasTex(shDispC); shDispT.mi
   var W2 = SHW * SC, D2 = SHD * SC, TH = 0.07;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x707070, map:shTex, emissive:0xffffff, emissiveMap:shTex, emissiveIntensity:0.55, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; SHG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, TH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x141518, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SHG.add(body);
-  standFor(SHY, SHG, W2, D2, TH, SHH, SHTILT, 0.12); devBody(SHY, 'sh'); BLOCKS.push([SHPOS.x - 0.34, SHPOS.x + 0.34, ROOM.z0, SHPOS.z + 0.34]);
+  standFor(SHY, SHG, W2, D2, TH, SHH, SHTILT, 0.12); devBody(SHY, 'sh'); BLOCKS.push(devBlock(SHPOS, 0.34));
   var d = new THREE.Mesh(new THREE.PlaneGeometry(62 * SC, 13.4 * SC), new THREE.MeshBasicMaterial({ map:shDispT })); d.rotation.x = -Math.PI / 2; d.position.set(hx(71), 0.002, hz(40)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = 'sh'; SHG.add(d); solids.push(d);
 })();
 HOST = SHG; LX = hx; LZ = hz; DEV = 'sh'; FACE = { bg:'#222327', fg:'#222327' };
@@ -7211,10 +7183,10 @@ RESTORE['jambutek-studio-shru-v1'] = function(){ shRestore(); shPots(); shApply(
    touch strip that plays the current chord like a harp, three pots (chord level, harp level, and one that does something
    different in each preset) and twelve presets shown by the colour of the big lamp. Its own layout and sound engine;
    the idea and the arrangement of the controls are Benjamin Poilve's minichord (minichord.com). */
-var MCPOS = { x:-2.45, z:ROOM.z1 - 0.72 }, MCW = 230, MCD = 136, MCH = 1.1, MCTILT = 0.56;
+var MCW = 230, MCD = 136, MCH = 1.1, MCTILT = 0.56;
 function mcx(u){ return (u - MCW / 2) * SC; }
 function mcz(u){ return (u - MCD / 2) * SC; }
-var MCY = new THREE.Group(); MCY.position.set(MCPOS.x, MCH, MCPOS.z); MCY.rotation.y = Math.PI; scene.add(MCY);
+var MCY = new THREE.Group(); MCY.position.set(MCPOS.x, MCH, MCPOS.z); MCY.rotation.y = MCPOS.r; scene.add(MCY);
 var MCG = new THREE.Group(); MCG.rotation.x = MCTILT; MCY.add(MCG);
 var MCROOT = [5, 0, 7, 2, 9, 4, 11], MCNAME = ['F', 'C', 'G', 'D', 'A', 'E', 'B'], MCTYPE = [[0, 4, 7], [0, 3, 7], [0, 4, 7, 10]], MCTN = ['major', 'minor', '7th'];
 /* presets: lamp colour, chord wave, filter, attack, release, harp wave, harp decay, what the third pot does */
@@ -7244,7 +7216,7 @@ var MCLED = {};
   sh.moveTo(X(43), Yv(52)); sh.lineTo(X(150), Yv(52)); sh.lineTo(X(150), Yv(122)); sh.lineTo(X(43), Yv(122)); sh.absarc(X(43), Yv(87), 35 * SC, -Math.PI / 2, Math.PI / 2, true);
   var neck = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth:TH, bevelEnabled:false, curveSegments:18 }), pink); neck.rotation.x = -Math.PI / 2; neck.position.y = -TH; MCG.add(neck);
   var bulb = new THREE.Mesh(new THREE.CylinderGeometry(63 * SC, 63 * SC, TH, 48), pink); bulb.position.set(mcx(160), -TH / 2 - 0.0004, mcz(68)); MCG.add(bulb);   // the wide end: strip, pots, presets
-  standFor(MCY, MCG, MCW * SC * 0.92, MCD * SC * 0.8, TH, MCH, MCTILT, 0.14); devBody(MCY, 'mc'); BLOCKS.push([MCPOS.x - 0.4, MCPOS.x + 0.4, ROOM.z1 - 1.06, ROOM.z1]);
+  standFor(MCY, MCG, MCW * SC * 0.92, MCD * SC * 0.8, TH, MCH, MCTILT, 0.14); devBody(MCY, 'mc'); BLOCKS.push(devBlock(MCPOS, 0.4));
   var strip = new THREE.Mesh(new THREE.BoxGeometry(84 * SC, 0.003, 18 * SC), new THREE.MeshLambertMaterial({ color:0x15161A })); strip.position.set(mcx(168), 0.0016, mcz(45)); MCG.add(strip);
   var lamp = new THREE.PointLight(0xFF6AB0, 0.5, 2.6, 1.6); lamp.position.set(0, 0.6, 0.25); MCY.add(lamp); MC.lamp = lamp;
 })();
@@ -7337,10 +7309,10 @@ function mcUpdate(now, dt){
    cut it in and out, and four corner buttons (previous / next sample, play, cue). The sample is played by a small
    variable-speed reader, so dragging the platter really does drag the sound. Samples are made in code.
    The idea and the arrangement follow rasteri's open-source SC1000; the model and the sound engine here are original. */
-var SCPOS = { x:-3.4, z:ROOM.z1 - 0.72 }, SCW = 170, SCD = 196, SCH = 1.1, SCTILT = 0.56;
+var SCW = 170, SCD = 196, SCH = 1.1, SCTILT = 0.56;
 function skx(u){ return (u - SCW / 2) * SC; }
 function skz(u){ return (u - SCD / 2) * SC; }
-var SCY = new THREE.Group(); SCY.position.set(SCPOS.x, SCH, SCPOS.z); SCY.rotation.y = Math.PI; scene.add(SCY);
+var SCY = new THREE.Group(); SCY.position.set(SCPOS.x, SCH, SCPOS.z); SCY.rotation.y = SCPOS.r; scene.add(SCY);
 var SCG = new THREE.Group(); SCG.rotation.x = SCTILT; SCY.add(SCG);
 var SCN = ['Ahh', 'Fresh', 'Stab', 'Zap'];
 var SK = { sample:0, xf:1, motor:0, pos:0, rate:0, rateT:1, touch:false, acc:0, push:0, cut:false, ang:0, g:0, bufs:null, rmtUntil:0, sentAt:0, quiet:0 };
@@ -7355,7 +7327,7 @@ var SKLED = {};
   var deck = new THREE.Mesh(new THREE.PlaneGeometry(W2 - 0.024, D2 - 0.024), new THREE.MeshPhongMaterial({ color:0x0C0D0F, shininess:20, specular:0x111111 })); deck.rotation.x = -Math.PI / 2; deck.position.y = 0.0002; SCG.add(deck);
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(p){ var sc = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.004, 8), new THREE.MeshLambertMaterial({ color:0x050506 })); sc.position.set(p[0] * (W2 / 2 - 0.008), 0.001, p[1] * (D2 / 2 - 0.008)); SCG.add(sc); });
   [[-0.03, 0.02, 0.012], [0.01, 0.014, 0.014], [0.04, 0.014, 0.014], [0.07, 0.014, 0.014]].forEach(function(j){ var m = new THREE.Mesh(new THREE.BoxGeometry(j[1], j[2], 0.012), new THREE.MeshLambertMaterial({ color:0x0A0A0B })); m.position.set(j[0], -0.03, D2 / 2 + 0.004); SCG.add(m); });   // the sockets along the front edge
-  standFor(SCY, SCG, W2, D2, TH, SCH, SCTILT, 0.13); devBody(SCY, 'sc'); BLOCKS.push([SCPOS.x - 0.36, SCPOS.x + 0.36, ROOM.z1 - 1.06, ROOM.z1]);
+  standFor(SCY, SCG, W2, D2, TH, SCH, SCTILT, 0.13); devBody(SCY, 'sc'); BLOCKS.push(devBlock(SCPOS, 0.36));
 })();
 HOST = SCG; LX = skx; LZ = skz; DEV = 'sc';
 var skPlat = knob('skplat', 88, 114, 70, 'Platter', 0, { h:3.2, endless:true, sides:48, color:0x08090A });
@@ -7496,7 +7468,7 @@ var DK = 'sn' + K, PX = 'sn' + K + '_';
 function snDef(){ var d = snDefaults(), x = DEF && DEF.snakes && DEF.snakes[K];      // this Snake's own factory pattern, when the set has one
   if (x && Array.isArray(x.lanes) && (x.lanes.length === 4 || x.lanes.length === 5) && x.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })){ var cl = d.lanes[4]; d.lanes = defCopy(x.lanes); if (d.lanes.length < 5) d.lanes.push(cl); d.root = clamp(x.root | 0, 0, 11); d.scale = clamp(x.scale | 0, 0, SCALES.length - 1); d.swing = clamp(+x.swing || 0, 0, 1); }
   return d; }
-var SNY = new THREE.Group(); SNY.position.set(HP.x, SNH, SNZ); scene.add(SNY);
+var SNY = new THREE.Group(); SNY.position.set(HP.x - Math.sin(HP.r) * 0.5, SNH, HP.z - Math.cos(HP.r) * 0.5); SNY.rotation.y = HP.r; scene.add(SNY);   // on its shelf just behind the synth, towards the middle of the rig
 var SNG = new THREE.Group(); SNG.rotation.x = SNTILT; SNY.add(SNG);
 var SN = snDef(); SN.out = DEFOUT; SN.cc = null; SN.learn = false; SN.cell = [0, 0, 0, 0, 0]; SN.vis = []; SN.cv = 0; SN.msgA = ''; SN.msgB = ''; SN.msgUntil = 0; SN.dirty = true; SN.run = false;
 var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes, cc:SN.cc || null })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
@@ -7512,7 +7484,6 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), woodMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
   [-1, 1].forEach(function(s){ var post = new THREE.Mesh(new THREE.BoxGeometry(0.04, SNH - 0.06, 0.04), metalMat); post.position.set(s * 0.25, -(SNH - 0.06) / 2 - 0.06, -0.13); SNY.add(post); });
   devBody(SNY, DK);
-  cable([[HP.x + 0.2, SNH - 0.12, SNZ - 0.1], [HP.x + 0.24, 1.25, SNZ + 0.02], [HP.x + 0.2, 1.02, HP.z - 0.24]], 0.005).material.color.setHex(0x8E0036);
   var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
   SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });
   var d = new THREE.Mesh(new THREE.PlaneGeometry(68 * SC, 28 * SC), new THREE.MeshBasicMaterial({ map:snDispT })); d.rotation.x = -Math.PI / 2; d.position.set(sx(118), 0.002, sz(31)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; SNG.add(d); solids.push(d);
@@ -7649,7 +7620,7 @@ function update(now, dt){
 DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
 function patterns(def){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; } if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
-return { SN:SN, G:SNG, key:DK, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
+return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
@@ -7715,10 +7686,10 @@ function wallUpdate(now){
    picture on its own small panel. The patterns are Patternflow's own (vendor/patternflow-patterns.js, CC BY-SA 4.0),
    each one computed live every frame. Knobs follow Patternflow's model: 48 clicks cross a knob's range, patterns that
    name their knobs set the ranges, the rest get Hue / Speed / Mode / Freq. */
-var PFPOS = { x:2.45, z:ROOM.z1 - 0.72 }, PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
+var PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
 function fx(u){ return (u - PFW / 2) * SC; }
 function fz(u){ return (u - PFD / 2) * SC; }
-var PFY = new THREE.Group(); PFY.position.set(PFPOS.x, PFH, PFPOS.z); PFY.rotation.y = Math.PI; scene.add(PFY);
+var PFY = new THREE.Group(); PFY.position.set(PFPOS.x, PFH, PFPOS.z); PFY.rotation.y = PFPOS.r; scene.add(PFY);
 var PFG = new THREE.Group(); PFG.rotation.x = PFTILT; PFY.add(PFG);
 var PFLIST = (typeof PFPATS !== 'undefined' && PFPATS) || [];
 var PFDEF = { ranges:[[0, 1], [0.1, 10], [0, 4.9], [0, 1]], vals:[0, 2, 0, 0.06], wrap:[true, false, false, true], names:['Hue', 'Speed', 'Mode', 'Freq'] };
@@ -7750,7 +7721,7 @@ var PFKX = [70, 136, 204, 270];
   var W2 = PFW * SC, D2 = PFD * SC, TH = 0.07;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x707070, map:pfPanT, emissive:0xffffff, emissiveMap:pfPanT, emissiveIntensity:1.0, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; PFG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, TH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x121316, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; PFG.add(body);
-  standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, 'pf'); BLOCKS.push([PFPOS.x - 0.46, PFPOS.x + 0.46, ROOM.z1 - 1.06, ROOM.z1]);
+  standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, 'pf'); BLOCKS.push(devBlock(PFPOS, 0.46));
   var led = new THREE.Mesh(new THREE.PlaneGeometry(300 * SC, 150 * SC), new THREE.MeshBasicMaterial({ map:pfTex })); led.rotation.x = -Math.PI / 2; led.position.set(fx(170), 0.002, fz(84)); led.userData.noShadow = true; led.userData.ia = 'trbody'; led.userData.dev = 'pf'; PFG.add(led); solids.push(led);
   var d = new THREE.Mesh(new THREE.PlaneGeometry(220 * SC, 24 * SC * 0.72), new THREE.MeshBasicMaterial({ map:pfDispT })); d.rotation.x = -Math.PI / 2; d.position.set(fx(170), 0.002, fz(176)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = 'pf'; PFG.add(d); solids.push(d);
 })();
@@ -8089,7 +8060,7 @@ var MP = (function(){
   Q.tick = function(now, dt){
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
-        Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
+        Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
         send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : cam.yaw).toFixed(3), +(lean ? -0.45 : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 : 0] });
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
@@ -8125,7 +8096,7 @@ var MP = (function(){
 })();
 
 /* ================= camera: a person standing in the room (same eye height, speed and feel as the arcade) ================= */
-var HOME = { x:0, z:2.35, yaw:0, pitch:-0.1 };
+var HOME = { x:-3.3, z:-0.5, yaw:-2.38, pitch:-0.12 };       // in the corner by the pattern buttons, looking across the rig
 var cam = { x:HOME.x, z:HOME.z, yaw:HOME.yaw, pitch:HOME.pitch, ty:HOME.yaw, tp:HOME.pitch, homing:false, walkTo:null };
 var running = false, EYE = 1.5, keys = {}, crouch = { on:false, k:0 }, JUMP = { y:0, v:0 };
 function collide(){
@@ -8148,19 +8119,19 @@ var xh = document.getElementById('xh'), xhLab = document.getElementById('xhLab')
 
 /* ================= leaning over an instrument ================= */
 var DEVS = {
-  tr:{ key:'tr', g:TRG, name:'drum machine', stand:{ x:TRPOS.x, z:TRPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.71, asp:1.6, off:0.06, lookz:0.03, hud:'hudTr' },
-  mf:{ key:'mf', g:MFG, name:'synth', stand:{ x:MFPOS.x, z:MFPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.69, asp:1.78, off:0.04, lookz:0.02, hud:'hudMf', keys:{ down:mfKbDown, up:mfKbUp, play:function(){ press(CT.mfplay); release(CT.mfplay); } } },
-  bs:{ key:'bs', g:BSG, name:'bass synth', stand:{ x:BSPOS.x, z:BSPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.66, asp:1.6, off:0.05, lookz:0.025, hud:'hudBs', keys:{ down:bsKbDown, up:bsKbUp, play:function(){ press(CT.bson); release(CT.bson); } } },
-  mb:{ key:'mb', g:MBG, name:'Blip synth', stand:{ x:MBPOS.x, z:MBPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.36, asp:1.1, off:0.04, lookz:0.005, hud:'hudMb', keys:{ down:mbKbDown, up:mbKbUp, play:function(){ toggleSeq(); } } },
-  sh:{ key:'sh', g:SHG, name:'Shru synth', stand:{ x:SHPOS.x, z:SHPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
-  am:{ key:'am', g:AMG, name:'Ambi synth', stand:{ x:AMPOS.x, z:AMPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
-  tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:{ x:TPPOS.x, z:TPPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
-  mx:{ key:'mx', g:MXG, name:'mixer', stand:{ x:MXPOS.x, z:MXPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.66, asp:1.84, off:0.05, lookz:0.03, hud:'hudMx' }
+  tr:{ key:'tr', g:TRG, name:'drum machine', stand:devStand(TRPOS), yaw:TRPOS.r, pitch:-0.42, d:0.71, asp:1.6, off:0.06, lookz:0.03, hud:'hudTr' },
+  mf:{ key:'mf', g:MFG, name:'synth', stand:devStand(MFPOS), yaw:MFPOS.r, pitch:-0.42, d:0.69, asp:1.78, off:0.04, lookz:0.02, hud:'hudMf', keys:{ down:mfKbDown, up:mfKbUp, play:function(){ press(CT.mfplay); release(CT.mfplay); } } },
+  bs:{ key:'bs', g:BSG, name:'bass synth', stand:devStand(BSPOS), yaw:BSPOS.r, pitch:-0.42, d:0.66, asp:1.6, off:0.05, lookz:0.025, hud:'hudBs', keys:{ down:bsKbDown, up:bsKbUp, play:function(){ press(CT.bson); release(CT.bson); } } },
+  mb:{ key:'mb', g:MBG, name:'Blip synth', stand:devStand(MBPOS), yaw:MBPOS.r, pitch:-0.42, d:0.36, asp:1.1, off:0.04, lookz:0.005, hud:'hudMb', keys:{ down:mbKbDown, up:mbKbUp, play:function(){ toggleSeq(); } } },
+  sh:{ key:'sh', g:SHG, name:'Shru synth', stand:devStand(SHPOS), yaw:SHPOS.r, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
+  am:{ key:'am', g:AMG, name:'Ambi synth', stand:devStand(AMPOS), yaw:AMPOS.r, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
+  tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:devStand(TPPOS), yaw:TPPOS.r, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
+  mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.66, asp:1.84, off:0.05, lookz:0.03, hud:'hudMx' }
 };
-DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:{ x:MCPOS.x, z:MCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
-DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:{ x:SCPOS.x, z:SCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
-DEVS.pf = { key:'pf', g:PFG, name:'Pattern synth', stand:{ x:PFPOS.x, z:PFPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.6, asp:1.5, off:0.04, lookz:0.05, hud:'hudPf' };
-SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:{ x:s.x, z:s.z + 0.95 }, yaw:0, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
+DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
+DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
+DEVS.pf = { key:'pf', g:PFG, name:'Pattern synth', stand:devStand(PFPOS), yaw:PFPOS.r, pitch:-0.42, d:0.6, asp:1.5, off:0.04, lookz:0.05, hud:'hudPf' };
+SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:devStand(s.hp), yaw:s.hp.r, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
 var LEAN = DEVS.tr, trBlend = 0;
 function trPose(eye, look){
   var d = LEAN.d * Math.max(1, LEAN.asp / camera.aspect);
@@ -8364,7 +8335,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.8 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.9 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -8413,7 +8384,7 @@ function frame(now){
 
   /* what the crosshair (or mouse) is on */
   var cen = centred(), xs = cen && mode === 'walk'; if (xh.hidden === xs) xh.hidden = !xs;
-  var ns = mode === 'walk' && cam.z < 1.5; if (ns !== nearSharp){ nearSharp = ns; resize(); }
+  var ns = mode === 'walk' && Math.hypot(cam.x - RIG.x, cam.z - RIG.z) < 3.7; if (ns !== nearSharp){ nearSharp = ns; resize(); }
   if (!drag){
     var hit = cen ? aim() : (pointer.in && !look ? aim(new THREE.Vector2(pointer.x, pointer.y)) : null);
     var hc = touchOnly && mode === 'walk' ? null : ctlOf(hit), lab = hit ? labelFor(hit) : null, scrolly = hc && (hc.kind === 'knob' || hc.kind === 'fader');

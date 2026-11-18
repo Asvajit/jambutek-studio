@@ -5,7 +5,7 @@
 var AMW = 320, AMD = 170, AMH = 1.1, AMTILT = 0.56;
 function ax(u){ return (u - AMW / 2) * SC; }
 function az(u){ return (u - AMD / 2) * SC; }
-var AMY = new THREE.Group(); AMY.position.set(AMPOS.x, AMH, AMPOS.z); scene.add(AMY);
+var AMY = new THREE.Group(); AMY.position.set(AMPOS.x, AMH, AMPOS.z); AMY.rotation.y = AMPOS.r; scene.add(AMY);
 var AMG = new THREE.Group(); AMG.rotation.x = AMTILT; AMY.add(AMG);
 var AMWAVE = ['saw', 'square', 'triang', 'sine', 'pwm', 'pad', 'fm', '8bits', 'noise', 'vowel'], AMSUB = ['sq1', 'tr1', 'pl1', 'sq2', 'tr2', 'pl2', 'click', 'glitch', 'blow', 'metal', 'pop'], AMX = ['off', 'ring', 'xor', 'fold', 'bits'];
 var AMSRC = ['env1', 'env2', 'env3', 'lfo1', 'lfo2', 'lfo3', 'velo', 'note'], AMDST = ['osc1+2', 'vibr', 'prm1', 'prm2', 'mix', 'freq', 'vca'], AMLW = ['tri', 'sqr', 's&h', 'ramp', 'sine'], AMGRID = [[4, '1/4'], [2, '1/8'], [1, '1/16'], [0.5, '1/32']];
@@ -77,7 +77,7 @@ var AMLED = {}, amDispC = mk(800, 96), amDispT = canvasTex(amDispC); amDispT.min
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:amTex, emissive:0xffffff, emissiveMap:amTex, emissiveIntensity:0.22, shininess:10, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; AMG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.002, TH, D2 + 0.004), new THREE.MeshPhongMaterial({ color:0xBDBDB8, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; AMG.add(body);
   [-1, 1].forEach(function(s){ var ck = new THREE.Mesh(new THREE.BoxGeometry(0.024, TH + 0.012, D2 + 0.02), woodMat); ck.position.set(s * (W2 / 2 + 0.012), -TH / 2 + 0.004, 0); ck.castShadow = true; AMG.add(ck); });   // the wooden cheeks
-  standFor(AMY, AMG, W2 + 0.05, D2, TH, AMH, AMTILT, 0.3); devBody(AMY, 'am'); BLOCKS.push([AMPOS.x - 0.48, AMPOS.x + 0.48, ROOM.z0, AMPOS.z + 0.34]);
+  standFor(AMY, AMG, W2 + 0.05, D2, TH, AMH, AMTILT, 0.3); devBody(AMY, 'am'); BLOCKS.push(devBlock(AMPOS, 0.48));
   var d = new THREE.Mesh(new THREE.PlaneGeometry(157 * SC, 20 * SC), new THREE.MeshBasicMaterial({ map:amDispT })); d.rotation.x = -Math.PI / 2; d.position.set(ax(164.5), 0.002, az(82.5)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = 'am'; AMG.add(d); solids.push(d);
 })();
 HOST = AMG; LX = ax; LZ = az; DEV = 'am'; FACE = { bg:'#101113', fg:'#101113' };

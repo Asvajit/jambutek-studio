@@ -7,7 +7,7 @@
 var SHW = 150, SHD = 122, SHH = 1.1, SHTILT = 0.56;
 function hx(u){ return (u - SHW / 2) * SC; }
 function hz(u){ return (u - SHD / 2) * SC; }
-var SHY = new THREE.Group(); SHY.position.set(SHPOS.x, SHH, SHPOS.z); scene.add(SHY);
+var SHY = new THREE.Group(); SHY.position.set(SHPOS.x, SHH, SHPOS.z); SHY.rotation.y = SHPOS.r; scene.add(SHY);
 var SHG = new THREE.Group(); SHG.rotation.x = SHTILT; SHY.add(SHG);
 var SHSHAPE = ['saw', 'sqr', 'tri', 'zsaw', 'fm', '8bit'], SHLFO = ['tri', 'sqr', 's&h', 'ramp'], SHSUB = ['sq1', 'tr1', 'sq2', 'tr2'];
 function shPct(v){ return String(Math.round(v * 127)); }
@@ -69,7 +69,7 @@ var SHLED = {}, shDispC = mk(520, 128), shDispT = canvasTex(shDispC); shDispT.mi
   var W2 = SHW * SC, D2 = SHD * SC, TH = 0.07;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x707070, map:shTex, emissive:0xffffff, emissiveMap:shTex, emissiveIntensity:0.55, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; SHG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, TH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x141518, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SHG.add(body);
-  standFor(SHY, SHG, W2, D2, TH, SHH, SHTILT, 0.12); devBody(SHY, 'sh'); BLOCKS.push([SHPOS.x - 0.34, SHPOS.x + 0.34, ROOM.z0, SHPOS.z + 0.34]);
+  standFor(SHY, SHG, W2, D2, TH, SHH, SHTILT, 0.12); devBody(SHY, 'sh'); BLOCKS.push(devBlock(SHPOS, 0.34));
   var d = new THREE.Mesh(new THREE.PlaneGeometry(62 * SC, 13.4 * SC), new THREE.MeshBasicMaterial({ map:shDispT })); d.rotation.x = -Math.PI / 2; d.position.set(hx(71), 0.002, hz(40)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = 'sh'; SHG.add(d); solids.push(d);
 })();
 HOST = SHG; LX = hx; LZ = hz; DEV = 'sh'; FACE = { bg:'#222327', fg:'#222327' };

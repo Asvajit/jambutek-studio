@@ -7,7 +7,7 @@ function mx(px){ return (px - 1060) * MS; }
 function mz(py){ return (py - 429) * MS; }
 function mm(px){ return px * MS / SC; }              // photo pixels -> the builders' millimetre units
 var MFH = 1.0, MFTILT = 0.42;
-var MFY = new THREE.Group(); MFY.position.set(MFPOS.x, MFH, MFPOS.z); scene.add(MFY);
+var MFY = new THREE.Group(); MFY.position.set(MFPOS.x, MFH, MFPOS.z); MFY.rotation.y = MFPOS.r; scene.add(MFY);
 var MFG = new THREE.Group(); MFG.rotation.x = MFTILT; MFY.add(MFG);
 function devBody(o, dev){ solid(o, 'trbody'); o.traverse(function(m){ m.userData.dev = dev; }); }
 
@@ -93,7 +93,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   });
   var bar = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.03), metalMat); bar.position.set(0, -MFH + 0.28, -0.02); MFY.add(bar);
   devBody(MFY, 'mf');
-  BLOCKS.push([MFPOS.x - 0.7, MFPOS.x + 0.7, ROOM.z0, MFPOS.z + 0.34]);
+  BLOCKS.push(devBlock(MFPOS, 0.7));
 })();
 
 /* ---- controls ---- */
