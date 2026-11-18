@@ -24,8 +24,8 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
   // its screen on the ceiling
   var pfGlow = new THREE.PointLight(0xffffff, 0, 6, 1.5); pfGlow.position.set(RIG.x, ROOM.h - 0.5, SCRZ); scene.add(pfGlow);
   (function(){
-    var frame = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.06, 2.06), new THREE.MeshLambertMaterial({ color:0x08090B })); frame.position.set(RIG.x, ROOM.h - 0.035, SCRZ); frame.userData.noShadow = true; scene.add(frame);
-    var scr = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 2.0), new THREE.MeshBasicMaterial({ map:pfTex })); scr.position.set(RIG.x, ROOM.h - 0.068, SCRZ); scr.rotation.x = Math.PI / 2; scr.rotation.z = SCRROT; scr.userData.noShadow = true; scene.add(scr);
+    var frame = new THREE.Mesh(new THREE.BoxGeometry(SCRW + 0.1, 0.06, SCRW / 2 + 0.06), new THREE.MeshLambertMaterial({ color:0x08090B })); frame.position.set(RIG.x, ROOM.h - 0.035, SCRZ); frame.userData.noShadow = true; scene.add(frame);
+    var scr = new THREE.Mesh(new THREE.PlaneGeometry(SCRW, SCRW / 2), new THREE.MeshBasicMaterial({ map:pfTex })); scr.position.set(RIG.x, ROOM.h - 0.068, SCRZ); scr.rotation.x = Math.PI / 2; scr.rotation.z = SCRROT; scr.userData.noShadow = true; scene.add(scr);
   })();
   // the booth: a counter across the corner, the unit behind it
   (function(){
@@ -124,6 +124,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
   }
   return { key:DK, G:PFG, PF:PF, pos:PFPOS, tick:flowTick, c:pfC, ctx:pfCtx, img:pfImg, buf:pfBuf, tex:pfTex, dc:pfDispC, dt:pfDispT, glow:pfGlow };
 }
-var FLOWS = [makeFlow('pf', PFPOS, 'jambutek-studio-flow-v1', RIG.z - 1.0, 0, 0, 'A')]; FLOWS.push(makeFlow('pg', PGPOS, 'jambutek-studio-flow-v1', RIG.z + 1.0, Math.PI, 0, 'B', FLOWS[0]));
+var SCRW = (ROOM.x1 - ROOM.x0) - 2 * 0.5;                // the two ceiling screens together fill the roof, less a frame one floor tile (half a metre) wide
+var FLOWS = [makeFlow('pf', PFPOS, 'jambutek-studio-flow-v1', RIG.z - SCRW / 4, 0, 0, 'A')]; FLOWS.push(makeFlow('pg', PGPOS, 'jambutek-studio-flow-v1', RIG.z + SCRW / 4, Math.PI, 0, 'B', FLOWS[0]));
 var PF = FLOWS[0].PF;
 function flowUpdate(now, dt){ FLOWS[0].tick(now, dt); FLOWS[1].tick(now, dt); }

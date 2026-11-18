@@ -17,7 +17,7 @@ var SNLIGHTS = [];
   var glowTex = new THREE.CanvasTexture(gc);
   var bodyGeo = geo(F.body), lensGeo = geo(F.lens);
   var bodyMat = new THREE.MeshPhongMaterial({ color:0x3C4048, emissive:0x0C0D10, shininess:30, specular:0x222222, side:THREE.DoubleSide });
-  var inset = 0.55, y = ROOM.h - 0.42, target = new THREE.Vector3(RIG.x, 0.95, RIG.z);
+  var inset = 0.42, y = ROOM.h - 0.42, target = new THREE.Vector3(RIG.x, 0.95, RIG.z);
   [[ROOM.x0 + inset, ROOM.z0 + inset], [ROOM.x1 - inset, ROOM.z0 + inset], [ROOM.x0 + inset, ROOM.z1 - inset], [ROOM.x1 - inset, ROOM.z1 - inset]].forEach(function(p){
     var pole = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.42, 0.04), metalMat); pole.position.set(p[0], ROOM.h - 0.21, p[1]); pole.userData.noShadow = true; scene.add(pole);
     var g = new THREE.Group(); g.position.set(p[0], y, p[1]); g.lookAt(target); scene.add(g);
