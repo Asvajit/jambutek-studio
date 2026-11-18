@@ -40,14 +40,15 @@ function snCellAt(L, k){
   var n = L.len, i = L.dir === 0 ? k % n : L.dir === 1 ? n - 1 - (k % n) : L.dir === 4 ? (Math.random() * n) | 0 : (function(){ var per = Math.max(1, 2 * n - 2), q = k % per, f = q < n ? q : per - q; return L.dir === 2 ? f : n - 1 - f; })();
   return SNSHAPE[L.shape][(i + L.shift) % 16];
 }
+function snDice(n){ var x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }
 function makeSnake(K, HP, DEFOUT){
 var DK = 'sn' + K, PX = 'sn' + K + '_';
 var SNY = new THREE.Group(); SNY.position.set(HP.x, SNH, SNZ); scene.add(SNY);
 var SNG = new THREE.Group(); SNG.rotation.x = SNTILT; SNY.add(SNG);
 var SN = snDefaults(); SN.out = DEFOUT; SN.cell = [0, 0, 0, 0]; SN.vis = []; SN.cv = 0; SN.msgA = ''; SN.msgB = ''; SN.msgUntil = 0; SN.dirty = true; SN.run = false;
-var snSaveT = null; function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(function(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes })); }, 900); }
-(function(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-' + K)) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.lanes) || s.lanes.length !== 4 || !s.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })) return;
-  SN.lanes = s.lanes; SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 6); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} })();
+var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
+function snRestore(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-' + K)) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.lanes) || s.lanes.length !== 4 || !s.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })) return;
+  SN.lanes = s.lanes; SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 6); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
 var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.minFilter = THREE.LinearFilter; snDispT.magFilter = THREE.LinearFilter;
 (function(){
   var W2 = SNW * SC, D2 = SND * SC, TH = 0.04;
@@ -132,7 +133,7 @@ function clock(t, N, sd, sw){                       // one call per 16th from th
   ev.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
   ev.forEach(function(e){
     var li = e[2], L = SN.lanes[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell });
-    if (li !== 0 || !SN.out || !SN.lanes[1].vals[cell] || Math.random() * 127 >= SN.lanes[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
+    if (li !== 0 || !SN.out || !SN.lanes[1].vals[cell] || snDice(N * 31 + e[3] * 7 + K * 131) * 127 >= SN.lanes[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
     var n = snNote(L.vals[cell]), vel = clamp(SN.lanes[2].vals[SN.cell[2]] / 127, 0.05, 1), dur = sd * e[4] * 0.6;
     var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else shNoteAt(n + 12, vel, e[0], dur);
   });
@@ -163,6 +164,7 @@ function update(now, dt){
 }
 DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
 function patterns(def){ SN.lanes = snDefaults().lanes; if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
+RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
 return { SN:SN, G:SNG, key:DK, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */

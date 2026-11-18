@@ -43,12 +43,12 @@ var MF = { presets:mfFactory(), cur:0, p:null, oscSel:0, lfoSel:0, fxSel:2, shif
 MF.p = JSON.parse(JSON.stringify(MF.presets[0]));
 var MFSAVE = 'jambutek-studio-synth-v1', mfSaveT = null;
 function mfSave(){ store(MFSAVE, JSON.stringify({ v:1, presets:MF.presets, cur:MF.cur, p:MF.p, seq:MF.seq, seqLen:MF.seqLen, div:MF.div, master:CT.mfmaster.v, arpMode:MF.arpMode, arpOct:MF.arpOct })); }
-function mfSaveSoon(){ clearTimeout(mfSaveT); mfSaveT = setTimeout(mfSave, 1200); }
-(function(){ try {
+function mfSaveSoon(){ clearTimeout(mfSaveT); mfSaveT = setTimeout(mfSave, saveMs(1200)); }
+function mfRestore(){ try {
   var s = JSON.parse(store(MFSAVE) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.presets) || s.presets.length !== MF.presets.length || !s.p || !s.p.o || !s.p.mat) return;
   MF.presets = s.presets; MF.cur = clamp(s.cur | 0, 0, MF.presets.length - 1); MF.p = s.p; if (Array.isArray(s.seq) && s.seq.length === 64) MF.seq = s.seq; MF.seqLen = clamp(s.seqLen | 0 || 16, 1, 64);
   MF.div = clamp(s.div | 0, 0, MFDIV.length - 1); if (typeof s.master === 'number') CT.mfmaster.v = clamp(s.master, 0, 1); MF.arpMode = clamp(s.arpMode | 0, 0, 7); MF.arpOct = clamp(s.arpOct | 0 || 1, 1, 4);
-} catch (e) {} })();
+} catch (e) {} } mfRestore();
 
 /* ---- display + labels ---- */
 function mfSay(a, b, ms){ MF.msgA = a; MF.msgB = b == null ? '' : b; MF.msgUntil = performance.now() + (ms || 1500); MF.dirty = true; }
@@ -517,3 +517,5 @@ function mfUpdate(now, dt){
   if (now > MF.msgUntil && MF.msgA){ MF.msgA = ''; MF.dirty = true; }
   if (MF.dirty){ MF.dirty = false; mfPaintDisp(); }
 }
+
+RESTORE[MFSAVE] = function(){ mfRestore(); CT.mfmaster.show(); mfSync(); mfApply(); MF.dirty = true; }; SAVENOW.push(mfSave);

@@ -59,7 +59,8 @@ function save(){
   var kn = {}; CTLIST.forEach(function(c){ if (!c.dev && ((c.kind === 'knob' && !c.endless) || c.kind === 'fader')) kn[c.id] = +c.v.toFixed(3); });
   store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, PAT:PAT, kn:kn }));
 }
-function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(save, 1200); }
+function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(save, saveMs(1200)); }
+SAVENOW.push(save);
 (function load(){
   try {
     var s = JSON.parse(store(SAVE_KEY) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.PAT) || s.PAT.length !== 16) return;
@@ -160,15 +161,17 @@ function schedStep(t){
   if (SEQ.step >= cur.last){ SEQ.step = 0; SEQ.bar++; if (SEQ.fill){ SEQ.fill = false; SEQ.fillVar = null; SEQ.crashNext = true; } M.varIx = (M.varIx + 1) % M.varSel.length; SEQ.skip = {}; }
   SEQ.nextT += sd;
 }
-function pump(){ if (!M.playing || !ac) return; var guard = 0; if (SEQ.nextT < ac.currentTime - 0.3) SEQ.nextT = ac.currentTime + 0.02; while (SEQ.nextT < ac.currentTime + 0.2 && guard++ < 64) schedStep(SEQ.nextT); }
-function startSeq(){
+function pump(){ if (!M.playing || !ac) return; var guard = 0; if (SEQ.nextT < ac.currentTime - 0.3){ if (!(MPON && MPNET.regrid && MPNET.regrid())) SEQ.nextT = ac.currentTime + 0.02; } while (SEQ.nextT < ac.currentTime + 0.2 && guard++ < 64) schedStep(SEQ.nextT); }
+function startSeq(at, remote, n0){
   unlock(); if (!AU.ready){ toast('No sound in this browser'); return; }
+  if (!remote && MPON && MPNET.start){ MPNET.start(); return; }
   M.playing = true; SEQ.step = 0; SEQ.bar = 0; M.varIx = 0; SEQ.fill = false; SEQ.fillVar = null; SEQ.crashNext = false; SEQ.vis = []; SEQ.skip = {};
-  SEQ.nextT = ac.currentTime + 0.06; SEQ.n16 = 0; mfOnStart(); bsOnStart(); amOnStart(); tpOnStart(); pump(); clearInterval(SEQ.timer); SEQ.timer = setInterval(pump, 25); dispDirty = true;
+  SEQ.nextT = at != null ? at : ac.currentTime + 0.06; SEQ.n16 = n0 | 0; if (n0) SEQ.step = SEQ.n16 % Math.max(1, playV().last); mfOnStart(); bsOnStart(); amOnStart(); tpOnStart(); pump(); clearInterval(SEQ.timer); SEQ.timer = setInterval(pump, 25); dispDirty = true;
 }
-function stopSeq(){ mfOnStop(); bsOnStop(); snOnStop(); amOnStop(); M.playing = false; clearInterval(SEQ.timer); SEQ.timer = null; SEQ.vis = []; SEQ.visStep = -1; dispDirty = true; }
+function stopSeq(remote){ if (!remote && MPON && MPNET.stop) MPNET.stop(); mfOnStop(); bsOnStop(); snOnStop(); amOnStop(); M.playing = false; clearInterval(SEQ.timer); SEQ.timer = null; SEQ.vis = []; SEQ.visStep = -1; dispDirty = true; }
 function toggleSeq(){ if (M.playing) stopSeq(); else startSeq(); }
-function setBpm(b){ M.bpm = clamp(Math.round(b * 10) / 10, 40, 300); tempoDirty = true; applyMix(); mfTempo(); bsTempo(); AM.dirty = true; tpTempo(); saveSoon(); }
+function setBpm(b, remote){ var was = M.bpm; M.bpm = clamp(Math.round(b * 10) / 10, 40, 300); tempoDirty = true; applyMix(); mfTempo(); bsTempo(); AM.dirty = true; tpTempo(); if (!remote){ saveSoon(); if (MPON && MPNET.tempo && was !== M.bpm) MPNET.tempo(); } }
+var MPNET = {};
 function tapTempo(){
   var now = performance.now(); M.taps = M.taps.filter(function(x){ return now - x < 2500; }); M.taps.push(now);
   if (M.taps.length >= 3){ var d = (M.taps[M.taps.length - 1] - M.taps[0]) / (M.taps.length - 1); setBpm(60000 / d); say('TAP  ' + M.bpm.toFixed(1)); } else say('TAP ' + '●'.repeat(M.taps.length));

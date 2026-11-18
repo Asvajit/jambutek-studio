@@ -39,8 +39,8 @@ var SHPRE = [
   shPatch('Hollow pad', { o1s:0.4, o2s:0.4, o2t:0.25, mix:0.5, sub:0.15, subw:0.3, cut:0.4, res:0.2, fenv:0.3, a1:0.5, d1:0.6, s1:0.6, a2:0.45, s2:0.9, r2:0.6, l1prm:0.3, l1r:0.25, o1p:0.2, o2p:0.25 })
 ];
 var SH = { p:shPatch('', {}), patch:0, page:0, mem:false, oct:0, stack:[], kb:{}, kbOct:0, vis:[], msg:'', msgUntil:0, dirty:true };
-(function(){ try { var s = JSON.parse(store('jambutek-studio-shru-v1') || 'null'); if (s && s.v === 1 && s.p){ SHKEYS.forEach(function(k){ if (typeof s.p[k] === 'number') SH.p[k] = clamp(s.p[k], 0, 1); }); SH.patch = clamp(s.patch | 0, 0, SHPRE.length - 1); SH.oct = clamp(s.oct | 0, -2, 2); } else shLoad(0, true); } catch (e) {} })();
-var shSaveT = null; function shSaveSoon(){ clearTimeout(shSaveT); shSaveT = setTimeout(function(){ store('jambutek-studio-shru-v1', JSON.stringify({ v:1, p:SH.p, patch:SH.patch, oct:SH.oct })); }, 800); }
+function shRestore(){ try { var s = JSON.parse(store('jambutek-studio-shru-v1') || 'null'); if (s && s.v === 1 && s.p){ SHKEYS.forEach(function(k){ if (typeof s.p[k] === 'number') SH.p[k] = clamp(s.p[k], 0, 1); }); SH.patch = clamp(s.patch | 0, 0, SHPRE.length - 1); SH.oct = clamp(s.oct | 0, -2, 2); } else shLoad(0, true); } catch (e) {} } shRestore();
+var shSaveT = null; function shSaveNow(){ store('jambutek-studio-shru-v1', JSON.stringify({ v:1, p:SH.p, patch:SH.patch, oct:SH.oct })); } function shSaveSoon(){ clearTimeout(shSaveT); shSaveT = setTimeout(shSaveNow, saveMs(800)); }
 function shLoad(i, quiet){ SH.patch = i; SHKEYS.forEach(function(k){ SH.p[k] = SHPRE[i][k]; }); SH.dirty = true; if (!quiet){ shApply(); shPots(); shSaveSoon(); } }
 
 var shC = mk(SHW * 8, SHD * 8), shTex = null, SHBX = [35.7, 49.7, 63.7, 77.5, 91.4, 105.2], SHPX = [30.3, 57, 83.7, 110];
@@ -178,3 +178,5 @@ function shUpdate(now, dt){
   if (now > SH.msgUntil && SH.msg){ SH.msg = ''; SH.dirty = true; }
   if (SH.dirty){ SH.dirty = false; shPaintDisp(); }
 }
+
+RESTORE['jambutek-studio-shru-v1'] = function(){ shRestore(); shPots(); shApply(); }; SAVENOW.push(shSaveNow);

@@ -7,8 +7,8 @@ var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); scene.add(
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF'], MXX = [32, 80, 128, 176, 224, 272, 320], MXMX = 368, MXNC = 7;
 var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, vol:0.75, mute:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0] };
-(function(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 7){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} })();
-var mxSaveT = null; function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(function(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master })); }, 800); }
+function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 7){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
+var mxSaveT = null; function mxSaveNow(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master })); } function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(mxSaveNow, saveMs(800)); }
 var mxC = mk(1576, 1080), mxTex = null;
 function paintMX(){
   var g = mxC.getContext('2d'); g.setTransform(4, 0, 0, 4, 0, 0);
@@ -88,3 +88,5 @@ var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, tu
   [[TRPOS.x, -0.03], [MFPOS.x, 0], [BSPOS.x, 0.03], [MBPOS.x, 0.05], [AMPOS.x, 0.07], [TPPOS.x, 0.09], [SHPOS.x, 0.11]].forEach(function(d, i){ cable([[d[0], 0.8, TRPOS.z - 0.28], [d[0], 0.3, zb + 0.05], [d[0] + 0.1, 0.012, zb + i * 0.03], [MXPOS.x - 0.3 + i * 0.05, 0.012, zb + i * 0.03], [MXPOS.x - 0.12 + i * 0.06, 0.35, zb + 0.04], [mxB[0] - 0.14 + i * 0.05, mxB[1], mxB[2]]], 0.006); });
   [-1, 1].forEach(function(s){ cable([[mxB[0] + 0.26 + s * 0.03, mxB[1], mxB[2]], [MXPOS.x + 0.2, 0.3, zb + 0.03], [MXPOS.x + (s > 0 ? 0.3 : -0.4), 0.012, zb - 0.06 + s * 0.03], [s * 4.3, 0.012, zb - 0.06 + s * 0.03], [s * 4.35, 0.012, 0.6], [s * 4.3, 0.5, 0.95], [s * 4.25, 1.05, 0.98]], 0.007); });
 })();
+
+RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);

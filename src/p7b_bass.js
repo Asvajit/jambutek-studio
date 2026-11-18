@@ -127,10 +127,10 @@ var BSRH = (function(){ var b = ['xxxxxxxxxxxxxxxx', 'x-x-x-x-x-x-x-x-', 'x--x--
   b.forEach(function(s){ out.push(s.slice(13) + s.slice(0, 13)); }); return out; })();
 var BSSAVE = 'jambutek-studio-bass-v1', bsSaveT = null;
 function bsSave(){ store(BSSAVE, JSON.stringify({ v:1, presets:BS.presets, cur:BS.cur, p:BS.p, seqs:BS.seqs, vol:CT.bsvol.v, rhythm:BS.rhythm, noteMode:BS.noteMode, arpOct:BS.arpOct })); }
-function bsSaveSoon(){ clearTimeout(bsSaveT); bsSaveT = setTimeout(bsSave, 1200); }
-(function(){ try { var s = JSON.parse(store(BSSAVE) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.presets) || s.presets.length !== BS.presets.length || !s.p || !s.p.o || !s.p.amp) return;
+function bsSaveSoon(){ clearTimeout(bsSaveT); bsSaveT = setTimeout(bsSave, saveMs(1200)); }
+function bsRestore(){ try { var s = JSON.parse(store(BSSAVE) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.presets) || s.presets.length !== BS.presets.length || !s.p || !s.p.o || !s.p.amp) return;
   BS.presets = s.presets; BS.cur = clamp(s.cur | 0, 0, 7); BS.p = s.p; if (Array.isArray(s.seqs) && s.seqs.length === 4) BS.seqs = s.seqs; if (typeof s.vol === 'number') CT.bsvol.v = clamp(s.vol, 0, 1);
-  BS.rhythm = clamp(s.rhythm | 0, 0, 31); BS.noteMode = clamp(s.noteMode | 0, 0, 7); if (BS.noteMode === 6) BS.noteMode = 7; BS.arpOct = clamp(s.arpOct | 0 || 1, 1, 4); } catch (e) {} })();
+  BS.rhythm = clamp(s.rhythm | 0, 0, 31); BS.noteMode = clamp(s.noteMode | 0, 0, 7); if (BS.noteMode === 6) BS.noteMode = 7; BS.arpOct = clamp(s.arpOct | 0 || 1, 1, 4); } catch (e) {} } bsRestore();
 
 function bsSay(m, ms){ BS.msg = String(m); BS.msgUntil = performance.now() + (ms || 1300); BS.dirty = true; }
 function bip(v){ var n = Math.round((v - 0.5) * 126); return (n > 0 ? '+' : '') + n; }
@@ -354,3 +354,5 @@ function bsUpdate(now, dt){
   if (now > BS.msgUntil && BS.msg){ BS.msg = ''; BS.dirty = true; }
   if (BS.dirty){ BS.dirty = false; bsPaintDisp(); }
 }
+
+RESTORE[BSSAVE] = function(){ bsRestore(); CT.bsvol.show(); bsSync(); bsApply(); BS.dirty = true; }; SAVENOW.push(bsSave);

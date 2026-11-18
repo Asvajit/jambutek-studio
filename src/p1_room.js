@@ -4,7 +4,12 @@ var A = window.JB_ASSETS;
 var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var touchOnly = window.matchMedia('(hover: none)').matches;
 var live = document.getElementById('live');
-function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
+/* Online rooms hang off this one function: every machine saves and loads through it. REMOTE lets a machine "load" a state that
+   came from the room instead of this browser; storeHook sees every save so it can be sent on; only the room's first player keeps
+   writing the room's state into their own browser. */
+var MPON = false, MPHOST = true, REMOTE = {}, storeHook = null, RESTORE = {}, SAVENOW = [];
+function saveMs(d){ return MPON ? 250 : d; }
+function store(k, v){ try { if (v === undefined) return (k in REMOTE) ? REMOTE[k] : localStorage.getItem(k); if (storeHook) storeHook(k, v); if (!MPON || MPHOST || k.indexOf('jambutek-studio-') !== 0) localStorage.setItem(k, v); } catch (e) {} return null; }
 
 /* ================= renderer: draw small, then blow it up with dither (same pipeline as the arcade) ================= */
 var canvas = document.getElementById('view');

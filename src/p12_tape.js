@@ -10,8 +10,8 @@ var TPG = new THREE.Group(); TPG.rotation.x = TPTILT; TPY.add(TPG);
 var TPEN = ['SPEED', 'START', 'END', 'MAGIC', 'TAPE', 'VOLUME'], TPSN = ['Kalimba', 'Choir', 'Tape Piano', 'Glass Bell', 'Pluck', 'Flute', 'Chord', 'Wash'];
 var TPPG = [[['Speed', 0.75], ['Gain', 0.7], ['Pan', 0.5]], [['Start point', 0], ['Attack', 0.02]], [['End point', 1], ['Decay', 0.35]], [['Space (delay < > reverb)', 0.62], ['Lo-fi', 0.15], ['Filter', 0.5]], [['Tape speed', 0.75]], [['Volume', 0.75], ['Loop level', 0.8]]];
 var TP = { pg:[0, 0, 0, 0, 0, 0], v:TPPG.map(function(p){ return p.map(function(q){ return q[1]; }); }), slot:0, chomp:false, samples:[], voices:[], held:{}, kb:{}, kbOct:0, loop:{ st:0, buf:null, rev:null, src:null, phase:0, bpm:120, dir:1 }, rec:null, sampling:null, vis:[] };
-(function(){ try { var s = JSON.parse(store('jambutek-studio-tape-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.vals) && s.vals.length === 6){ s.vals.forEach(function(p, i){ if (Array.isArray(p)) p.forEach(function(x, j){ if (typeof x === 'number' && j < TP.v[i].length) TP.v[i][j] = clamp(x, 0, 1); }); }); TP.slot = clamp(s.slot | 0, 0, 7); } } catch (e) {} })();
-var tpSaveT = null; function tpSaveSoon(){ clearTimeout(tpSaveT); tpSaveT = setTimeout(function(){ store('jambutek-studio-tape-v1', JSON.stringify({ v:1, vals:TP.v, slot:TP.slot })); }, 900); }
+function tpRestore(){ try { var s = JSON.parse(store('jambutek-studio-tape-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.vals) && s.vals.length === 6){ s.vals.forEach(function(p, i){ if (Array.isArray(p)) p.forEach(function(x, j){ if (typeof x === 'number' && j < TP.v[i].length) TP.v[i][j] = clamp(x, 0, 1); }); }); TP.slot = clamp(s.slot | 0, 0, 7); } } catch (e) {} } tpRestore();
+var tpSaveT = null; function tpSaveNow(){ store('jambutek-studio-tape-v1', JSON.stringify({ v:1, vals:TP.v, slot:TP.slot })); } function tpSaveSoon(){ clearTimeout(tpSaveT); tpSaveT = setTimeout(tpSaveNow, saveMs(900)); }
 var TPEP = [[64, 32.5, 6.3], [96.4, 32, 6.3], [127, 32, 6.3], [158.5, 32, 6.3], [197, 29.5, 15], [284, 31.5, 6.3]], TPWX = function(i){ return 19.1 + i * 18.65; }, TPBX = [28.4, 47, 84.4, 103, 121.7, 159, 177.6, 215, 233.6, 252.3];
 var tpC = mk(TPW * 6, TPD * 6), tpTex = null;
 function paintTP(){
@@ -216,3 +216,5 @@ function tpUpdate(now, dt){
 }
 function tpTempo(){ tpApply(); var L = TP.loop; if (TPA && L.src) L.src.playbackRate.setTargetAtTime(Math.abs(tpTapeRate()) * M.bpm / L.bpm, ac.currentTime, 0.05); }
 function pkIR(q){ var secs = 0.5 + q / 8 * 6, len = Math.round(ac.sampleRate * secs), ir = ac.createBuffer(2, len, ac.sampleRate); for (var ch = 0; ch < 2; ch++){ var d = ir.getChannelData(ch), lp = 0; for (var i = 0; i < len; i++){ var t = i / len, w = (Math.random() * 2 - 1) * Math.pow(1 - t, 3) * (i < 400 ? i / 400 : 1); lp += (w - lp) * (0.7 - t * 0.45); d[i] = lp; } } return ir; }
+
+RESTORE['jambutek-studio-tape-v1'] = function(){ tpRestore(); TPEP.forEach(function(p, k){ var c = CT['tpe' + k]; c.v = TP.v[k][TP.pg[k]]; c.show(); }); tpApply(); }; SAVENOW.push(tpSaveNow);

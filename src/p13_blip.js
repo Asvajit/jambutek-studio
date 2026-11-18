@@ -9,8 +9,8 @@ function mbz(u){ return (u - MBD / 2) * SC; }
 var MBY = new THREE.Group(); MBY.position.set(MBPOS.x, MBH, MBPOS.z); scene.add(MBY);
 var MBG = new THREE.Group(); MBG.rotation.x = MBTILT; MBY.add(MBG);
 var MB = { p:{ vol:0.8, adec:0.45, fdec:0.4, cut:0.45, res:0.35, glide:0.1, det:0.3, rate:0.4, depth:0.15, sus:1, sub:1, wave:0, dest:1 }, stack:[], kb:{}, kbOct:0, vis:[], gate:0 };
-(function(){ try { var s = JSON.parse(store('jambutek-studio-blip-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(MB.p).forEach(function(k){ if (typeof s.p[k] === 'number') MB.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} })();
-var mbSaveT = null; function mbSaveSoon(){ clearTimeout(mbSaveT); mbSaveT = setTimeout(function(){ store('jambutek-studio-blip-v1', JSON.stringify({ v:1, p:MB.p })); }, 800); }
+function mbRestore(){ try { var s = JSON.parse(store('jambutek-studio-blip-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(MB.p).forEach(function(k){ if (typeof s.p[k] === 'number') MB.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} } mbRestore();
+var mbSaveT = null; function mbSaveNow(){ store('jambutek-studio-blip-v1', JSON.stringify({ v:1, p:MB.p })); } function mbSaveSoon(){ clearTimeout(mbSaveT); mbSaveT = setTimeout(mbSaveNow, saveMs(800)); }
 var mbC = mk(MBW * 8, MBD * 8), mbTex = null;
 function paintMB(){
   var g = mbC.getContext('2d'); g.setTransform(8, 0, 0, 8, 0, 0);
@@ -99,3 +99,5 @@ function mbUpdate(now, dt){
   MB.gate = lerp(MB.gate, on ? 1 : 0, 1 - Math.exp(-dt * 25)); ledOn(MBLED.on, 0.25 + MB.gate * 0.75);
   if (MBA){ var c = 60 * Math.pow(2, MB.p.cut * 7.2 + snCv(3) * 2), tt = ac.currentTime; MBA.f1.frequency.setTargetAtTime(clamp(c, 30, 16000), tt, 0.015); MBA.f2.frequency.setTargetAtTime(clamp(c, 30, 16000), tt, 0.015); }
 }
+
+RESTORE['jambutek-studio-blip-v1'] = function(){ mbRestore(); CTLIST.forEach(function(c){ if (c.dev !== 'mb') return; if (c.sw) c.set(MB.p[c.pk] ? 1 : 0); else { c.v = MB.p[c.pk]; c.show(); } }); mbApply(); }; SAVENOW.push(mbSaveNow);

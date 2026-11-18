@@ -45,9 +45,9 @@ function amFactory(){ return [
 var AM = { presets:amFactory(), cur:0, p:null, page:0, sub:0, last:'freq', voices:[], held:{}, latched:{}, order:[], lastNote:60, lastVel:0.8, arpI:0, vis:[], lph:[0, 0, 0], lval:[0, 0, 0], lsh:[0, 0, 0], kb:{}, kbOct:0, dirty:true, msg:'', msgUntil:0, eff:{},
   seq:[0, null, 12, 0, null, 7, 0, 10, null, 0, 12, null, 7, 3, null, 5] };
 AM.p = JSON.parse(JSON.stringify(AM.presets[0]));
-var amSaveT = null; function amSaveSoon(){ clearTimeout(amSaveT); amSaveT = setTimeout(function(){ AM.presets[AM.cur] = JSON.parse(JSON.stringify(AM.p)); store('jambutek-studio-ambi-v1', JSON.stringify({ v:1, presets:AM.presets, cur:AM.cur })); }, 1200); }
-(function(){ try { var s = JSON.parse(store('jambutek-studio-ambi-v1') || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.presets) || s.presets.length !== AM.presets.length) return;
-  s.presets.forEach(function(p, i){ if (p && typeof p === 'object') Object.keys(AMP).forEach(function(k){ if (typeof p[k] === 'number') AM.presets[i][k] = clamp(p[k], 0, 1); }); }); AM.cur = clamp(s.cur | 0, 0, AM.presets.length - 1); AM.p = JSON.parse(JSON.stringify(AM.presets[AM.cur])); } catch (e) {} })();
+var amSaveT = null; function amSaveNow(){ AM.presets[AM.cur] = JSON.parse(JSON.stringify(AM.p)); store('jambutek-studio-ambi-v1', JSON.stringify({ v:1, presets:AM.presets, cur:AM.cur })); } function amSaveSoon(){ clearTimeout(amSaveT); amSaveT = setTimeout(amSaveNow, saveMs(1200)); }
+function amRestore(){ try { var s = JSON.parse(store('jambutek-studio-ambi-v1') || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.presets) || s.presets.length !== AM.presets.length) return;
+  s.presets.forEach(function(p, i){ if (p && typeof p === 'object') Object.keys(AMP).forEach(function(k){ if (typeof p[k] === 'number') AM.presets[i][k] = clamp(p[k], 0, 1); }); }); AM.cur = clamp(s.cur | 0, 0, AM.presets.length - 1); AM.p = JSON.parse(JSON.stringify(AM.presets[AM.cur])); } catch (e) {} } amRestore();
 var amC = mk(AMW * 5, AMD * 5), amTex = null, AMKX = [104, 142, 180, 218], AMKY = [50, 114], AMSX = [78, 100.6, 123.2, 145.8, 168.4, 191, 213.6, 236.2];
 function paintAM(){
   var g = amC.getContext('2d'); g.setTransform(5, 0, 0, 5, 0, 0); g.fillStyle = '#E6E6E2'; g.fillRect(0, 0, AMW, AMD);
@@ -229,3 +229,5 @@ function amUpdate(now, dt){
   if (now > AM.msgUntil && AM.msg){ AM.msg = ''; AM.dirty = true; }
   if (AM.dirty){ AM.dirty = false; amPaintDisp(); }
 }
+
+RESTORE['jambutek-studio-ambi-v1'] = function(){ amRestore(); amSync(); amApply(); }; SAVENOW.push(amSaveNow);

@@ -76,6 +76,46 @@ body{
 @media (hover:none){ .desk{ display:none } }
 @media (hover:hover){ .touch{ display:none } }
 .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+#mpLobby{ position:fixed; inset:0; z-index:12; display:grid; place-items:center; overflow-y:auto; padding:12px 0; background:rgba(4,5,8,.62); }
+#mpLobby[hidden]{ display:none }
+#mpLobby .card{ width:min(420px, calc(100% - 32px)); background:#0E1016; border:1px solid rgba(216,216,216,.18); border-radius:10px; padding:22px 22px 18px; color:var(--bone); box-shadow:0 20px 60px rgba(0,0,0,.6) }
+#mpLobby h2{ margin:0 0 4px; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:#FFE15A }
+#mpLobby p{ margin:0 0 16px; font-size:12px; line-height:1.5; color:rgba(216,216,216,.7) }
+#mpLobby label{ display:block; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:rgba(216,216,216,.6); margin:0 0 6px }
+#mpLobby input{ width:100%; box-sizing:border-box; font:inherit; font-size:14px; color:#fff; background:#05060A; border:1px solid rgba(216,216,216,.25); border-radius:6px; padding:10px 12px; margin:0 0 14px; text-transform:none }
+#mpSkins{ display:flex; gap:10px; margin:0 0 14px }
+#mpLobby #mpSkins button:hover{ border-color:rgba(46,230,214,.6) }
+#mpLobby #mpSkins button{ flex:1; margin:0; padding:8px 6px; background:#05060A; border:1px solid rgba(216,216,216,.25); border-radius:8px; color:#fff; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; font:inherit; font-size:11px; letter-spacing:.12em; text-transform:uppercase }
+#mpLobby #mpSkins button canvas{ width:54px; height:90px; image-rendering:auto }
+#mpLobby #mpSkins button.on{ background:#0B1F22;  border-color:#2EE6D6; box-shadow:0 0 0 2px rgba(46,230,214,.35), 0 0 18px rgba(46,230,214,.25) }
+#mpLobby input.code{ text-transform:uppercase; letter-spacing:.3em }
+#mpLobby .row{ display:flex; gap:8px; align-items:flex-start }
+#mpLobby .row input{ flex:1; margin:0 }
+#mpLobby button{ font:inherit; font-size:12px; letter-spacing:.1em; text-transform:uppercase; border:0; border-radius:6px; padding:11px 14px; cursor:pointer; color:#0B0D12; background:#90F0A8 }
+#mpLobby button.alt{ background:#30A8F0 }
+#mpLobby button.ghost{ background:none; color:rgba(216,216,216,.7); border:1px solid rgba(216,216,216,.25); width:100%; margin-top:14px }
+#mpLobby .or{ text-align:center; font-size:10px; letter-spacing:.2em; color:rgba(216,216,216,.4); margin:14px 0 }
+#mpLobby .err{ color:#FF6F88; font-size:12px; min-height:16px; margin-top:10px }
+#mpLobby #mpCreate{ width:100% }
+#mpHud{ position:fixed; z-index:5; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); right:max(14px, env(safe-area-inset-right, 0px)); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--bone); background:rgba(8,10,14,.72); border:1px solid rgba(216,216,216,.2); border-radius:8px; padding:7px 10px; max-width:260px }
+#mpHud[hidden]{ display:none }
+#mpHud .code{ color:#FFE15A; letter-spacing:.24em }
+#mpHud button{ font:inherit; font-size:10px; letter-spacing:.1em; text-transform:uppercase; margin-left:8px; padding:2px 6px; border-radius:4px; border:1px solid rgba(216,216,216,.3); background:none; color:var(--bone); cursor:pointer }
+#mpHud ul{ list-style:none; margin:6px 0 0; padding:0; text-transform:none; letter-spacing:.04em }
+#mpHud li{ display:flex; align-items:center; gap:6px; line-height:1.6 }
+#mpHud li i{ width:8px; height:8px; border-radius:50%; display:inline-block }
+#mpChat{ position:fixed; z-index:5; left:max(16px, env(safe-area-inset-left, 0px)); bottom:calc(40px + env(safe-area-inset-bottom, 0px)); width:min(380px, calc(100% - 32px)); pointer-events:none; font-size:12px }
+#mpChat[hidden]{ display:none }
+#mpChat .log div{ margin-top:3px; color:#fff; text-shadow:0 1px 0 #000, 0 0 6px #000; transition:opacity .6s; line-height:1.4 }
+#mpChat .log div.old{ opacity:0 }
+#mpChat.open .log div.old{ opacity:.75 }
+#mpChat .log b{ font-weight:500 }
+#mpChat .log .sys{ color:rgba(216,216,216,.7); font-style:italic }
+#mpChat input{ pointer-events:auto; display:none; width:100%; box-sizing:border-box; margin-top:6px; font:inherit; font-size:13px; color:#fff; background:rgba(5,6,10,.85); border:1px solid rgba(216,216,216,.35); border-radius:6px; padding:8px 10px }
+#mpChat.open input{ display:block }
+#mpChat .tip{ margin-top:4px; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:rgba(216,216,216,.55); text-shadow:0 1px 0 #000 }
+#mpChat.open .tip{ display:none }
+#mpChat{ margin-bottom:46px }   /* clear of the studio hint line */
 </style>
 
 <canvas id="view" aria-label="A dark studio room with a grid sequencer, a drum machine, four synthesizers, a sampler and a mixer in a row on angled stands"></canvas>
@@ -89,12 +129,29 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.2</span>
+    <span id="verFps">studio v1.3</span>
   </div>
 </div>
 
 <div id="xh" hidden><div class="plus"></div><div class="lab" id="xhLab"></div></div>
 <div id="tip" hidden></div>
+<div id="mpLobby" hidden>
+  <div class="card">
+    <h2>Jambutek Studio &middot; online</h2>
+    <p>Make a room and send the code to up to 5 friends, or type a friend's code to join them. The first one in brings their patterns; the room resets when everyone leaves.</p>
+    <label for="mpName">Your name</label>
+    <input id="mpName" maxlength="16" autocomplete="nickname" placeholder="e.g. Roo">
+    <label>Pick your look</label>
+    <div id="mpSkins"></div>
+    <button type="button" id="mpCreate">Make a new room</button>
+    <div class="or">or join a friend</div>
+    <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="CODE" autocomplete="off"><button type="button" class="alt" id="mpJoin">Join</button></div>
+    <div class="err" id="mpErr"></div>
+    <button type="button" class="ghost" id="mpSolo">Play solo</button>
+  </div>
+</div>
+<div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
+<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="tip"><b>T</b> to chat</div></div>
 <div id="toast"></div>
 <div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
 
