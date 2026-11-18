@@ -14,24 +14,73 @@ var MP = (function(){
   var nameIn = document.getElementById('mpName'), codeIn = document.getElementById('mpCode'), err = document.getElementById('mpErr'), skinBox = document.getElementById('mpSkins');
   try { nameIn.value = localStorage.getItem('jambutek-name') || ''; } catch (e) {}
   var SKINR = {"head": [[0.15708, 0.15875, 0.21708, 0.22375], [0.03208, 0.15875, 0.09208, 0.22375], [0.09458, 0.09542, 0.15458, 0.15625], [0.09458, 0.22625, 0.15458, 0.28625], [0.09458, 0.15875, 0.15458, 0.22375], [0.21958, 0.15875, 0.27958, 0.22375]], "hat": [[0.46125, 0.16625, 0.52958, 0.18208], [0.32042, 0.16625, 0.38875, 0.18208], [0.39125, 0.09542, 0.45875, 0.16375], [0.39125, 0.18458, 0.45875, 0.25208], [0.39125, 0.16625, 0.45875, 0.18208], [0.53208, 0.16625, 0.59958, 0.18208]], "torso": [[0.79792, 0.15208, 0.85375, 0.29708], [0.64042, 0.15208, 0.69625, 0.29708], [0.69875, 0.09542, 0.79542, 0.14958], [0.69875, 0.29958, 0.79542, 0.35542], [0.69875, 0.15208, 0.79542, 0.29708], [0.85625, 0.15208, 0.95208, 0.29708]], "armL": [[0.08958, 0.46875, 0.11958, 0.60292], [0.03042, 0.46875, 0.06042, 0.60292], [0.06292, 0.43708, 0.08708, 0.46625], [0.06292, 0.60542, 0.08708, 0.63542], [0.06292, 0.46875, 0.08708, 0.60292], [0.12208, 0.46875, 0.14708, 0.60292]], "armR": [[0.32375, 0.46958, 0.35292, 0.60292], [0.26542, 0.46958, 0.29458, 0.60292], [0.29708, 0.43708, 0.32125, 0.46708], [0.29708, 0.60542, 0.32125, 0.63625], [0.29708, 0.46958, 0.32125, 0.60292], [0.35542, 0.46958, 0.37958, 0.60292]], "legL": [[0.57375, 0.47792, 0.61042, 0.57625], [0.50125, 0.47792, 0.53792, 0.57625], [0.54042, 0.43792, 0.57125, 0.47542], [0.54042, 0.57875, 0.57125, 0.61542], [0.54042, 0.47792, 0.57125, 0.57625], [0.61292, 0.47792, 0.64375, 0.57625]], "legR": [[0.80792, 0.47792, 0.84458, 0.57625], [0.73542, 0.47792, 0.77208, 0.57625], [0.77458, 0.43875, 0.80542, 0.47542], [0.77458, 0.57875, 0.80542, 0.61542], [0.77458, 0.47792, 0.80542, 0.57625], [0.84708, 0.47792, 0.87875, 0.57625]], "shinL": [[0.10458, 0.75792, 0.14125, 0.85625], [0.03208, 0.75792, 0.06875, 0.85625], [0.07125, 0.71875, 0.10208, 0.75542], [0.07125, 0.85875, 0.10208, 0.89625], [0.07125, 0.75792, 0.10208, 0.85625], [0.14375, 0.75792, 0.17542, 0.85625]], "shinR": [[0.33958, 0.75792, 0.37625, 0.85625], [0.26625, 0.75792, 0.30292, 0.85625], [0.30542, 0.71792, 0.33708, 0.75542], [0.30542, 0.85875, 0.33708, 0.89792], [0.30542, 0.75792, 0.33708, 0.85625], [0.37875, 0.75792, 0.40958, 0.85625]], "shoeL": [[0.60208, 0.78125, 0.66208, 0.79625], [0.50125, 0.78125, 0.56125, 0.79625], [0.56375, 0.71542, 0.59958, 0.77875], [0.56375, 0.79875, 0.59958, 0.86125], [0.56375, 0.78125, 0.59958, 0.79625], [0.66458, 0.78125, 0.70208, 0.79625]], "shoeR": [[0.84458, 0.78125, 0.90458, 0.79625], [0.74292, 0.78125, 0.80292, 0.79625], [0.80542, 0.71875, 0.84208, 0.77875], [0.80542, 0.79875, 0.84208, 0.85875], [0.80542, 0.78125, 0.84208, 0.79625], [0.90708, 0.78125, 0.94375, 0.79625]]}, skinMats = [];
-  var SKINS = [{ n:'Jambu', a:'skin' }, { n:'Boss', a:'skin2' }], skinMats = {};
+  var SKINS = [{ n:'Night Owl', a:'sk0' }, { n:'Diva', a:'sk1' }, { n:'Specs', a:'sk2' }, { n:'Clown', a:'sk3' }, { n:'Overalls', a:'sk4' }, { n:'Boss', a:'sk5' }], skinMats = {};
   Q.skin = 0; try { Q.skin = Math.min(SKINS.length - 1, Math.max(0, +localStorage.getItem('jambutek-skin') || 0)); } catch (e) {}
-  function drawSkinPreview(cv, i){                   // flat front view built from the sheet's front faces
-    var im = new Image(); im.onload = function(){
-      var c = cv.getContext('2d'), W = cv.width, H = cv.height, sc = H / 1.95, iw = im.width, ih = im.height;
-      function part(key, w, h, cx, top){ var r = SKINR[key][4]; c.drawImage(im, r[0] * iw, r[1] * ih, (r[2] - r[0]) * iw, (r[3] - r[1]) * ih, W / 2 + (cx - w / 2) * sc, (1.92 - top) * sc, w * sc, h * sc); }
-      c.clearRect(0, 0, W, H);
-      part('shinL', 0.13, 0.39, -0.08, 0.39); part('shinR', 0.13, 0.39, 0.08, 0.39); part('legL', 0.13, 0.39, -0.08, 0.78); part('legR', 0.13, 0.39, 0.08, 0.78);
-      part('shoeL', 0.15, 0.07, -0.08, 0.07); part('shoeR', 0.15, 0.07, 0.08, 0.07); part('armL', 0.1, 0.52, -0.25, 1.30); part('armR', 0.1, 0.52, 0.25, 1.30);
-      part('torso', 0.38, 0.56, 0, 1.34); part('head', 0.24, 0.26, 0, 1.6); part('hat', 0.27, 0.07, 0, 1.68);
-    }; im.src = A[SKINS[i].a];
+  var PV = null;
+  function pvInit(){
+    if (PV) return PV;
+    var r = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true }); r.setPixelRatio(1); r.setSize(192, 300);
+    var sc = new THREE.Scene(); sc.add(new THREE.AmbientLight(0xffffff, 0.62));
+    var d = new THREE.DirectionalLight(0xffffff, 0.55); d.position.set(1.2, 2, 2.4); sc.add(d);
+    var d2 = new THREE.DirectionalLight(0xbfd8ff, 0.25); d2.position.set(-2, 1, -2); sc.add(d2);
+    var cam2 = new THREE.PerspectiveCamera(24, 192 / 300, 0.1, 20); cam2.position.set(0, 0.98, 4.6); cam2.lookAt(0, 0.88, 0);
+    PV = { r:r, sc:sc, cam:cam2, figs:[], mats:[] }; return PV;
   }
-  function paintSkins(){ [].forEach.call(skinBox.children, function(b, i){ b.classList.toggle('on', i === Q.skin); b.setAttribute('aria-pressed', i === Q.skin ? 'true' : 'false'); }); }
-  SKINS.forEach(function(sk, i){
-    var b = document.createElement('button'); b.type = 'button'; var cv = document.createElement('canvas'); cv.width = 144; cv.height = 240; b.appendChild(cv);
+  function pvFig(i){
+    var P = pvInit(); if (P.figs[i]) return P.figs[i];
+    var img = new Image(), t = new THREE.Texture(img); t.anisotropy = 4;
+    var m = new THREE.MeshLambertMaterial({ map:t }), g = new THREE.Group(); g.visible = false; P.sc.add(g);
+    function b(w, h, d, key, x, y, z){ var o = new THREE.Mesh(skinGeo(w, h, d, key), m); o.position.set(x, y, z); g.add(o); }
+    b(0.13, 0.39, 0.15, 'legL', -0.08, 0.585, 0); b(0.13, 0.39, 0.15, 'legR', 0.08, 0.585, 0);
+    b(0.13, 0.39, 0.15, 'shinL', -0.08, 0.195, 0); b(0.13, 0.39, 0.15, 'shinR', 0.08, 0.195, 0);
+    b(0.15, 0.07, 0.24, 'shoeL', -0.08, 0.035, 0.03); b(0.15, 0.07, 0.24, 'shoeR', 0.08, 0.035, 0.03);
+    b(0.38, 0.56, 0.22, 'torso', 0, 1.06, 0); b(0.1, 0.52, 0.12, 'armL', -0.25, 1.04, 0); b(0.1, 0.52, 0.12, 'armR', 0.25, 1.04, 0);
+    b(0.24, 0.26, 0.24, 'head', 0, 1.51, 0); b(0.27, 0.07, 0.27, 'hat', 0, 1.65, 0);
+    var F = P.figs[i] = { g:g, ready:false, ang:0 };
+    img.onload = function(){ t.needsUpdate = true; F.ready = true; pvDraw(i); }; img.src = A[SKINS[i].a];
+    return F;
+  }
+  function pvDraw(i){
+    var P = pvInit(), F = pvFig(i), btn = skinBox.children[i]; if (!F.ready || !btn) return;
+    P.figs.forEach(function(f){ if (f) f.g.visible = false; }); F.g.visible = true; F.g.rotation.y = F.ang;
+    P.r.render(P.sc, P.cam); var c = btn.querySelector('canvas').getContext('2d'); c.clearRect(0, 0, 192, 300); c.drawImage(P.r.domElement, 0, 0);
+  }
+  var pvSpin = -1, pvLast = 0;
+  function pvLoop(now){
+    if (pvSpin < 0) return;
+    var F = PV && PV.figs[pvSpin]; if (F){ F.ang += Math.min(0.05, (now - (pvLast || now)) / 1000) * 1.3; pvDraw(pvSpin); }
+    pvLast = now; requestAnimationFrame(pvLoop);
+  }
+  function pvHover(i, on){
+    var prev = pvSpin;
+    if (on){ if (pvSpin === i) return; pvSpin = i; pvLast = 0; if (prev < 0) requestAnimationFrame(pvLoop); }
+    else if (pvSpin === i) pvSpin = -1;
+    if (!on || (prev >= 0 && prev !== i)){ var k = on ? prev : i, F = PV && PV.figs[k]; if (F){ F.ang = 0; pvDraw(k); } }
+  }
+  function drawSkinPreview(cv, i){ pvFig(i); }
+  Q.taken = [];
+  function freeSkin(){ for (var i = 0; i < SKINS.length; i++) if (Q.taken.indexOf(i) < 0) return i; return 0; }
+  function paintSkins(){
+    if (Q.taken.indexOf(Q.skin) >= 0) Q.skin = freeSkin();
+    [].forEach.call(skinBox.children, function(b, i){ var tk = Q.taken.indexOf(i) >= 0; b.classList.toggle('on', i === Q.skin); b.classList.toggle('taken', tk); b.disabled = tk;
+      b.setAttribute('aria-pressed', i === Q.skin ? 'true' : 'false'); b.title = tk ? 'Taken in this room' : ''; }); }
+  var takenFor = '', takenT = 0;
+  function checkTaken(){
+    var c = (codeIn.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    if (c.length < 4){ if (Q.taken.length){ Q.taken = []; paintSkins(); } takenFor = ''; return; }
+    if (c === takenFor && performance.now() - takenT < 4000) return; takenFor = c; takenT = performance.now();
+    fetch('/room/' + c, { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+      if (!j || takenFor !== c) return; Q.taken = (j.taken || []).map(Number); paintSkins();
+    }).catch(function(){});
+  }
+  codeIn.addEventListener('input', checkTaken);
+  setInterval(function(){ if (Q.lobbyOpen) { takenT = 0; checkTaken(); } }, 5000);
+  setTimeout(function(){ SKINS.forEach(function(sk, i){
+    var b = document.createElement('button'); b.type = 'button'; var cv = document.createElement('canvas'); cv.width = 192; cv.height = 300; b.appendChild(cv);
+    ['mouseenter', 'focus'].forEach(function(ev){ b.addEventListener(ev, function(){ pvHover(i, true); }); }); ['mouseleave', 'blur'].forEach(function(ev){ b.addEventListener(ev, function(){ pvHover(i, false); }); });
     b.setAttribute('aria-label', sk.n); b.title = sk.n; skinBox.appendChild(b); drawSkinPreview(cv, i);
-    b.addEventListener('click', function(){ Q.skin = i; try { localStorage.setItem('jambutek-skin', i); } catch (e) {} paintSkins(); });
-  }); paintSkins();
+    b.addEventListener('click', function(){ if (Q.taken.indexOf(i) >= 0) return; Q.skin = i; try { localStorage.setItem('jambutek-skin', i); } catch (e) {} paintSkins(); });
+  }); paintSkins(); checkTaken(); }, 0);
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
   function newCode(){ var AB = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 4; i++) s += AB[(Math.random() * AB.length) | 0]; return s; }
   // ---- avatars: the arcade's characters ----
@@ -148,7 +197,7 @@ var MP = (function(){
     ws.onmessage = function(ev){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
       if (m.t === 'welcome'){
-        var first = !Q.id; Q.id = m.id; Q.color = m.color; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
+        var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
         if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 1.1 : 0.5; }
         Object.keys(Q.peers).forEach(removePeer);
         m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
@@ -184,7 +233,7 @@ var MP = (function(){
   }
   function showLobby(msg){ Q.lobbyOpen = true; lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
   function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); }
-  document.getElementById('mpCreate').addEventListener('click', function(){ start(newCode()); });
+  document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
   codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') start(codeIn.value); });
   nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? start(codeIn.value) : start(newCode())); });

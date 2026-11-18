@@ -3,6 +3,7 @@
    every knob they turn, keeps the latest state of each machine for people who arrive later,
    and wipes itself when everyone leaves. */
 const MAX_PLAYERS = 6;
+const SKINS = 6;                 // one of each look per room
 const COLORS = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
 
 export class Room {
@@ -24,6 +25,10 @@ export class Room {
     for (const p of this.players(except)) { try { p.ws.send(s); } catch (e) {} }
   }
   async fetch(req) {
+    if (new URL(req.url).pathname.startsWith('/room/')) {    // which looks are already being worn here
+      const ps = this.players();
+      return Response.json({ n: ps.length, taken: ps.map((p) => p.a.skin || 0) }, { headers: { 'Cache-Control': 'no-store' } });
+    }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 });
     const url = new URL(req.url);
     const pair = new WebSocketPair();
@@ -37,14 +42,16 @@ export class Room {
     }
     if (!others.length) { this.world = {}; await this.ctx.storage.deleteAll(); }      // first one in: a fresh room
     const name = (url.searchParams.get('name') || 'Guest').replace(/[<>]/g, '').trim().slice(0, 16) || 'Guest';
-    const skin = Math.max(0, Math.min(7, parseInt(url.searchParams.get('skin') || '0', 10) || 0));
+    const takenSkins = others.map((p) => p.a.skin || 0);
+    let skin = Math.max(0, Math.min(SKINS - 1, parseInt(url.searchParams.get('skin') || '0', 10) || 0));
+    if (takenSkins.includes(skin)) { for (let i = 0; i < SKINS; i++) if (!takenSkins.includes(i)) { skin = i; break; } }
     const used = others.map((p) => p.a.color);
     const color = COLORS.find((c) => !used.includes(c)) || COLORS[0];
     const id = crypto.randomUUID().slice(0, 8);
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ id, name, color, skin, s: null });
     server.send(JSON.stringify({
-      t: 'welcome', id, color, max: MAX_PLAYERS, now: Date.now(),
+      t: 'welcome', id, color, skin, max: MAX_PLAYERS, now: Date.now(),
       players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s })),
       world: this.world,
     }));
@@ -96,6 +103,11 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname === '/mp-ping') return Response.json({ ok: true, max: MAX_PLAYERS, v: 1 });
+    if (url.pathname.startsWith('/room/')) {
+      const code = url.pathname.slice(6).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+      if (code.length < 4) return Response.json({ n: 0, taken: [] });
+      return env.ROOMS.get(env.ROOMS.idFromName(code)).fetch(req);
+    }
     if (url.pathname.startsWith('/ws/')) {
       const code = url.pathname.slice(4).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
       if (code.length < 4) return new Response('Bad room code', { status: 400 });
