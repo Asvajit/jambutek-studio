@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.9</span>
+    <span id="verFps">studio v1.10</span>
   </div>
 </div>
 
@@ -4423,24 +4423,31 @@ var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
-BLOCKS.push([RIG.x - 1.5, RIG.x + 1.5, RIG.z - 1.5, RIG.z + 1.5]);          // nobody walks through the middle of the rig
-// acoustic foam: low-poly wedge tiles in the Jambutek colours, in blocks along the side walls and behind the gear
+BLOCKS.push([RIG.x - RIG.R - 0.42, RIG.x + RIG.R + 0.42, RIG.z - RIG.R - 0.42, RIG.z + RIG.R + 0.42]);          // nobody walks through the middle of the rig
+// one long desk bent into a square: every instrument sits on it, with a raised bridge along the inside edge for the sequencers
+var TABLE_Y = 0.78, TIER_Y = 1.12, TBL_IN = RIG.R - 0.68, TBL_OUT = RIG.R + 0.42, TIER_OUT = RIG.R - 0.34;
+function riser(Y, H, W, D2, TH, tilt, baseY){            // a solid wedge from the desk up to a tilted tray; Y is the upright group whose origin is H above the floor
+  var u = TH + 0.026, zf = D2 / 2 + 0.03, c = Math.cos(tilt), sn = Math.sin(tilt), yb = baseY - H;
+  var sh = new THREE.Shape();
+  sh.moveTo(-u * sn + zf * c, -u * c - zf * sn); sh.lineTo(-u * sn - zf * c, -u * c + zf * sn);
+  sh.lineTo(-u * sn - zf * c, yb); sh.lineTo(-u * sn + zf * c, yb); sh.closePath();
+  var g = new THREE.ExtrudeGeometry(sh, { depth:W, bevelEnabled:false }); g.translate(0, 0, -W / 2); g.rotateY(-Math.PI / 2);
+  var m = new THREE.Mesh(g, metalMat); m.castShadow = true; Y.add(m); return m;
+}
 (function(){
-  var cols = [0xC00048, 0x1878C0, 0x16202E, 0x16202E, 0x30A8F0, 0x16202E];
-  var geoA = new THREE.ConeGeometry(0.2, 0.09, 4, 1); geoA.rotateY(Math.PI / 4); geoA.rotateX(Math.PI / 2);
-  var mats = cols.map(function(c){ return new THREE.MeshLambertMaterial({ color:c }); });
-  function block(x, y, z, rotY, nx, ny, seed){
-    var g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY; scene.add(g);
-    var back = new THREE.Mesh(new THREE.BoxGeometry(nx * 0.29 + 0.04, ny * 0.29 + 0.04, 0.02), blackMat); back.position.z = 0.01; g.add(back);
-    for (var i = 0; i < nx; i++) for (var j = 0; j < ny; j++){
-      var m = new THREE.Mesh(geoA, mats[(i * 7 + j * 3 + seed) % mats.length]);
-      m.position.set((i - (nx - 1) / 2) * 0.29, (j - (ny - 1) / 2) * 0.29, 0.065); g.add(m);
-    }
-    solid(g, 'foam');
+  function ring(rIn, rOut, y0, y1, mat, tag){
+    var w = rOut - rIn, mid = (rIn + rOut) / 2, h = y1 - y0, g = new THREE.Group(); g.position.set(RIG.x, (y0 + y1) / 2, RIG.z); scene.add(g);
+    [-1, 1].forEach(function(s){
+      var a = new THREE.Mesh(new THREE.BoxGeometry(rOut * 2, h, w), mat); a.position.z = s * mid; g.add(a);
+      var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, rIn * 2), mat); b.position.x = s * mid; g.add(b);
+      a.castShadow = b.castShadow = true; a.receiveShadow = b.receiveShadow = true;
+    });
+    solid(g, tag);
   }
-  block(-2.7, 1.75, ROOM.z0, 0, 5, 4, 1); block(2.7, 1.75, ROOM.z0, 0, 5, 4, 4);
-  block(ROOM.x0, 1.7, 1.2, Math.PI / 2, 6, 4, 2); block(ROOM.x0, 1.7, 4.8, Math.PI / 2, 6, 4, 5);
-  block(ROOM.x1, 1.7, 1.2, -Math.PI / 2, 6, 4, 3); block(ROOM.x1, 1.7, 4.8, -Math.PI / 2, 6, 4, 0);
+  ring(TBL_IN + 0.1, TBL_OUT - 0.14, 0, TABLE_Y - 0.05, metalMat, 'desk');          // a plinth set back under the top, so there are no legs at all
+  ring(TBL_IN, TBL_OUT, TABLE_Y - 0.05, TABLE_Y, woodMat, 'desk');
+  ring(TBL_IN + 0.03, TIER_OUT - 0.03, TABLE_Y, TIER_Y - 0.03, metalMat, 'desk');
+  ring(TBL_IN, TIER_OUT, TIER_Y - 0.03, TIER_Y, woodMat, 'desk');
 })();
 // the label's jambu in neon on the back wall, as in the arcade
 /* a moulded cut-out: the artwork's own silhouette, extruded, with the art on its face */
@@ -4576,15 +4583,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   // the stand: a tilted tray with a front lip, on two A-frame legs
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; tray.castShadow = true; TRG.add(tray); solid(tray, 'trbody');
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); TRG.add(lip);
-  var st = new THREE.Group(); TRY.add(st);
-  [-1, 1].forEach(function(s){
-    var x = s * 0.36;
-    var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, TRH - 0.12, 0.045), metalMat); post.position.set(x, (TRH - 0.12) / 2, -0.02); post.castShadow = true; st.add(post);
-    var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, 0.0175, 0); st.add(foot);
-    var brace = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.56), metalMat); brace.position.set(x, 0.5, 0.0); brace.rotation.x = -1.02; st.add(brace);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, TRH - (TH + 0.05) * Math.cos(TILT), -(TH + 0.05) * Math.sin(TILT)); arm.rotation.x = TILT; st.add(arm);
-  });
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.03), metalMat); bar.position.set(0, 0.28, -0.02); st.add(bar);
+  var st = new THREE.Group(); st.position.y = TRH; TRY.add(st); riser(st, TRH, W2 + 0.08, D2, TH, TILT, TABLE_Y);
   solid(st, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
 })();
@@ -5296,14 +5295,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MFG.add(body);
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; MFG.add(tray);
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); MFG.add(lip);
-  [-1, 1].forEach(function(s){
-    var x = s * 0.5;
-    var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, MFH - 0.12, 0.045), metalMat); post.position.set(x, -MFH + (MFH - 0.12) / 2, -0.02); MFY.add(post);
-    var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, -MFH + 0.0175, 0); MFY.add(foot);
-    var brace = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.5), metalMat); brace.position.set(x, -MFH + 0.46, 0); brace.rotation.x = -1.02; MFY.add(brace);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, -(TH + 0.05) * Math.cos(MFTILT), -(TH + 0.05) * Math.sin(MFTILT)); arm.rotation.x = MFTILT; MFY.add(arm);
-  });
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.03), metalMat); bar.position.set(0, -MFH + 0.28, -0.02); MFY.add(bar);
+  riser(MFY, MFH, W2 + 0.08, D2, TH, MFTILT, TABLE_Y);
   devBody(MFY, 'mf');
   BLOCKS.push(devBlock(MFPOS, 0.7));
 })();
@@ -5984,14 +5976,7 @@ function cable(pts, r){
 function standFor(Y, G, W2, D2, TH, H, tilt, legX){                 // tray + lip on the tilted group, legs on the upright one
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; G.add(tray);
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); G.add(lip);
-  [-1, 1].forEach(function(s){
-    var x = s * legX;
-    var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, H - 0.12, 0.045), metalMat); post.position.set(x, -H + (H - 0.12) / 2, -0.02); Y.add(post);
-    var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, -H + 0.0175, 0); Y.add(foot);
-    var brace = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.5), metalMat); brace.position.set(x, -H + 0.46, 0); brace.rotation.x = -1.02; Y.add(brace);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, -(TH + 0.05) * Math.cos(tilt), -(TH + 0.05) * Math.sin(tilt)); arm.rotation.x = tilt; Y.add(arm);
-  });
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(legX * 2, 0.03, 0.03), metalMat); bar.position.set(0, -H + 0.28, -0.02); Y.add(bar);
+  riser(Y, H, W2 + 0.08, D2, TH, tilt, TABLE_Y);
 }
 
 /* ================= the bass synth: a two-oscillator mono synth with a sub, laid out from the Bass Station II guide's top-panel drawing ================= */
@@ -7482,7 +7467,7 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SNG.add(body);
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.02, D2 + 0.05), woodMat); tray.position.y = -TH - 0.012; SNG.add(tray);
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), woodMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
-  [-1, 1].forEach(function(s){ var post = new THREE.Mesh(new THREE.BoxGeometry(0.04, SNH - 0.06, 0.04), metalMat); post.position.set(s * 0.25, -(SNH - 0.06) / 2 - 0.06, -0.13); SNY.add(post); });
+  riser(SNY, SNH, W2 + 0.05, D2, TH, SNTILT, TIER_Y);
   devBody(SNY, DK);
   var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
   SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });
@@ -8335,7 +8320,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.9 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.10 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

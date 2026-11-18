@@ -87,15 +87,7 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   // the stand: a tilted tray with a front lip, on two A-frame legs
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; tray.castShadow = true; TRG.add(tray); solid(tray, 'trbody');
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); TRG.add(lip);
-  var st = new THREE.Group(); TRY.add(st);
-  [-1, 1].forEach(function(s){
-    var x = s * 0.36;
-    var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, TRH - 0.12, 0.045), metalMat); post.position.set(x, (TRH - 0.12) / 2, -0.02); post.castShadow = true; st.add(post);
-    var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, 0.0175, 0); st.add(foot);
-    var brace = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.56), metalMat); brace.position.set(x, 0.5, 0.0); brace.rotation.x = -1.02; st.add(brace);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, TRH - (TH + 0.05) * Math.cos(TILT), -(TH + 0.05) * Math.sin(TILT)); arm.rotation.x = TILT; st.add(arm);
-  });
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.03), metalMat); bar.position.set(0, 0.28, -0.02); st.add(bar);
+  var st = new THREE.Group(); st.position.y = TRH; TRY.add(st); riser(st, TRH, W2 + 0.08, D2, TH, TILT, TABLE_Y);
   solid(st, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
 })();

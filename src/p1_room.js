@@ -200,24 +200,31 @@ var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
-BLOCKS.push([RIG.x - 1.5, RIG.x + 1.5, RIG.z - 1.5, RIG.z + 1.5]);          // nobody walks through the middle of the rig
-// acoustic foam: low-poly wedge tiles in the Jambutek colours, in blocks along the side walls and behind the gear
+BLOCKS.push([RIG.x - RIG.R - 0.42, RIG.x + RIG.R + 0.42, RIG.z - RIG.R - 0.42, RIG.z + RIG.R + 0.42]);          // nobody walks through the middle of the rig
+// one long desk bent into a square: every instrument sits on it, with a raised bridge along the inside edge for the sequencers
+var TABLE_Y = 0.78, TIER_Y = 1.12, TBL_IN = RIG.R - 0.68, TBL_OUT = RIG.R + 0.42, TIER_OUT = RIG.R - 0.34;
+function riser(Y, H, W, D2, TH, tilt, baseY){            // a solid wedge from the desk up to a tilted tray; Y is the upright group whose origin is H above the floor
+  var u = TH + 0.026, zf = D2 / 2 + 0.03, c = Math.cos(tilt), sn = Math.sin(tilt), yb = baseY - H;
+  var sh = new THREE.Shape();
+  sh.moveTo(-u * sn + zf * c, -u * c - zf * sn); sh.lineTo(-u * sn - zf * c, -u * c + zf * sn);
+  sh.lineTo(-u * sn - zf * c, yb); sh.lineTo(-u * sn + zf * c, yb); sh.closePath();
+  var g = new THREE.ExtrudeGeometry(sh, { depth:W, bevelEnabled:false }); g.translate(0, 0, -W / 2); g.rotateY(-Math.PI / 2);
+  var m = new THREE.Mesh(g, metalMat); m.castShadow = true; Y.add(m); return m;
+}
 (function(){
-  var cols = [0xC00048, 0x1878C0, 0x16202E, 0x16202E, 0x30A8F0, 0x16202E];
-  var geoA = new THREE.ConeGeometry(0.2, 0.09, 4, 1); geoA.rotateY(Math.PI / 4); geoA.rotateX(Math.PI / 2);
-  var mats = cols.map(function(c){ return new THREE.MeshLambertMaterial({ color:c }); });
-  function block(x, y, z, rotY, nx, ny, seed){
-    var g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY; scene.add(g);
-    var back = new THREE.Mesh(new THREE.BoxGeometry(nx * 0.29 + 0.04, ny * 0.29 + 0.04, 0.02), blackMat); back.position.z = 0.01; g.add(back);
-    for (var i = 0; i < nx; i++) for (var j = 0; j < ny; j++){
-      var m = new THREE.Mesh(geoA, mats[(i * 7 + j * 3 + seed) % mats.length]);
-      m.position.set((i - (nx - 1) / 2) * 0.29, (j - (ny - 1) / 2) * 0.29, 0.065); g.add(m);
-    }
-    solid(g, 'foam');
+  function ring(rIn, rOut, y0, y1, mat, tag){
+    var w = rOut - rIn, mid = (rIn + rOut) / 2, h = y1 - y0, g = new THREE.Group(); g.position.set(RIG.x, (y0 + y1) / 2, RIG.z); scene.add(g);
+    [-1, 1].forEach(function(s){
+      var a = new THREE.Mesh(new THREE.BoxGeometry(rOut * 2, h, w), mat); a.position.z = s * mid; g.add(a);
+      var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, rIn * 2), mat); b.position.x = s * mid; g.add(b);
+      a.castShadow = b.castShadow = true; a.receiveShadow = b.receiveShadow = true;
+    });
+    solid(g, tag);
   }
-  block(-2.7, 1.75, ROOM.z0, 0, 5, 4, 1); block(2.7, 1.75, ROOM.z0, 0, 5, 4, 4);
-  block(ROOM.x0, 1.7, 1.2, Math.PI / 2, 6, 4, 2); block(ROOM.x0, 1.7, 4.8, Math.PI / 2, 6, 4, 5);
-  block(ROOM.x1, 1.7, 1.2, -Math.PI / 2, 6, 4, 3); block(ROOM.x1, 1.7, 4.8, -Math.PI / 2, 6, 4, 0);
+  ring(TBL_IN + 0.1, TBL_OUT - 0.14, 0, TABLE_Y - 0.05, metalMat, 'desk');          // a plinth set back under the top, so there are no legs at all
+  ring(TBL_IN, TBL_OUT, TABLE_Y - 0.05, TABLE_Y, woodMat, 'desk');
+  ring(TBL_IN + 0.03, TIER_OUT - 0.03, TABLE_Y, TIER_Y - 0.03, metalMat, 'desk');
+  ring(TBL_IN, TIER_OUT, TIER_Y - 0.03, TIER_Y, woodMat, 'desk');
 })();
 // the label's jambu in neon on the back wall, as in the arcade
 /* a moulded cut-out: the artwork's own silhouette, extruded, with the art on its face */
