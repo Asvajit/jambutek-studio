@@ -181,7 +181,7 @@ function pendant(x, z, drop, color, intensity, tx, ty, tz, angle, shadow){
   return { light:l, bulb:bulb, base:intensity };
 }
 var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
-var TRPOS = { x:-3.44, z:-0.72 }, MFPOS = { x:-2.2, z:-0.72 }, BSPOS = { x:-0.95, z:-0.72 }, AMPOS = { x:0.12, z:-0.72 }, TPPOS = { x:1.04, z:-0.72 }, MBPOS = { x:1.83, z:-0.72 }, SHPOS = { x:2.55, z:-0.72 }, MXPOS = { x:3.47, z:-0.72 };
+var TRPOS = { x:-3.44, z:-0.72 }, MFPOS = { x:-2.2, z:-0.72 }, BSPOS = { x:-0.95, z:-0.72 }, AMPOS = { x:0.12, z:-0.72 }, TPPOS = { x:1.04, z:-0.72 }, MBPOS = { x:1.83, z:-0.72 }, SHPOS = { x:2.55, z:-0.72 }, MXPOS = { x:3.52, z:-0.72 };
 var trLamp = pendant(TRPOS.x, 0.3, 0.62, 0xFFE7C8, 2.4, TRPOS.x, 1.0, TRPOS.z, 0.8, true);
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);

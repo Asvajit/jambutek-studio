@@ -4,7 +4,7 @@
    touch strip that plays the current chord like a harp, three pots (chord level, harp level, and one that does something
    different in each preset) and twelve presets shown by the colour of the big lamp. Its own layout and sound engine;
    the idea and the arrangement of the controls are Benjamin Poilve's minichord (minichord.com). */
-var MCPOS = { x:-2.45, z:ROOM.z1 - 0.72 }, MCW = 216, MCD = 130, MCH = 1.1, MCTILT = 0.56;
+var MCPOS = { x:-2.45, z:ROOM.z1 - 0.72 }, MCW = 230, MCD = 136, MCH = 1.1, MCTILT = 0.56;
 function mcx(u){ return (u - MCW / 2) * SC; }
 function mcz(u){ return (u - MCD / 2) * SC; }
 var MCY = new THREE.Group(); MCY.position.set(MCPOS.x, MCH, MCPOS.z); MCY.rotation.y = Math.PI; scene.add(MCY);
@@ -33,23 +33,24 @@ var mcSaveT = null; function mcSaveNow(){ store('jambutek-studio-chord-v1', JSON
 var MCLED = {};
 (function(){
   var TH = 0.05, pink = new THREE.MeshPhongMaterial({ color:0xF2619F, emissive:0x3A0C20, shininess:30, specular:0x332028 });
-  var sh = new THREE.Shape(), X = function(u){ return mcx(u); }, Yv = function(v){ return -mcz(v); };
-  sh.moveTo(X(49), Yv(20)); sh.lineTo(X(150), Yv(20)); sh.lineTo(X(150), Yv(106)); sh.lineTo(X(49), Yv(106)); sh.absarc(X(49), Yv(63), 43 * SC, -Math.PI / 2, Math.PI / 2, true);
+  var sh = new THREE.Shape(), X = function(u){ return mcx(u); }, Yv = function(v){ return -mcz(v); };          // the narrow end, where the chord buttons sit
+  sh.moveTo(X(43), Yv(52)); sh.lineTo(X(150), Yv(52)); sh.lineTo(X(150), Yv(122)); sh.lineTo(X(43), Yv(122)); sh.absarc(X(43), Yv(87), 35 * SC, -Math.PI / 2, Math.PI / 2, true);
   var neck = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth:TH, bevelEnabled:false, curveSegments:18 }), pink); neck.rotation.x = -Math.PI / 2; neck.position.y = -TH; MCG.add(neck);
-  var bulb = new THREE.Mesh(new THREE.CylinderGeometry(60 * SC, 60 * SC, TH, 44), pink); bulb.position.set(mcx(152), -TH / 2 - 0.0004, mcz(63)); MCG.add(bulb);
-  standFor(MCY, MCG, MCW * SC * 0.9, MCD * SC * 0.8, TH, MCH, MCTILT, 0.14); devBody(MCY, 'mc'); BLOCKS.push([MCPOS.x - 0.4, MCPOS.x + 0.4, ROOM.z1 - 1.06, ROOM.z1]);
+  var bulb = new THREE.Mesh(new THREE.CylinderGeometry(63 * SC, 63 * SC, TH, 48), pink); bulb.position.set(mcx(160), -TH / 2 - 0.0004, mcz(68)); MCG.add(bulb);   // the wide end: strip, pots, presets
+  standFor(MCY, MCG, MCW * SC * 0.92, MCD * SC * 0.8, TH, MCH, MCTILT, 0.14); devBody(MCY, 'mc'); BLOCKS.push([MCPOS.x - 0.4, MCPOS.x + 0.4, ROOM.z1 - 1.06, ROOM.z1]);
+  var strip = new THREE.Mesh(new THREE.BoxGeometry(84 * SC, 0.003, 18 * SC), new THREE.MeshLambertMaterial({ color:0x15161A })); strip.position.set(mcx(168), 0.0016, mcz(45)); MCG.add(strip);
   var lamp = new THREE.PointLight(0xFF6AB0, 0.5, 2.6, 1.6); lamp.position.set(0, 0.6, 0.25); MCY.add(lamp); MC.lamp = lamp;
 })();
 HOST = MCG; LX = mcx; LZ = mcz; DEV = 'mc';
 for (var mcr = 0; mcr < 3; mcr++) for (var mcc = 0; mcc < 7; mcc++)(function(r, c){
-  FACE = { bg:'#F6F1EC', fg:'#B02A66' };
-  var b = button('mcb' + r + '_' + c, 26 + c * 15.2, 44 + r * 15.2, 12.8, 12.8, MCNAME[c] + ['', 'm', '7'][r], MCNAME[c] + ' ' + MCTN[r], 0xFF6AB0); b.chord = [c, r]; b.mat.color.setHex(0xB8B8B8);
+  FACE = { bg:'#17181B', fg:'#F4F4F2' };
+  var b = button('mcb' + r + '_' + c, 30 + c * 15.4, 68 + r * 15.4, 13, 13, r === 0 ? MCNAME[c].toLowerCase() : MCNAME[c].toLowerCase() + ['', 'm', '7'][r], MCNAME[c] + ' ' + MCTN[r], 0xFF6AB0); b.chord = [c, r]; b.mat.color.setHex(0xC8C8C8);
 })(mcr, mcc);
-FACE = { bg:'#F28A2A', fg:'#3A1A00' }; button('mcsharp', 30, 29, 12.8, 9, '#', 'Sharp', 0xFFE15A).mat.color.setHex(0xA0A0A0); button('mcrhy', 117, 27, 12.8, 9, 'HOLD', 'Rhythm mode: hold the chord or play it only while pressed', 0xFFE15A).mat.color.setHex(0xA0A0A0);
-ledAt(MCLED, 'rhy', 104, 27, 0.0026, 0xFF3A2A); ledAt(MCLED, 'main', 121, 97, 0.0075, 0xFF6AB0);
-for (var mch = 0; mch < 12; mch++)(function(i){ var c = pad('mch' + i, 137, 23 + i * 7.3, 15, 6.6, 0xFFD0E8, 'Harp ' + (12 - i)); c.harp = 11 - i; c.touch = true; })(mch);
-[['chord', 164, 36, 'Chord volume'], ['harp', 173, 63, 'Harp volume'], ['mod', 164, 90, 'Mod']].forEach(function(a){ knob('mck' + a[0], a[1], a[2], 6, a[3], MC[a[0]], { h:11, sides:16, color:0x101114 }).mk = a[0]; });
-FACE = { bg:'#F6F1EC', fg:'#B02A66' }; button('mcdn', 143, 117.5, 11, 7.5, '▼', 'Previous preset', 0xFFFFFF).mat.color.setHex(0xB8B8B8); button('mcup', 157, 117.5, 11, 7.5, '▲', 'Next preset', 0xFFFFFF).mat.color.setHex(0xB8B8B8);
+FACE = { bg:'#17181B', fg:'#F4F4F2' }; button('mcsharp', 14.5, 87, 8.5, 8.5, '#', 'Sharp', 0xFFE15A).mat.color.setHex(0xC8C8C8); button('mcrhy', 119, 47, 8.5, 8.5, ' ', 'Rhythm mode: hold the chord or play it only while pressed', 0xFFE15A).mat.color.setHex(0xC8C8C8);
+ledAt(MCLED, 'rhy', 109, 50, 0.0024, 0xFF3A2A); ledAt(MCLED, 'main', 146, 66, 0.0075, 0xFF6AB0);
+for (var mch = 0; mch < 12; mch++)(function(i){ var c = pad('mch' + i, 131 + i * 6.75, 45, 6, 15, 0xFFD0E8, 'Harp ' + (i + 1)); c.harp = i; c.touch = true; })(mch);
+[['chord', 158, 21, 'Chord volume'], ['harp', 175, 18.5, 'Harp volume'], ['mod', 192, 22, 'Mod']].forEach(function(a){ knob('mck' + a[0], a[1], a[2], 4.6, a[3], MC[a[0]], { h:19, sides:16, color:0x101114 }).mk = a[0]; });
+FACE = { bg:'#17181B', fg:'#F4F4F2' }; button('mcup', 211, 55, 11, 9, '▲', 'Next preset', 0xFFFFFF).mat.color.setHex(0xC8C8C8); button('mcdn', 211, 67, 11, 9, '▼', 'Previous preset', 0xFFFFFF).mat.color.setHex(0xC8C8C8);
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 
 var MCA = null;
@@ -95,7 +96,7 @@ function mcSync(){ ['chord', 'harp', 'mod'].forEach(function(k){ var c = CT['mck
 RESTORE['jambutek-studio-chord-v1'] = function(){ mcRestore(); mcSync(); }; SAVENOW.push(mcSaveNow);
 function mcLabel(c){
   if (c.mk) return c.name + (c.mk === 'mod' ? ' (' + ({ cut:'filter', vib:'vibrato', trem:'tremolo', det:'detune', dec:'harp decay' })[MCPRE[MC.preset].mod] + ')' : '') + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
-  if (c.harp != null) return 'Harp strip · click, or hold and slide to strum';
+  if (c.harp != null) return 'Harp strip · click, or hold and slide along it to strum';
   if (c.id === 'mcsharp') return 'Sharp: ' + (MC.sharp ? 'on' : 'off') + ' · click (or hold Shift)';
   if (c.id === 'mcrhy') return 'Rhythm mode: ' + (MC.cont ? 'chord holds until the next one' : 'chord plays only while pressed') + ' · click';
   if (c.id === 'mcup' || c.id === 'mcdn') return 'Preset ' + (MC.preset + 1) + ' · ' + MCPRE[MC.preset].n + ' · click';
@@ -120,6 +121,6 @@ function mcUpdate(now, dt){
   CTLIST.forEach(function(c){ if (c.dev !== 'mc' || c.kind === 'knob') return; var L;
     if (c.chord) L = (MC.cur[0] === c.chord[0] && MC.cur[1] === c.chord[1] && MC.sounding) ? 1 : c.down ? 0.8 : 0;
     else if (c.harp != null) L = c.down ? 1 : 0.08;
-    else L = c.id === 'mcsharp' ? ((MC.sharp || M.shift) ? 1 : 0) : c.id === 'mcrhy' ? (MC.cont ? 0.7 : 0) : (c.down ? 1 : 0);
+    else L = c.id === 'mcsharp' ? ((MC.sharp || M.shift) ? 1 : 0) : c.id === 'mcrhy' ? (c.down ? 1 : 0) : (c.down ? 1 : 0);
     if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }

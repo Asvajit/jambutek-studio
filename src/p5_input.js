@@ -30,9 +30,10 @@ var DEVS = {
   sh:{ key:'sh', g:SHG, name:'Shru synth', stand:{ x:SHPOS.x, z:SHPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
   am:{ key:'am', g:AMG, name:'Ambi synth', stand:{ x:AMPOS.x, z:AMPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
   tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:{ x:TPPOS.x, z:TPPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
-  mx:{ key:'mx', g:MXG, name:'mixer', stand:{ x:MXPOS.x, z:MXPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.66, asp:1.66, off:0.05, lookz:0.03, hud:'hudMx' }
+  mx:{ key:'mx', g:MXG, name:'mixer', stand:{ x:MXPOS.x, z:MXPOS.z + 0.95 }, yaw:0, pitch:-0.42, d:0.66, asp:1.84, off:0.05, lookz:0.03, hud:'hudMx' }
 };
-DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:{ x:MCPOS.x, z:MCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.42, asp:1.7, off:0.04, lookz:0.02, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
+DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:{ x:MCPOS.x, z:MCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
+DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:{ x:SCPOS.x, z:SCPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 DEVS.pf = { key:'pf', g:PFG, name:'Pattern synth', stand:{ x:PFPOS.x, z:PFPOS.z - 0.95 }, yaw:Math.PI, pitch:-0.42, d:0.6, asp:1.5, off:0.04, lookz:0.05, hud:'hudPf' };
 SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:{ x:s.x, z:s.z + 0.95 }, yaw:0, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
 var LEAN = DEVS.tr, trBlend = 0;
@@ -46,7 +47,7 @@ function enterTR(dev){
   var D = typeof dev === 'string' ? DEVS[dev] : dev; if (mode !== 'walk' || !D) return;      // dev is a key or a DEVS entry; the wall buttons have none
   LEAN = D;
   unlock(); mode = 'tr'; keys = {}; cam.walkTo = null; cam.homing = false; relock = locked; releaseLock(); trBlend = 0;
-  trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
+  trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
   resize(); refreshLockUi();
 }
 function leaveTR(){
@@ -91,18 +92,20 @@ var drag = null, pressed = null;
 function startCtl(c, e, h){
   if (c.kind === 'knob' || c.kind === 'fader'){
     if (e.detail >= 2 && !c.endless && !c.click){ setCtl(c, c.def); toast(c.name + ' reset'); return; }
-    drag = { c:c, y:e.clientY, v0:c.v, acc:0, clicks:0, moved:false };
+    drag = { c:c, y:e.clientY, py:e.clientY, v0:c.v, acc:0, clicks:0, moved:false }; if (c.grab) c.grab(true);
     if (!locked){ try { canvas.setPointerCapture(e.pointerId); } catch (x) {} canvas.className = 'grabbing'; }
   } else { pressed = c; c._hit = h; press(c); if (!locked){ try { canvas.setPointerCapture(e.pointerId); } catch (x) {} } }
 }
 function moveCtl(e){
-  var c = drag.c, dy = locked ? (drag.acc += e.movementY || 0) : e.clientY - drag.y;
+  var c = drag.c;
+  if (c.scrub){ var mv = locked ? (e.movementY || 0) : e.clientY - drag.py; drag.py = e.clientY; if (Math.abs(e.clientY - drag.y) > 3 || Math.abs(mv) > 3) drag.moved = true; c.scrub(-mv); return; }
+  var dy = locked ? (drag.acc += e.movementY || 0) : e.clientY - drag.y;
   if (Math.abs(dy) > 3) drag.moved = true;
   if (c.endless){ var n = Math.trunc(-dy / 12); if (n !== drag.clicks){ turnCtl(c, n - drag.clicks); drag.clicks = n; } }
   else setCtl(c, drag.v0 - dy / (c.kind === 'fader' ? 170 : 230) * (e.shiftKey ? 0.25 : 1));
 }
 function endCtl(cancel){
-  if (drag){ var d = drag; drag = null; canvas.className = ''; pointer.has = false; if (!cancel && !d.moved && d.c.click) d.c.click(); }
+  if (drag){ var d = drag; drag = null; canvas.className = ''; pointer.has = false; if (d.c.grab) d.c.grab(false); if (!cancel && !d.moved && d.c.click) d.c.click(); }
   if (pressed){ release(pressed); pressed = null; }
 }
 function lockRefused(){
@@ -201,7 +204,7 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr'){
     if ((k === 'e' && !e.repeat) || e.key === 'Escape' || 'wasd'.indexOf(k) >= 0 && k.length === 1){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
-    if (LEAN === DEVS.mx){ var mi = '12345678'.indexOf(e.key); if (mi >= 0 && !e.repeat) mxMute(mi); return; }
+    if (LEAN === DEVS.mx){ var mi = '123456789'.indexOf(e.key); if (mi >= 0 && !e.repeat) mxMute(mi); return; }
     var di = '1234567890-'.indexOf(e.key); if (di >= 0 && !e.repeat){ hit(di); return; }
     return;
   }
@@ -236,7 +239,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.7 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.8 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -300,7 +303,7 @@ function frame(now){
     if (cen) xhLab.textContent = dl; else { tip.hidden = false; tip.textContent = dl; tip.style.left = pointer.cx + 'px'; tip.style.top = pointer.cy + 'px'; }
   }
 
-  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); flowUpdate(now, dt); mcUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
+  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); flowUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
   var kick = SEQ.kick;
   monitors.forEach(function(m){ var s = 1 + kick * 0.03; m.face.scale.set(s, s, 1); m.face.material.emissiveIntensity = 0.25 + kick * 0.25; });
   trLamp.light.intensity = trLamp.base * (1 + kick * 0.08);
@@ -337,5 +340,5 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
