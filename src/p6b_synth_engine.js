@@ -39,7 +39,8 @@ var MF = { presets:mfFactory(), cur:0, p:null, oscSel:0, lfoSel:0, fxSel:2, shif
   arpMode:0, arpOct:1, mods:[0, 0, 0, 0], div:3, seqLen:16, seq:[], cursor:0, transp:0, mcur:0, medit:false, strip:0, sv:[[0.5, 0], [0, 0], [0.5, 0]],
   voices:[], down:{}, order:[], latched:{}, cmap:{}, stack:[], lastNote:60, lastVel:0.8, src:[0, 0, 0, 0, 0, 0, 0], lph:[0, 0], lval:[0, 0], lsh:[[0, 0], [0, 0]], cyc:{ ph:0, v:0, st:0 },
   clockOn:false, nextT:0, step:0, arpI:0, arpDir:1, pat:[], vis:[], visStep:-1, msgA:'', msgB:'', msgUntil:0, dirty:true, kbOct:0, kb:{}, eff:{} };
-(function(){ var r = [48, null, 48, 60, null, 51, null, 48, 55, null, 48, 58, null, 51, 53, null]; for (var i = 0; i < 64; i++) MF.seq.push(i < 16 && r[i] != null ? { n:[r[i]] } : null); })();
+function mfSeqDefault(){ var d = DEF && DEF.synth; if (d && Array.isArray(d.seq) && d.seq.length === 64){ MF.seq = defCopy(d.seq); MF.seqLen = clamp(d.seqLen | 0 || 16, 1, 64); return; } var r = [48, null, 48, 60, null, 51, null, 48, 55, null, 48, 58, null, 51, 53, null]; MF.seq = []; for (var i = 0; i < 64; i++) MF.seq.push(i < 16 && r[i] != null ? { n:[r[i]] } : null); }
+mfSeqDefault();
 MF.p = JSON.parse(JSON.stringify(MF.presets[0]));
 var MFSAVE = 'jambutek-studio-synth-v1', mfSaveT = null;
 function mfSave(){ store(MFSAVE, JSON.stringify({ v:1, presets:MF.presets, cur:MF.cur, p:MF.p, seq:MF.seq, seqLen:MF.seqLen, div:MF.div, master:CT.mfmaster.v, arpMode:MF.arpMode, arpOct:MF.arpOct })); }

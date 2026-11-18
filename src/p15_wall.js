@@ -27,12 +27,12 @@ function patternExport(){
 function allPatterns(def){
   // drum machine
   if (def) PAT = presets(); else { PAT = []; while (PAT.length < 16) PAT.push(mkPat('INIT PTN', 0)); }
+  if (def && DEF && DEF.bpm) setBpm(DEF.bpm);
   M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; dispDirty = true; saveSoon();
   // synth, bass, Ambi step sequences
-  var r = [48, null, 48, 60, null, 51, null, 48, 55, null, 48, 58, null, 51, 53, null];
-  MF.seq = []; for (var i = 0; i < 64; i++) MF.seq.push(def && i < 16 && r[i] != null ? { n:[r[i]] } : null); mfSaveSoon();
+  if (def) mfSeqDefault(); else { MF.seq = []; for (var i = 0; i < 64; i++) MF.seq.push(null); } MF.dirty = true; mfSaveSoon();
   BS.seqs = def ? JSON.parse(BSSEQ0) : BS.seqs.map(function(){ return [{ rest:1 }]; }); BS.dirty = true; bsSaveSoon();
-  AM.seq = def ? [0, null, 12, 0, null, 7, 0, 10, null, 0, 12, null, 7, 3, null, 5] : [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]; AM.dirty = true; amSaveSoon();
+  AM.seq = def ? AMSEQ0.slice() : [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]; AM.dirty = true; amSaveSoon();
   // every Snake, and the Tape's loop
   SNAKES.forEach(function(s){ s.patterns(def); });
   var L = TP.loop; if (TP.rec){ try { TP.rec.stop(); } catch (e) {} TP.rec = null; } if (L.src){ try { L.src.stop(); L.src.disconnect(); } catch (e) {} L.src = null; } L.st = 0; L.buf = null; L.rev = null;

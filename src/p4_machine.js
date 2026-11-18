@@ -46,10 +46,11 @@ function presets(){
       { BD:'x------x--x---x-', SD:'----x-------x---', CH:'--x---x---x---x-', RS:'-x-----x-x------', OH:'---------------x', HC:'------------x---', acc:'x---x-----x-x---' } ])
   ];
   while (P.length < 16) P.push(mkPat('INIT PTN', 0));
+  if (DEF && Array.isArray(DEF.drums) && DEF.drums.length === 16 && DEF.drums.every(function(p){ return p && Array.isArray(p.vars) && p.vars.length === 8 && Array.isArray(p.tones) && p.vars.every(function(v){ return v && v.st && v.st.length === 11 && v.sb && v.acc; }); })) return defCopy(DEF.drums);
   return P;
 }
 var PAT = presets();
-var M = { playing:false, bpm:124, mode:'trrec', prevMode:'trrec', sel:0, accSel:false, sub:false, shift:false, muteMode:false, clearArm:false, copyArm:false,
+var M = { playing:false, bpm:DEF && DEF.bpm >= 40 && DEF.bpm <= 300 ? DEF.bpm : 124, mode:'trrec', prevMode:'trrec', sel:0, accSel:false, sub:false, shift:false, muteMode:false, clearArm:false, copyArm:false,
   mutes:[0,0,0,0,0,0,0,0,0,0,0], pat:0, nextPat:-1, varSel:[0], varIx:0, editVar:0, fillOn:false, fxOn:false, menu:null, roll:0, msg:'', msgUntil:0, taps:[] };
 var SEQ = { step:0, nextT:0, bar:0, timer:null, vis:[], visStep:-1, fill:false, fillVar:null, crashNext:false, skip:{}, flash:[0,0,0,0,0,0,0,0,0,0,0], kick:0 };
 

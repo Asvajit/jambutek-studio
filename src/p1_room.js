@@ -7,6 +7,9 @@ var live = document.getElementById('live');
 /* Online rooms hang off this one function: every machine saves and loads through it. REMOTE lets a machine "load" a state that
    came from the room instead of this browser; storeHook sees every save so it can be sent on; only the room's first player keeps
    writing the room's state into their own browser. */
+/* the factory patterns: a set made in the room and exported from the wall panel (vendor/defaults.json) */
+var DEF = window.JB_DEFAULTS || null;
+function defCopy(x){ return JSON.parse(JSON.stringify(x)); }
 var MPON = false, MPHOST = true, REMOTE = {}, storeHook = null, RESTORE = {}, SAVENOW = [];
 function saveMs(d){ return MPON ? 250 : d; }
 function store(k, v){ try { if (v === undefined) return (k in REMOTE) ? REMOTE[k] : localStorage.getItem(k); if (storeHook) storeHook(k, v); if (!MPON || MPHOST || k.indexOf('jambutek-studio-') !== 0) localStorage.setItem(k, v); } catch (e) {} return null; }
