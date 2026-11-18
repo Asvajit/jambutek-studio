@@ -192,26 +192,12 @@ var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z -
     PFPOS = { x:ROOM.x1 - 1.31, z:ROOM.z0 + 1.31, r:Math.PI * 0.75 }, PGPOS = { x:ROOM.x0 + 1.31, z:ROOM.z1 - 1.31, r:-Math.PI * 0.25 };       // east row
 function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
 function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
-var trLamp = pendant(0, TRPOS.z - 0.9, 0.0, 0xEEF3FF, 2.3, 0, 1.0, TRPOS.z, 1.1, false, true);            // one lamp over each side of the rig
+var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, false);            // one lamp over each side of the rig
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);
-var sideLampR = pendant(0, BSPOS.z + 0.9, 0.0, 0xEEF3FF, 2.3, 0, 1.0, BSPOS.z, 1.1, false, true);
-var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.0, 0xEEF3FF, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false, true);
-var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.0, 0xEEF3FF, 2.2, RIG.R, 1.0, RIG.z, 1.05, false, true);
-// fluorescent battens on the ceiling: two over each side of the rig, pointing across it (model by Mark Peters, CC BY 4.0, see vendor/FLUORO-NOTICE.md)
-(function(){
-  var F = window.JB_FLUORO; if (!F) return;
-  function u16(b64){ var bin = atob(b64), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Uint16Array(u8.buffer); }
-  function deq(q, lo, hi, n){ var out = new Float32Array(q.length); for (var i = 0; i < q.length; i++){ var a = i % n; out[i] = lo[a] + (hi[a] - lo[a]) * q[i] / 65535; } return out; }
-  var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(deq(u16(F.p), F.lo, F.hi, 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(deq(u16(F.uv), F.ulo, F.uhi, 2), 2));
-  geo.setIndex(new THREE.BufferAttribute(u16(F.i), 1)); geo.computeVertexNormals();
-  function tx(src){ var t = new THREE.TextureLoader().load(src); t.flipY = false; return t; }
-  var mat = new THREE.MeshLambertMaterial({ map:tx(F.map), emissive:0xffffff, emissiveMap:tx(F.emi), emissiveIntensity:1.5 });
-  var d = RIG.R + 0.95, o = 0.9;
-  [[-o, -d, 0], [o, -d, 0], [-o, d, 0], [o, d, 0], [-d, -o, 1], [-d, o, 1], [d, -o, 1], [d, o, 1]].forEach(function(p){
-    var m = new THREE.Mesh(geo, mat); m.position.set(RIG.x + p[0], ROOM.h, RIG.z + p[1]); m.rotation.y = p[2] * Math.PI / 2; m.userData.noShadow = true; scene.add(m);
-  });
-})();
+var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false);
+var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false);
+var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.z, 1.05, false);
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
@@ -232,13 +218,18 @@ function moulded(outline, texSrc, size, depth, sideColor, sideGlow){
 }
 var LOGO_OUTLINE = [[0.482, 1.0], [0.443, 0.988], [0.327, 0.914], [0.278, 0.866], [0.243, 0.816], [0.212, 0.751], [0.214, 0.731], [0.241, 0.701], [0.243, 0.668], [0.131, 0.637], [0.099, 0.622], [0.074, 0.601], [0.042, 0.539], [0.032, 0.445], [0.043, 0.378], [0.086, 0.307], [0.094, 0.248], [0.108, 0.204], [0.133, 0.159], [0.165, 0.124], [0.192, 0.105], [0.271, 0.07], [0.317, 0.062], [0.38, 0.063], [0.417, 0.037], [0.448, 0.024], [0.523, 0.016], [0.625, 0.036], [0.68, 0.068], [0.714, 0.108], [0.731, 0.151], [0.727, 0.266], [0.767, 0.274], [0.813, 0.294], [0.878, 0.356], [0.905, 0.417], [0.905, 0.499], [0.959, 0.649], [0.967, 0.717], [0.953, 0.766], [0.926, 0.796], [0.763, 0.918], [0.694, 0.954], [0.625, 0.98], [0.566, 0.993]];
 var logo = moulded(LOGO_OUTLINE, A.logo, 0.82, 0.07, 0xFF2A6A, 0xFF1E5A);
-logo.mesh.position.set(0, 1.98, ROOM.z0 + 0.01); logo.mesh.castShadow = false; logo.mesh.userData.noShadow = true; scene.add(logo.mesh); solid(logo.mesh, 'sign');
+logo.mesh.position.set(0, 1.8, ROOM.z0 + 0.01); logo.mesh.castShadow = false; logo.mesh.userData.noShadow = true; scene.add(logo.mesh); solid(logo.mesh, 'sign');
 logo.face.emissiveIntensity = 0.85; logo.face.fog = false; logo.side.fog = false;
-var logoGlow = new THREE.PointLight(0xFF3C7A, 1.2, 3.6, 1.5); logoGlow.position.set(0, 2.36, ROOM.z0 + 0.55); scene.add(logoGlow);
+var logoGlow = new THREE.PointLight(0xFF3C7A, 1.2, 3.6, 1.5); logoGlow.position.set(0, 2.18, ROOM.z0 + 0.55); scene.add(logoGlow);
 var logoHalo = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), new THREE.MeshBasicMaterial({ transparent:true, opacity:0.5, blending:THREE.AdditiveBlending, depthWrite:false, color:0xFF2A6A,
   map:(function(){ var c = mk(64, 64), g = c.getContext('2d'), gr = g.createRadialGradient(32,32,0,32,32,32);
     gr.addColorStop(0, 'rgba(255,255,255,.75)'); gr.addColorStop(.45, 'rgba(255,255,255,.25)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return canvasTex(c); })() }));
-logoHalo.position.set(0, 2.39, ROOM.z0 + 0.008); logoHalo.material.fog = false; logoHalo.userData.noShadow = true; scene.add(logoHalo);
+logoHalo.position.set(0, 2.21, ROOM.z0 + 0.008); logoHalo.material.fog = false; logoHalo.userData.noShadow = true; scene.add(logoHalo);
+[[0, ROOM.z1, Math.PI], [ROOM.x0, (ROOM.z0 + ROOM.z1) / 2, Math.PI / 2], [ROOM.x1, (ROOM.z0 + ROOM.z1) / 2, -Math.PI / 2]].forEach(function(w){          // the same sign on the other three walls, sharing its tubes so they all pump together
+  var g = new THREE.Group(); g.position.set(w[0], 0, w[1]); g.rotation.y = w[2]; scene.add(g);
+  var m = new THREE.Mesh(logo.mesh.geometry, logo.mesh.material); m.scale.copy(logo.mesh.scale); m.position.set(0, 1.8, 0.01); m.userData.noShadow = true; g.add(m); solid(m, 'sign');
+  var h = new THREE.Mesh(logoHalo.geometry, logoHalo.material); h.position.set(0, 2.21, 0.008); h.userData.noShadow = true; g.add(h);
+});
 var logoFx = { next: performance.now() + 4000, until: 0 };
 function logoPower(now){                        // mostly steady; every so often the tube stutters
   if (now > logoFx.next && now > logoFx.until){ logoFx.until = now + rnd(350, 900); logoFx.next = now + rnd(4000, 12000); }

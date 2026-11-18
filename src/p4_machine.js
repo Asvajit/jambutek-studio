@@ -156,7 +156,7 @@ function schedStep(t){
     for (var k = 0; k < n; k++) trig(i, tt + k * sd / n, vel * (k ? 0.82 : 1));
     if (!M.mutes[i]){ hits.push(i); if (i === 1) sv = vel; }
   }
-  SEQ.vis.push({ t:tt, step:s, hits:hits, sv:sv });
+  SEQ.vis.push({ t:tt, step:s, hits:hits, sv:sv, n:SEQ.n16 });
   mfClock(t, SEQ.n16, sd, sw); bsClock(t, SEQ.n16, sd, sw); snClock(t, SEQ.n16, sd, sw); amClock(t, SEQ.n16, sd, sw); SEQ.n16++;
   SEQ.step++;
   if (SEQ.step >= cur.last){ SEQ.step = 0; SEQ.bar++; if (SEQ.fill){ SEQ.fill = false; SEQ.fillVar = null; SEQ.crashNext = true; } M.varIx = (M.varIx + 1) % M.varSel.length; SEQ.skip = {}; }
@@ -320,7 +320,7 @@ function paintTempo(){
 /* ---- lights: called every frame ---- */
 var VARL = 'ABCDEFGH';
 function updateTR(now, dt){
-  if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); if (e.sv) SEQ.snare = e.sv; } }
+  if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; SEQ.visN = e.n; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); if (e.sv) SEQ.snare = e.sv; } }
   var blink = (now % 420) < 210, fast = (now % 200) < 100, v = editV(), pv = playV(), vs = M.playing ? SEQ.visStep : -1;
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);
