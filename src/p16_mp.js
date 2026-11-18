@@ -260,8 +260,8 @@ var MP = (function(){
   Q.tick = function(now, dt){
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
-        Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x : cam.x, pz = lean ? LEAN.stand.z - 0.25 : cam.z;
-        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? 0 : cam.yaw).toFixed(3), +(lean ? -0.45 : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 : 0] });
+        Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
+        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : cam.yaw).toFixed(3), +(lean ? -0.45 : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 : 0] });
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
       if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)){ Q.pingAt = now; send({ t:'ping', at:performance.now() }); }

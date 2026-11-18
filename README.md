@@ -26,3 +26,7 @@ Commit the rebuilt `public/index.html` along with the source change.
 ## Online rooms
 
 Opened from the Worker's address, the page offers a lobby: pick a name and a character, make a room or join one by code (up to six players). Opened as a local file it skips the lobby and plays solo. `npx wrangler dev` runs the whole thing locally, rooms included.
+
+## Credits
+
+The LED pattern synth at the back of the room plays patterns from [Patternflow](https://github.com/engmung/Patternflow) by Seunghun Lee and contributors, licensed CC BY-SA 4.0. See `vendor/PATTERNFLOW-NOTICE.md`.
