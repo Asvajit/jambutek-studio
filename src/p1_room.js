@@ -192,12 +192,12 @@ var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z -
     PFPOS = { x:ROOM.x1 - 1.31, z:ROOM.z0 + 1.31, r:Math.PI * 0.75 }, PGPOS = { x:ROOM.x0 + 1.31, z:ROOM.z1 - 1.31, r:-Math.PI * 0.25 };       // east row
 function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
 function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
-var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, false);            // one lamp over each side of the rig
+var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, false, true);            // one lamp over each side of the rig
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);
-var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false);
-var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false);
-var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.z, 1.05, false);
+var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false, true);
+var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false, true);
+var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.z, 1.05, false, true);
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through

@@ -30,7 +30,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
   // the booth: a counter across the corner, the unit behind it
   (function(){
     var fx0 = PFPOS.x - Math.sin(PFPOS.r) * 0.5, fz0 = PFPOS.z - Math.cos(PFPOS.r) * 0.5, blk = new THREE.MeshLambertMaterial({ color:0x2A2D35 });
-    pendant(PFPOS.x - Math.sin(PFPOS.r) * 0.9, PFPOS.z - Math.cos(PFPOS.r) * 0.9, 0.75, 0xFFE7C8, 2.8, PFPOS.x, 0.9, PFPOS.z, 0.8, false);                 // a small lamp over the booth so it reads from across the room
+    pendant(PFPOS.x - Math.sin(PFPOS.r) * 0.9, PFPOS.z - Math.cos(PFPOS.r) * 0.9, 0.75, 0xFFE7C8, 2.8, PFPOS.x, 0.9, PFPOS.z, 0.8, false, true);                 // a small lamp over the booth so it reads from across the room
   var c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.92, 0.07), blk); c.position.set(fx0, 0.46, fz0); c.rotation.y = PFPOS.r; scene.add(c);
     var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), woodMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = PFPOS.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth');
     for (var i = -2; i <= 2; i++){ var bx = fx0 + Math.cos(PFPOS.r) * i * 0.32, bz = fz0 - Math.sin(PFPOS.r) * i * 0.32; BLOCKS.push([bx - 0.17, bx + 0.17, bz - 0.17, bz + 0.17]); }
