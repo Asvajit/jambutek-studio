@@ -121,6 +121,7 @@ var BS = { presets:bsFactory(), cur:0, p:null, oscSel:0, envSel:0, lfoMode:1, fn
   down:{}, latched:{}, order:[], stack:[], holdN:null, cur_n:null, f:[110, 110], noteT:0, vis:[], arpI:0, seqI:0, recFresh:false, lastKey:48, lastVel:0.8,
   seqs:[[{ n:48 }, { n:48 }, { n:60 }, { n:48 }, { rest:1 }, { n:51 }, { n:48 }, { n:55 }, { n:48 }, { n:48 }, { n:58 }, { n:60 }, { rest:1 }, { n:51 }, { n:53 }, { n:46 }], [], [], []],
   lph:[0, 0], lsh:[0, 0], lval:[0, 0], msg:'', msgUntil:0, dirty:true, kb:{}, kbOct:0 };
+var BSSEQ0 = JSON.stringify(BS.seqs);
 BS.p = JSON.parse(JSON.stringify(BS.presets[0]));
 var BSRH = (function(){ var b = ['xxxxxxxxxxxxxxxx', 'x-x-x-x-x-x-x-x-', 'x--x--x-x--x--x-', 'x-xxx-xxx-xxx-xx', 'xx-xxx-xxx-xxx-x', 'x--xx--xx--xx--x', 'x-x-x-xxx-x-x-xx', 'x---x---x---x---', 'x-xx-x-xx-xx-x-x', 'xxx-xxx-xxx-xxx-', 'x--x-x--x--x-x--', '-x-x-x-x-x-x-x-x', 'x-x--x-xx-x--x-x', 'xx--xx--xx--xx--', 'x---x-x-x---x-xx', 'x-xxx---x-xxx---'], out = b.slice();
   b.forEach(function(s){ out.push(s.slice(13) + s.slice(0, 13)); }); return out; })();

@@ -89,7 +89,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.0</span>
+    <span id="verFps">studio v1.1</span>
   </div>
 </div>
 
@@ -615,7 +615,7 @@ pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', 266, 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
 button('fxon', 467, 212, 11, 8.5, 'ON', 'Master FX on', ORG);
 button('fillon', 548, 212, 11, 8.5, 'ON', 'Auto fill-in on', GRN); button('filltrig', 628, 212, 11, 9.5, 'MANUAL\nTRIG', 'Fill-in now', WHT);
-COLX.forEach(function(x, i){ button('sel' + i, x, 492, 12, 8.5, INST[i], INAME[i], new THREE.Color(COLCOL[i]).getHex()).inst = i; });
+COLX.forEach(function(x, i){ button('sel' + i, x, 483, 12, 8.5, INST[i], INAME[i], new THREE.Color(COLCOL[i]).getHex()).inst = i; button('mt' + i, x, 501, 12, 7, 'MUTE', INAME[i] + ' mute', ORG).mi = i; });
 button('write', 686, 265, 12, 8.5, 'WRITE', 'Write (save)', RED); button('enter', 726, 265, 12, 8.5, 'ENTER', 'Enter', WHT);
 button('kit', 686, 301, 12, 8.5, 'KIT', 'Kit', GRN); button('inst', 726, 301, 12, 8.5, 'INST', 'Instrument tone', GRN); button('sample', 766, 301, 12, 8.5, 'SAMPLE', 'Sample', GRN);
 button('ctrlsel', 686, 338, 12, 8.5, 'CTRL\nSELECT', 'Ctrl select', GRN); button('copy', 726, 338, 12, 8.5, 'COPY', 'Copy', GRN); button('utility', 766, 338, 12, 8.5, 'UTILITY', 'Utility', GRN);
@@ -991,6 +991,7 @@ function press(c){
   unlock();
   if (c.dev){ c.down = 1; DEVH[c.dev].press(c); return; }
   var id = c.id; c.down = 1; dispDirty = true;
+  if (c.mi != null){ M.mutes[c.mi] = M.mutes[c.mi] ? 0 : 1; applyMix(); say(INST[c.mi] + (M.mutes[c.mi] ? '  MUTED' : '  ON')); saveSoon(); return; }
   if (c.pi != null){ pressPad(c.pi); return; }
   if (c.vi != null){
     var k = c.vi, L = 'ABCDEFGH';
@@ -1104,6 +1105,7 @@ function updateTR(now, dt){
     var L = 0;
     if (c.vi != null){ var inChain = M.varSel.indexOf(c.vi) >= 0, cur = M.playing && M.varSel[M.varIx % M.varSel.length] === c.vi; L = cur ? (blink ? 1 : 0.25) : inChain ? 1 : c.vi === M.editVar ? 0.4 : 0; c.col.setHex(M.mode === 'trrec' && c.vi === M.editVar && M.playing ? RED : GRN); }
     else if (c.inst != null && c.kind === 'btn'){ var i = c.inst; L = M.muteMode ? (M.mutes[i] ? 0 : 0.7) : (i === M.sel ? 0.85 : 0); L = Math.max(L, SEQ.flash[i]); if (M.mutes[i] && !M.muteMode) L *= 0.3; }
+    else if (c.mi != null) L = M.mutes[c.mi] ? 1 : 0;
     else if (c.pi != null){
       var k = c.pi; c.col.copy(c.base);
       if (M.mode === 'trrec'){ var s = M.accSel ? v.acc[k] : v.st[M.sel][k];              // step record: white pads, beats 1 5 9 13 a touch brighter, written steps red
@@ -2030,6 +2032,7 @@ var BS = { presets:bsFactory(), cur:0, p:null, oscSel:0, envSel:0, lfoMode:1, fn
   down:{}, latched:{}, order:[], stack:[], holdN:null, cur_n:null, f:[110, 110], noteT:0, vis:[], arpI:0, seqI:0, recFresh:false, lastKey:48, lastVel:0.8,
   seqs:[[{ n:48 }, { n:48 }, { n:60 }, { n:48 }, { rest:1 }, { n:51 }, { n:48 }, { n:55 }, { n:48 }, { n:48 }, { n:58 }, { n:60 }, { rest:1 }, { n:51 }, { n:53 }, { n:46 }], [], [], []],
   lph:[0, 0], lsh:[0, 0], lval:[0, 0], msg:'', msgUntil:0, dirty:true, kb:{}, kbOct:0 };
+var BSSEQ0 = JSON.stringify(BS.seqs);
 BS.p = JSON.parse(JSON.stringify(BS.presets[0]));
 var BSRH = (function(){ var b = ['xxxxxxxxxxxxxxxx', 'x-x-x-x-x-x-x-x-', 'x--x--x-x--x--x-', 'x-xxx-xxx-xxx-xx', 'xx-xxx-xxx-xxx-x', 'x--xx--xx--xx--x', 'x-x-x-xxx-x-x-xx', 'x---x---x---x---', 'x-xx-x-xx-xx-x-x', 'xxx-xxx-xxx-xxx-', 'x--x-x--x--x-x--', '-x-x-x-x-x-x-x-x', 'x-x--x-xx-x--x-x', 'xx--xx--xx--xx--', 'x---x-x-x---x-xx', 'x-xxx---x-xxx---'], out = b.slice();
   b.forEach(function(s){ out.push(s.slice(13) + s.slice(0, 13)); }); return out; })();
@@ -3246,7 +3249,8 @@ function update(now, dt){
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }
 DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
-return { SN:SN, G:SNG, key:DK, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
+function patterns(def){ SN.lanes = snDefaults().lanes; if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
+return { SN:SN, G:SNG, key:DK, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
@@ -3254,6 +3258,47 @@ function snClock(t, N, sd, sw){ SNAKES.forEach(function(s){ s.clock(t, N, sd, sw
 function snOnStop(){ SNAKES.forEach(function(s){ s.onStop(); }); }
 function snUpdate(now, dt){ SNAKES.forEach(function(s){ s.update(now, dt); }); }
 function snCv(o){ var v = 0; SNAKES.forEach(function(s){ if (s.SN.out === o) v += s.SN.cv; }); return clamp(v, -1, 1); }
+
+/* ================= two wall buttons to the left of the drum machine =================
+   CLEAR ALL wipes every pattern on every machine; DEFAULTS puts the factory patterns back.
+   Both have to be held down for a moment, so a stray click does nothing. */
+var WALLHOLD = 1300, WALL = { t0:0, c:null, done:false };
+var WALLG = new THREE.Group(); WALLG.position.set(-4.225, 1.42, ROOM.z0 + 0.024); WALLG.rotation.x = Math.PI / 2; scene.add(WALLG);
+(function(){
+  var c = mk(500, 240), g = c.getContext('2d'); g.fillStyle = '#1B1D22'; g.fillRect(0, 0, 500, 240); g.strokeStyle = '#F2C230'; g.lineWidth = 6; g.strokeRect(7, 7, 486, 226);
+  g.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = '#D8D8D8'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('PATTERNS  ·  PRESS AND HOLD', 250, 40);
+  var t = smoothTex(c), box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.24), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x1B1D22 }); }));
+  box.position.y = -0.02; box.userData.noShadow = true; WALLG.add(box);
+})();
+HOST = WALLG; LX = function(u){ return u * SC; }; LZ = function(u){ return u * SC; }; DEV = 'wall';
+FACE = { bg:'#D8262E', fg:'#FFFFFF' }; button('wallclear', -58, 14, 100, 62, 'CLEAR\nALL', 'Clear all patterns', 0xFF2A3C).mat.color.setHex(0x8A8A8A);
+FACE = { bg:'#2E9E55', fg:'#FFFFFF' }; button('walldef', 58, 14, 100, 62, 'DEFAULT\nPATTERNS', 'Default patterns', 0x3BFF6A).mat.color.setHex(0x8A8A8A);
+HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
+function allPatterns(def){
+  // drum machine
+  if (def) PAT = presets(); else { PAT = []; while (PAT.length < 16) PAT.push(mkPat('INIT PTN', 0)); }
+  M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; dispDirty = true; saveSoon();
+  // synth, bass, Ambi step sequences
+  var r = [48, null, 48, 60, null, 51, null, 48, 55, null, 48, 58, null, 51, 53, null];
+  MF.seq = []; for (var i = 0; i < 64; i++) MF.seq.push(def && i < 16 && r[i] != null ? { n:[r[i]] } : null); mfSaveSoon();
+  BS.seqs = def ? JSON.parse(BSSEQ0) : BS.seqs.map(function(){ return [{ rest:1 }]; }); BS.dirty = true; bsSaveSoon();
+  AM.seq = def ? [0, null, 12, 0, null, 7, 0, 10, null, 0, 12, null, 7, 3, null, 5] : [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]; AM.dirty = true; amSaveSoon();
+  // every Snake, and the Tape's loop
+  SNAKES.forEach(function(s){ s.patterns(def); });
+  var L = TP.loop; if (TP.rec){ try { TP.rec.stop(); } catch (e) {} TP.rec = null; } if (L.src){ try { L.src.stop(); L.src.disconnect(); } catch (e) {} L.src = null; } L.st = 0; L.buf = null; L.rev = null;
+  toast(def ? 'Default patterns restored on every machine' : 'All patterns cleared on every machine', 2600);
+}
+function wallLabel(c){ return c.name + ' · press and hold'; }
+function wallPress(c){ unlock(); c.down = 1; WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
+function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.id === 'wallclear' ? 'clear everything' : 'restore the defaults')); WALL.c = null; } }
+DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
+function wallUpdate(now){
+  ['wallclear', 'walldef'].forEach(function(id){
+    var c = CT[id], L = 0.12, h = WALL.c === c;
+    if (h){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; allPatterns(id === 'walldef'); } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); }
+    if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.004 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
+  });
+}
 
 /* ================= camera: a person standing in the room (same eye height, speed and feel as the arcade) ================= */
 var HOME = { x:0, z:2.35, yaw:0, pitch:-0.1 };
@@ -3297,7 +3342,7 @@ function trPose(eye, look){
 function nearDev(){ var best = null, bd = 1.5; Object.keys(DEVS).forEach(function(k){ var D = DEVS[k], d = Math.hypot(cam.x - D.stand.x, cam.z - D.stand.z); if (d < bd){ bd = d; best = D; } }); return best; }
 function devOf(hit){ var u = hit.object.userData; return DEVS[(u.ctl && u.ctl.dev) || u.dev || 'tr']; }
 function enterTR(dev){
-  if (mode !== 'walk') return;
+  if (mode !== 'walk' || !DEVS[dev]) return;
   LEAN = (typeof dev === 'string' ? DEVS[dev] : dev) || DEVS.tr;
   unlock(); mode = 'tr'; keys = {}; cam.walkTo = null; cam.homing = false; relock = locked; releaseLock(); trBlend = 0;
   trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
@@ -3323,7 +3368,7 @@ function iaOf(hit){ return hit ? hit.object.userData.ia : null; }
 function ndcOf(e){ var r = canvas.getBoundingClientRect(); return new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
 function centred(){ return locked; }                                             // is the crosshair doing the pointing?
 function curAim(){ return centred() ? aim() : (pointer.in ? aim(new THREE.Vector2(pointer.x, pointer.y)) : null); }
-function ctlOf(hit){ return hit && iaOf(hit) === 'ctl' && (mode === 'tr' || hit.distance <= CTL_REACH) ? hit.object.userData.ctl : null; }
+function ctlOf(hit){ return hit && iaOf(hit) === 'ctl' && (mode === 'tr' || hit.distance <= (hit.object.userData.ctl.dev === 'wall' ? REACH + 0.6 : CTL_REACH)) ? hit.object.userData.ctl : null; }
 function labelFor(hit){
   var ia = iaOf(hit); if (!ia) return null;
   if (ia === 'ctl' || ia === 'trbody'){
@@ -3490,7 +3535,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.0 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.1 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -3554,7 +3599,7 @@ function frame(now){
     if (cen) xhLab.textContent = dl; else { tip.hidden = false; tip.textContent = dl; tip.style.left = pointer.cx + 'px'; tip.style.top = pointer.cy + 'px'; }
   }
 
-  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); shUpdate(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
+  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); amUpdate(now, dt); tpUpdate(now, dt);
   var kick = SEQ.kick;
   monitors.forEach(function(m){ var s = 1 + kick * 0.03; m.face.scale.set(s, s, 1); m.face.material.emissiveIntensity = 0.25 + kick * 0.25; });
   trLamp.light.intensity = trLamp.base * (1 + kick * 0.08);
@@ -3589,7 +3634,7 @@ function ready(){
   requestAnimationFrame(frame);
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>

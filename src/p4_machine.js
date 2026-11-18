@@ -213,6 +213,7 @@ function press(c){
   unlock();
   if (c.dev){ c.down = 1; DEVH[c.dev].press(c); return; }
   var id = c.id; c.down = 1; dispDirty = true;
+  if (c.mi != null){ M.mutes[c.mi] = M.mutes[c.mi] ? 0 : 1; applyMix(); say(INST[c.mi] + (M.mutes[c.mi] ? '  MUTED' : '  ON')); saveSoon(); return; }
   if (c.pi != null){ pressPad(c.pi); return; }
   if (c.vi != null){
     var k = c.vi, L = 'ABCDEFGH';
@@ -326,6 +327,7 @@ function updateTR(now, dt){
     var L = 0;
     if (c.vi != null){ var inChain = M.varSel.indexOf(c.vi) >= 0, cur = M.playing && M.varSel[M.varIx % M.varSel.length] === c.vi; L = cur ? (blink ? 1 : 0.25) : inChain ? 1 : c.vi === M.editVar ? 0.4 : 0; c.col.setHex(M.mode === 'trrec' && c.vi === M.editVar && M.playing ? RED : GRN); }
     else if (c.inst != null && c.kind === 'btn'){ var i = c.inst; L = M.muteMode ? (M.mutes[i] ? 0 : 0.7) : (i === M.sel ? 0.85 : 0); L = Math.max(L, SEQ.flash[i]); if (M.mutes[i] && !M.muteMode) L *= 0.3; }
+    else if (c.mi != null) L = M.mutes[c.mi] ? 1 : 0;
     else if (c.pi != null){
       var k = c.pi; c.col.copy(c.base);
       if (M.mode === 'trrec'){ var s = M.accSel ? v.acc[k] : v.st[M.sel][k];              // step record: white pads, beats 1 5 9 13 a touch brighter, written steps red

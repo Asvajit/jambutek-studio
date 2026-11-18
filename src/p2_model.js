@@ -202,7 +202,7 @@ pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', 266, 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
 button('fxon', 467, 212, 11, 8.5, 'ON', 'Master FX on', ORG);
 button('fillon', 548, 212, 11, 8.5, 'ON', 'Auto fill-in on', GRN); button('filltrig', 628, 212, 11, 9.5, 'MANUAL\nTRIG', 'Fill-in now', WHT);
-COLX.forEach(function(x, i){ button('sel' + i, x, 492, 12, 8.5, INST[i], INAME[i], new THREE.Color(COLCOL[i]).getHex()).inst = i; });
+COLX.forEach(function(x, i){ button('sel' + i, x, 483, 12, 8.5, INST[i], INAME[i], new THREE.Color(COLCOL[i]).getHex()).inst = i; button('mt' + i, x, 501, 12, 7, 'MUTE', INAME[i] + ' mute', ORG).mi = i; });
 button('write', 686, 265, 12, 8.5, 'WRITE', 'Write (save)', RED); button('enter', 726, 265, 12, 8.5, 'ENTER', 'Enter', WHT);
 button('kit', 686, 301, 12, 8.5, 'KIT', 'Kit', GRN); button('inst', 726, 301, 12, 8.5, 'INST', 'Instrument tone', GRN); button('sample', 766, 301, 12, 8.5, 'SAMPLE', 'Sample', GRN);
 button('ctrlsel', 686, 338, 12, 8.5, 'CTRL\nSELECT', 'Ctrl select', GRN); button('copy', 726, 338, 12, 8.5, 'COPY', 'Copy', GRN); button('utility', 766, 338, 12, 8.5, 'UTILITY', 'Utility', GRN);

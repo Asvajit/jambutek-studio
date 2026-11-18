@@ -162,7 +162,8 @@ function update(now, dt){
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }
 DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
-return { SN:SN, G:SNG, key:DK, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
+function patterns(def){ SN.lanes = snDefaults().lanes; if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
+return { SN:SN, G:SNG, key:DK, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
