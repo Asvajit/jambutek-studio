@@ -1,6 +1,6 @@
 
 /* ================= the Snake: a 4 x 4 grid sequencer after Maxime Dangles' MDD SnAkE (Max for Live) =================
-   Notes (each step has a pitch knob and an on/off button), velocities and a probability lane each walk the same 16 cells along a "snake shape",
+   Notes (each step has a pitch knob and an on/off button), velocities, a probability lane and a custom lane that learns a knob on the synth each walk the same 16 cells along a "snake shape",
    each with its own direction, speed, length and shift. Scales and the 14 shapes are read from the device itself.
    There is one beside every synth, set to play it by default; OUT can point it at any other. The drum machine clocks them all. */
 var SCALES = [["Chromatic",[0,1,2,3,4,5,6,7,8,9,10,11]],["Major",[0,2,4,5,7,9,11]],["Minor",[0,2,3,5,7,9,11]],["Dorian",[0,2,3,5,7,9,10]],["Mixolydian",[0,2,4,5,7,9,10]],["Lydian",[0,2,4,6,7,9,11]],["Phrygian",[0,1,3,5,7,8,10]],["Locrian",[0,1,3,5,6,8,10]],["WholeTone",[0,2,4,6,8,10]],["HalfWholeDim",[0,1,3,4,6,7,9,10]],["WholeHalfDim",[0,2,3,5,6,8,9,11]],["MinorBlues",[0,3,5,6,7,10]],["MinorPentatonic",[0,3,5,7,10]],["MajorPentatonic",[0,2,4,7,9]],["HarmonicMinor",[0,2,3,5,7,8,11]],["HarmonicMajor",[0,2,4,5,7,8,11]],["Dorian#4",[0,2,3,6,7,9,10]],["PhrygianDominant",[0,1,4,5,7,8,10]],["MelodicMinor",[0,2,3,5,7,9,11]],["LydianAugmented",[0,2,4,6,8,9,11]],["LydianDominant",[0,2,4,6,7,9,10]],["SuperLocrian",[0,1,3,4,6,8,10]],["8ToneSpanish",[0,1,3,4,5,6,8,10]],["Bhairav",[0,1,4,5,7,8,11]],["HungarianMinor",[0,2,3,6,7,8,11]],["Hirajoshi",[0,2,3,7,8]],["InSen",[0,1,5,7,10]],["Iwato",[0,1,5,6,10]],["Kumoi",[0,2,3,7,9]],["PelogSelisir",[0,1,3,7,8]],["PelogTembung",[0,1,5,7,8]],["Messiaen3",[0,2,3,4,6,7,8,10,11]],["Messiaen4",[0,1,2,5,6,7,8,11]],["Messiaen5",[0,1,5,6,7,11]],["Messiaen6",[0,2,4,5,6,8,10,11]],["Messiaen7",[0,1,2,3,5,6,7,8,9,11]]];
@@ -12,12 +12,12 @@ var SNSHAPE = ['1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16', '1 5 9 13 2 6 10 14 3 7
 var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
-var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru'];
+var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
   var notes = [0, 2, 3, 5, 7, 8, 12, 12, 15, 15, 17, 19, 20, 22, 24, 27].map(function(n){ return n + 12; });
   function lane(vals, sp){ return { vals:vals, dir:0, speed:sp, len:16, shift:0, shape:0 }; }
-  return { root:0, scale:2, out:0, swing:0, page:0, lanes:[lane(notes, 1), lane([1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0], 1), lane([100, 64, 64, 90, 64, 64, 100, 64, 80, 64, 100, 64, 64, 90, 64, 64], 1), lane([127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127], 1)] };
+  return { root:0, scale:2, out:0, swing:0, page:0, lanes:[lane(notes, 1), lane([1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0], 1), lane([100, 64, 64, 90, 64, 64, 100, 64, 80, 64, 100, 64, 64, 90, 64, 64], 1), lane([127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127], 1), lane([64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64], 1)] };
 }
 var snC = mk(1200, 760), snTex = null;
 function paintSN(){
@@ -28,7 +28,7 @@ function paintSN(){
   function box(x0, y0, x1, y1){ g.fillStyle = '#22252B'; g.fillRect(x0, y0, x1 - x0, y1 - y0); }
   box(4, 14, 78, 186); box(82, 14, 154, 186); box(158, 14, 296, 186);
   T('SNAKE', 5, 7, 7.5, '#90F0A8', true, 'left'); T('after MDD SnAkE by Maxime Dangles', 296, 7.5, 4, '#9A9CA0', false, 'right');
-  T('FUNDAMENTAL', 22, 131, 3.6); T('SCALE', 59, 131, 3.6); T('OUT', 12, 172, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU'].forEach(function(s, k){ T(s, 24.5 + k * 8, 181.5, 2.6, '#B8B8B4'); });
+  T('FUNDAMENTAL', 22, 131, 3.6); T('SCALE', 59, 131, 3.6); T('OUT', 12, 172, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD'].forEach(function(s, k){ T(s, 24.5 + k * 6.86, 181.5, 2.5, '#B8B8B4'); });
   T('STEPS', 100, 113, 3.6); T('SHIFT', 136, 113, 3.6); T('SWING', 100, 149, 3.6); T('SNAKE SHAPE', 136, 149, 3.6);
   SNGY.forEach(function(y, r){ SNGX.forEach(function(x, c){ g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.4; g.beginPath(); g.arc(x, y - 5, 9.4, Math.PI * 0.75, Math.PI * 0.25); g.stroke(); T(String(r * 4 + c + 1), x - 13.2, y + 12, 3.2, '#7C7E84'); }); });
   g.setTransform(1, 0, 0, 1, 0, 0); if (snTex) snTex.needsUpdate = true;
@@ -44,14 +44,15 @@ function snDice(n){ var x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return 
 function makeSnake(K, HP, DEFOUT){
 var DK = 'sn' + K, PX = 'sn' + K + '_';
 function snDef(){ var d = snDefaults(), x = DEF && DEF.snakes && DEF.snakes[K];      // this Snake's own factory pattern, when the set has one
-  if (x && Array.isArray(x.lanes) && x.lanes.length === 4 && x.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })){ d.lanes = defCopy(x.lanes); d.root = clamp(x.root | 0, 0, 11); d.scale = clamp(x.scale | 0, 0, SCALES.length - 1); d.swing = clamp(+x.swing || 0, 0, 1); }
+  if (x && Array.isArray(x.lanes) && (x.lanes.length === 4 || x.lanes.length === 5) && x.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })){ var cl = d.lanes[4]; d.lanes = defCopy(x.lanes); if (d.lanes.length < 5) d.lanes.push(cl); d.root = clamp(x.root | 0, 0, 11); d.scale = clamp(x.scale | 0, 0, SCALES.length - 1); d.swing = clamp(+x.swing || 0, 0, 1); }
   return d; }
 var SNY = new THREE.Group(); SNY.position.set(HP.x, SNH, SNZ); scene.add(SNY);
 var SNG = new THREE.Group(); SNG.rotation.x = SNTILT; SNY.add(SNG);
-var SN = snDef(); SN.out = DEFOUT; SN.cell = [0, 0, 0, 0]; SN.vis = []; SN.cv = 0; SN.msgA = ''; SN.msgB = ''; SN.msgUntil = 0; SN.dirty = true; SN.run = false;
-var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
-function snRestore(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-' + K)) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.lanes) || s.lanes.length !== 4 || !s.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })) return;
-  SN.lanes = s.lanes; SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 6); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
+var SN = snDef(); SN.out = DEFOUT; SN.cc = null; SN.learn = false; SN.cell = [0, 0, 0, 0, 0]; SN.vis = []; SN.cv = 0; SN.msgA = ''; SN.msgB = ''; SN.msgUntil = 0; SN.dirty = true; SN.run = false;
+var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes, cc:SN.cc || null })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
+function snRestore(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-' + K)) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.lanes) || (s.lanes.length !== 4 && s.lanes.length !== 5) || !s.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })) return;
+  if (s.lanes.length < 5) s.lanes.push(snDefaults().lanes[4]); SN.cc = s.cc && typeof s.cc === 'object' && typeof s.cc.dev === 'string' ? s.cc : null;
+  SN.lanes = s.lanes; SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 7); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
 var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.minFilter = THREE.LinearFilter; snDispT.magFilter = THREE.LinearFilter;
 (function(){
   var W2 = SNW * SC, D2 = SND * SC, TH = 0.04;
@@ -67,10 +68,10 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var d = new THREE.Mesh(new THREE.PlaneGeometry(68 * SC, 28 * SC), new THREE.MeshBasicMaterial({ map:snDispT })); d.rotation.x = -Math.PI / 2; d.position.set(sx(118), 0.002, sz(31)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; SNG.add(d); solids.push(d);
 })();
 HOST = SNG; LX = sx; LZ = sz; DEV = DK; FACE = { bg:'#30343B', fg:'#F0F0EC' };
-SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 28 + [0, 0, 1, 2][i] * 27, 66, 18, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
+SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 26 + [0, 0, 1, 2, 3][i] * 21, 66, 15, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
 knob((PX + 'root'), 22, 116, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 116, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
 button((PX + 'resetall'), 22, 150, 30, 12, 'RESET\nALL', 'Reset all lanes', 0xFFFFFF); button((PX + 'randall'), 59, 150, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
-slide((PX + 'out'), 48.5, 172, 7, false, 'Out', 0.096);
+slide((PX + 'out'), 48.5, 172, 8, false, 'Out', 0.096);
 button((PX + 'dir'), 118, 58, 64, 13, 'DIRECTION', 'Direction', 0xFFFFFF); button((PX + 'speed'), 118, 76, 64, 13, 'SPEED', 'Speed', 0xFFFFFF);
 knob((PX + 'steps'), 100, 98, 6.5, 'Steps', 1, { h:8 }).detents = 15; knob((PX + 'shift'), 136, 98, 6.5, 'Shift', 0, { h:8 }).detents = 15;
 knob((PX + 'swing'), 100, 134, 6.5, 'Swing', 0, { h:8 }); knob((PX + 'shape'), 136, 134, 7, 'Snake shape', 0, { h:8, endless:true, sides:14 });
@@ -82,9 +83,9 @@ function snShowCells(){ return; var gp = SN.page === 1; for (var i = 0; i < 16; 
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 function snSay(a, b, ms){ SN.msgA = a; SN.msgB = b == null ? '' : String(b); SN.msgUntil = performance.now() + (ms || 1500); SN.dirty = true; }
 function snNote(v){ return 24 + SN.root + scaleQ(Math.round(v), SCALES[SN.scale][1]); }
-function snCellTxt(p, v){ return p === 0 ? snNoteName(snNote(v)) : p === 1 ? (v ? 'On' : 'Off') : p === 3 ? Math.round(v / 1.27) + '%' : String(Math.round(v)); }
+function snCellTxt(p, v){ return p === 0 ? snNoteName(snNote(v)) : p === 1 ? (v ? 'On' : 'Off') : p >= 3 ? Math.round(v / 1.27) + '%' : String(Math.round(v)); }
 function snSync(){
-  var L = SN.lanes[SN.page], mx = [83, 1, 127, 127][SN.page];
+  var L = SN.lanes[SN.page], mx = [83, 1, 127, 127, 127][SN.page];
   for (var i = 0; i < 16; i++){ var c = CT[(PX + 'c') + i]; c.v = L.vals[i] / mx; c.detents = SN.page === 0 ? 83 : SN.page === 1 ? 1 : 0; c.step = 0.02; c.show(); }
   snShowCells();
   CT[PX + 'root'].v = SN.root / 11; CT[PX + 'root'].show(); CT[PX + 'steps'].v = (L.len - 1) / 15; CT[PX + 'steps'].show(); CT[PX + 'shift'].v = L.shift / 15; CT[PX + 'shift'].show(); CT[PX + 'swing'].v = SN.swing; CT[PX + 'swing'].show(); CT[PX + 'out'].set(SN.out); SN.dirty = true;
@@ -100,7 +101,7 @@ function snLabel(c){
 }
 function snCtl(c){
   var L = SN.lanes[SN.page], id = c.id, v = c.v;
-  if (c.cell != null){ var mx = [83, 1, 127, 127][SN.page]; L.vals[c.cell] = SN.page === 1 ? (v >= 0.5 ? 1 : 0) : Math.round(v * mx); snSay(SNLN[SN.page] + ' ' + (c.cell + 1), snCellTxt(SN.page, L.vals[c.cell])); }
+  if (c.cell != null){ var mx = [83, 1, 127, 127, 127][SN.page]; L.vals[c.cell] = SN.page === 1 ? (v >= 0.5 ? 1 : 0) : Math.round(v * mx); snSay(SNLN[SN.page] + ' ' + (c.cell + 1), snCellTxt(SN.page, L.vals[c.cell])); }
   else if (id === (PX + 'root')){ SN.root = Math.round(v * 11); snSay('Fundamental', NOTEN[SN.root]); }
   else if (id === (PX + 'steps')){ L.len = 1 + Math.round(v * 15); snSay(SNLN[SN.page] + ' steps', L.len); }
   else if (id === (PX + 'shift')){ L.shift = Math.round(v * 15); snSay(SNLN[SN.page] + ' shift', L.shift); }
@@ -113,39 +114,69 @@ function snTurn(c, n){
   else if (c.id === (PX + 'shape')){ L.shape = ((L.shape + n) % 14 + 14) % 14; snSay(SNLN[SN.page] + ' shape', L.shape + 1); }
   snSaveSoon();
 }
+/* the custom lane: learn the next knob or fader moved on the connected synth, then turn it step by step */
+function snLearn(on){
+  SN.learn = !!on; SN.dirty = true;
+  if (!on){ if (SNLEARN === snHear) SNLEARN = null; return; }
+  if (!SN.out){ SN.learn = false; snSay('CUSTOM', 'set OUT to a synth first', 2200); return; }
+  if (SNLEARN && SNLEARN !== snHear) SNLEARN(null);          // only one Snake listens at a time
+  SNLEARN = snHear; snSay('LEARN', 'move a knob on the ' + SNOUT[SN.out], 60000);
+}
+function snHear(c){
+  if (!c){ SN.learn = false; SN.dirty = true; return; }
+  if (!SN.learn || c.dev !== SNDEV[SN.out] || (c.kind !== 'knob' && c.kind !== 'fader') || c.endless) return;
+  var d = null, k;
+  if (c.dev === 'sh'){ if (c.pot == null) return; k = SHPAGES[SH.page][1][c.pot]; d = { dev:'sh', key:k[0], name:k[2] }; }
+  else if (c.dev === 'am'){ k = c.vol ? 'volu' : c.pi2 != null ? amKeys()[c.pi2] : null; if (!k || k === 'bpm') return; d = { dev:'am', key:k, name:AMP[k] ? AMP[k][1] : 'Volume' }; }
+  else if (c.dev === 'tp'){ if (c.ei == null) return; d = { dev:'tp', k:c.ei, pg:TP.pg[c.ei], name:TPPG[c.ei][TP.pg[c.ei]][0] }; }
+  else d = { dev:c.dev, id:c.id, name:c.name };
+  SN.cc = d; SN.learn = false; SNLEARN = null; SN.dirty = true; snSay('CUSTOM turns', d.name, 2600); snSaveSoon();
+}
+function snTurnCC(v){
+  var d = SN.cc; if (!d) return; MPQUIET = true;
+  try {
+    if (d.dev === 'sh'){ SH.p[d.key] = v; shApply(); if (SHPAGES[SH.page][1].some(function(q){ return q[0] === d.key; })) shPots(); }
+    else if (d.dev === 'am'){ AM.p[d.key] = amSnap(d.key, v); amLive(); if (d.key === 'volu' || amKeys().indexOf(d.key) >= 0) amSync(); AM.dirty = true; }
+    else if (d.dev === 'tp'){ TP.v[d.k][d.pg] = v; tpApply(); if (TP.pg[d.k] === d.pg){ var e = CT['tpe' + d.k]; e.v = v; e.show(); } }
+    else { var c = CT[d.id]; if (c && !c.endless){ setCtl(c, v); if (c.show) c.show(); } }
+  } catch (err) {}
+  MPQUIET = false;
+}
 function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i] = p === 0 ? 12 + ((Math.random() * 25) | 0) : p === 1 ? (Math.random() < 0.7 ? 1 : 0) : 30 + ((Math.random() * 98) | 0); }
 function snPress(c){
   var id = c.id, L = SN.lanes[SN.page], D = snDef();
   if (c.gate != null){ var gv = SN.lanes[1].vals; gv[c.gate] = gv[c.gate] ? 0 : 1; c.down = 1; setTimeout(function(){ c.down = 0; }, 120); snSay('Step ' + (c.gate + 1), gv[c.gate] ? 'On' : 'Off'); snSaveSoon(); return; }
-  if (c.pg != null){ SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
-  if (c.sw){ SN.out = (c.pos + 1) % 7; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
+  if (c.pg != null){
+    if (c.pg === 4){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name : 'click again to learn'); return; }   // the custom lane: first click with nothing learned, or a second click, listens for a knob
+    snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
+  if (c.sw){ SN.out = (c.pos + 1) % 8; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
   switch (id){
     case (PX + 'dir'): L.dir = (L.dir + 1) % 5; snSay(SNLN[SN.page] + ' direction', SNDIR[L.dir]); break;
     case (PX + 'speed'): L.speed = (L.speed + 1) % 5; snSay(SNLN[SN.page] + ' speed', SNSPD[L.speed][1]); break;
     case (PX + 'rand'): snRandom(SN.page); snSync(); snSay(SNLN[SN.page], 'Random'); break;
     case (PX + 'reset'): SN.lanes[SN.page] = D.lanes[SN.page]; snSync(); snSay(SNLN[SN.page], 'Reset'); break;
-    case (PX + 'randall'): for (var p = 0; p < 4; p++) snRandom(p); snSync(); snSay('All lanes', 'Random'); break;
+    case (PX + 'randall'): for (var p = 0; p < 5; p++) snRandom(p); snSync(); snSay('All lanes', 'Random'); break;
     case (PX + 'resetall'): SN.lanes = D.lanes; snSync(); snSay('All lanes', 'Reset'); break;
   }
   snSaveSoon();
 }
 function clock(t, N, sd, sw){                       // one call per 16th from the drum machine
   var ev = [], swg = sw + SN.swing * 0.33;
-  [1, 2, 3, 0].forEach(function(li, ord){ var L = SN.lanes[li], S = SNSPD[L.speed][0];
+  [1, 2, 3, 4, 0].forEach(function(li, ord){ var L = SN.lanes[li], S = SNSPD[L.speed][0];
     for (var k = Math.ceil(N / S - 1e-6); k * S < N + 1 - 1e-6; k++){ var pos = k * S, r = Math.round(pos), on = Math.abs(pos - r) < 1e-6; ev.push([t + (pos - N) * sd + (on && r % 2 ? swg * sd : 0), ord, li, k, S]); } });
   ev.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
   ev.forEach(function(e){
-    var li = e[2], L = SN.lanes[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell });
+    var li = e[2], L = SN.lanes[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell }); if (li === 4 && SN.cc) SN.vis.push({ t:e[0], cc:L.vals[cell] / 127 });
     if (li !== 0 || !SN.out || !SN.lanes[1].vals[cell] || snDice(N * 31 + e[3] * 7 + K * 131) * 127 >= SN.lanes[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
     var n = snNote(L.vals[cell]), vel = clamp(SN.lanes[2].vals[SN.cell[2]] / 127, 0.05, 1), dur = sd * e[4] * 0.6;
-    var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else shNoteAt(n + 12, vel, e[0], dur);
+    var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else if (o === 6) shNoteAt(n + 12, vel, e[0], dur); else mcPluckAt(n + 24, vel, e[0]);
   });
 }
 function onStop(){ SN.vis = []; SN.cv = 0; }
 function snPaintDisp(){
   var g = snDispC.getContext('2d'), now = performance.now(), L = SN.lanes[SN.page], a, b;
   g.fillStyle = '#04070A'; g.fillRect(0, 0, 272, 112); g.textBaseline = 'middle'; g.textAlign = 'left';
-  if (now < SN.msgUntil){ a = SN.msgA; b = SN.msgB; } else { a = SNLN[SN.page] + '  ' + SNSPD[L.speed][1]; b = NOTEN[SN.root] + ' ' + SCALES[SN.scale][0]; }
+  if (now < SN.msgUntil){ a = SN.msgA; b = SN.msgB; } else { a = SNLN[SN.page] + '  ' + SNSPD[L.speed][1]; b = SN.page === 4 ? (SN.learn ? 'move a knob...' : SN.cc ? SN.cc.name : 'nothing learned') : NOTEN[SN.root] + ' ' + SCALES[SN.scale][0]; }
   g.fillStyle = '#' + ('00000' + SNCOL[SN.page].toString(16)).slice(-6); g.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText(a, 8, 24, 160);
   g.fillStyle = '#F2F2F2'; g.font = 'bold 30px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText(b, 8, 62, 160);
   g.fillStyle = '#8FA0B0'; g.font = 'bold 18px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText('→ ' + SNOUT[SN.out] + '   ' + SNDIR[L.dir], 8, 96, 160);
@@ -157,11 +188,11 @@ function snPaintDisp(){
 }
 function update(now, dt){
   var t = ac ? ac.currentTime : 0, i; SN.run = M.playing;
-  if (ac) SN.vis = SN.vis.filter(function(e){ if (e.t > t) return true; if (e.cv != null) SN.cv = e.cv; else { SN.vcell = SN.vcell || [-1, -1, -1, -1]; SN.vcell[e.l] = e.c; } return false; });
-  var vc = M.playing && SN.vcell ? SN.vcell : [-1, -1, -1, -1], g = SN.lanes[1].vals, col = new THREE.Color();
-  for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 4; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); CT[(PX + 'c') + i].mat.color.setHex(g[i] ? 0x202226 : 0x121316); }
+  if (ac) SN.vis = SN.vis.filter(function(e){ if (e.t > t) return true; if (e.cc != null) snTurnCC(e.cc); else if (e.cv != null) SN.cv = e.cv; else { SN.vcell = SN.vcell || [-1, -1, -1, -1, -1]; SN.vcell[e.l] = e.c; } return false; });
+  var vc = M.playing && SN.vcell ? SN.vcell : [-1, -1, -1, -1, -1], g = SN.lanes[1].vals, col = new THREE.Color();
+  for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); CT[(PX + 'c') + i].mat.color.setHex(g[i] ? 0x202226 : 0x121316); }
   for (i = 0; i < 16; i++){ var gp = CT[(PX + 'g') + i], gl = (g[i] ? 0.75 : 0) + (vc[0] === i ? 0.3 : 0); if (gl !== gp.lit){ gp.lit = gl; gp.col.copy(gp.base); if (vc[0] === i && !g[i]) gp.col.setHex(0xFFFFFF); gp.paintLit(); } var gy = gp.y0 - (gp.down ? 0.003 : 0); if (gp.m.position.y !== gy) gp.m.position.y = gy; }
-  CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
   if (now > SN.msgUntil && SN.msgA){ SN.msgA = ''; SN.dirty = true; }
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }

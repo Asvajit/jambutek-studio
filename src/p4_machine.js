@@ -270,7 +270,7 @@ function onCtl(c){                                 // a knob or fader moved
   say((c.inst != null ? INST[c.inst] + ' ' + c.id.replace(/\d+$/, '').replace('lev', 'level').toUpperCase() : c.name.toUpperCase()) + '  ' + valText(c));
   applyMix(); saveSoon();
 }
-function setCtl(c, v){ v = clamp(v, 0, 1); if (v === c.v) return; c.v = v; onCtl(c); }
+function setCtl(c, v){ v = clamp(v, 0, 1); if (v === c.v) return; c.v = v; onCtl(c); if (SNLEARN && !MPQUIET) SNLEARN(c); }
 function turnCtl(c, n){                            // the two endless encoders, in clicks
   if (!n) return; c.v += n / 24; c.show();
   if (c.dev){ DEVH[c.dev].turn(c, n); return; }

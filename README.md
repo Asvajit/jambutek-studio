@@ -30,3 +30,5 @@ Opened from the Worker's address, the page offers a lobby: pick a name and a cha
 ## Credits
 
 The LED pattern synth at the back of the room plays patterns from [Patternflow](https://github.com/engmung/Patternflow) by Seunghun Lee and contributors, licensed CC BY-SA 4.0. See `vendor/PATTERNFLOW-NOTICE.md`.
+
+The pink chord box at the back follows the idea and control layout of the [minichord](https://github.com/BenjaminPoilve/minichord) by Benjamin Poilvé; its sound engine and model here are original and none of the minichord's files are included.
