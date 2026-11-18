@@ -1,6 +1,6 @@
 
 /* ================= the LED pattern synths, after Patternflow =================
-   Two of them, in booths in opposite corners of the room. Each drives its own 128 x 64 LED screen on the ceiling; the two
+   Two of them, in booths in opposite corners of the room, twinned: turn a knob on one and the other follows. Each has a 128 x 64 LED screen on the ceiling showing the same picture; the two
    screens sit side by side over the rig and make a square. Four endless knobs and the same picture on the unit's own panel. The patterns are Patternflow's own (vendor/patternflow-patterns.js, CC BY-SA 4.0),
    each one computed live every frame. Knobs follow Patternflow's model: 48 clicks cross a knob's range, patterns that
    name their knobs set the ranges, the rest get Hue / Speed / Mode / Freq. */
@@ -9,16 +9,18 @@ function fx(u){ return (u - PFW / 2) * SC; }
 function fz(u){ return (u - PFD / 2) * SC; }
 var PFLIST = (typeof PFPATS !== 'undefined' && PFPATS) || [];
 var PFDEF = { ranges:[[0, 1], [0.1, 10], [0, 4.9], [0, 1]], vals:[0, 2, 0, 0.06], wrap:[true, false, false, true], names:['Hue', 'Speed', 'Mode', 'Freq'] };
-function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG){
+function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: the unit this one is twinned with. A twin shares its state and picture, so both units and both screens always match
   var PFY = new THREE.Group(); PFY.position.set(PFPOS.x, PFH, PFPOS.z); PFY.rotation.y = PFPOS.r; scene.add(PFY);
   var PFG = new THREE.Group(); PFG.rotation.x = PFTILT; PFY.add(PFG);
   var PF = { on:!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), pat:0, vals:PFDEF.vals.slice(), fed:null, boot:0, btn:[false, false, false, false],
              mod:null, params:{}, ranges:PFDEF.ranges, wrap:PFDEF.wrap, names:PFDEF.names, defs:PFDEF.vals, t:0, acc:0, cost:4, hz:30, dirty:true, dark:false, glow:[0, 0, 0] };
+  if (M) PF = M.PF;
   var pfC = mk(PFLW, PFLH), pfCtx = pfC.getContext('2d'), pfImg = pfCtx.createImageData(PFLW, PFLH), pfBuf = pfImg.data, pfTex = canvasTex(pfC);
   pfTex.magFilter = THREE.NearestFilter; pfTex.minFilter = THREE.LinearFilter; pfTex.generateMipmaps = false;
+  if (M){ pfC = M.c; pfCtx = M.ctx; pfImg = M.img; pfBuf = M.buf; pfTex = M.tex; }
   var pfDisplay = { width:PFLW, height:PFLH, setPixel:function(x, y, r, g, b){ if (x < 0 || y < 0 || x >= PFLW || y >= PFLH) return; var o = ((y | 0) * PFLW + (x | 0)) * 4; pfBuf[o] = r; pfBuf[o + 1] = g; pfBuf[o + 2] = b; } };
   function pfClear(){ for (var i = 0; i < pfBuf.length; i += 4){ pfBuf[i] = pfBuf[i + 1] = pfBuf[i + 2] = 0; pfBuf[i + 3] = 255; } }
-  pfClear(); pfCtx.putImageData(pfImg, 0, 0);
+  if (!M){ pfClear(); pfCtx.putImageData(pfImg, 0, 0); }
   // its screen on the ceiling
   var pfGlow = new THREE.PointLight(0xffffff, 0, 6, 1.5); pfGlow.position.set(RIG.x, ROOM.h - 0.5, SCRZ); scene.add(pfGlow);
   (function(){
@@ -35,6 +37,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG){
   })();
   // the instrument
   var pfPanC = mk(PFW * 5, PFD * 5), pfPanT = null, pfDispC = mk(880, 96), pfDispT = canvasTex(pfDispC); pfDispT.minFilter = THREE.LinearFilter; pfDispT.magFilter = THREE.LinearFilter;
+  if (M){ pfDispC = M.dc; pfDispT = M.dt; }
   var PFKX = [70, 136, 204, 270];
   (function(){
     var g = pfPanC.getContext('2d'); g.setTransform(5, 0, 0, 5, 0, 0); g.fillStyle = '#1A1B1F'; g.fillRect(0, 0, PFW, PFD);
@@ -72,8 +75,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG){
     var i = -1; PFLIST.forEach(function(p, k){ if (p.meta.id === s.id) i = k; }); if (i < 0) i = 0;
     if (first || i !== PF.pat) pfLoad(i, s.vals); else if (Array.isArray(s.vals) && s.vals.length === 4){ PF.vals = s.vals.map(function(v, k){ return clamp(+v || 0, PF.ranges[k][0], PF.ranges[k][1]); }); PF.dirty = true; }
     if (!first || s.on === 0) PF.on = s.on !== 0 && (first ? PF.on : true); } catch (e) { if (first) pfLoad(PAT0); } }
-  pfRestore(true);
-  RESTORE[SKEY] = function(){ pfRestore(false); }; SAVENOW.push(pfSaveNow);
+  if (!M){ pfRestore(true); RESTORE[SKEY] = function(){ pfRestore(false); }; SAVENOW.push(pfSaveNow); }
   function pfLabel(c){
     if (c.ki != null) return PF.names[c.ki] + ' ' + pfFmt(PF.vals[c.ki], PF.ranges[c.ki]) + ' · scroll or drag, click resets';
     if (c.id === DK + 'pow') return 'Light ' + (PF.on ? 'on' : 'off') + ' · click';
@@ -107,6 +109,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG){
   }
   function flowTick(now, dt){
     [DK + 'prev', DK + 'next', DK + 'pow'].forEach(function(id){ var c = CT[id], L = id === DK + 'pow' ? (PF.on ? 1 : 0.05) : (c.down ? 1 : 0.1); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+    if (M){ pfGlow.color.copy(M.glow.color); pfGlow.intensity = M.glow.intensity; return; }
     if (PF.dirty){ PF.dirty = false; pfPaintDisp(); }
     var k = 1 - Math.exp(-dt * 6);
     if (!PF.on || !PF.mod){ if (!PF.dark){ PF.dark = true; pfClear(); pfCtx.putImageData(pfImg, 0, 0); pfTex.needsUpdate = true; } pfGlow.intensity = lerp(pfGlow.intensity, 0, k); return; }
@@ -119,8 +122,8 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG){
     PF.glow[0] = lerp(PF.glow[0], r / n / 255, 0.25); PF.glow[1] = lerp(PF.glow[1], g / n / 255, 0.25); PF.glow[2] = lerp(PF.glow[2], b / n / 255, 0.25);
     var mx = Math.max(PF.glow[0], PF.glow[1], PF.glow[2], 0.001); pfGlow.color.setRGB(PF.glow[0] / mx, PF.glow[1] / mx, PF.glow[2] / mx); pfGlow.intensity = Math.min(1.3, mx * 2.0);
   }
-  return { key:DK, G:PFG, PF:PF, pos:PFPOS, tick:flowTick };
+  return { key:DK, G:PFG, PF:PF, pos:PFPOS, tick:flowTick, c:pfC, ctx:pfCtx, img:pfImg, buf:pfBuf, tex:pfTex, dc:pfDispC, dt:pfDispT, glow:pfGlow };
 }
-var FLOWS = [makeFlow('pf', PFPOS, 'jambutek-studio-flow-v1', RIG.z - 0.8, 0, 0, 'A'), makeFlow('pg', PGPOS, 'jambutek-studio-flow2-v1', RIG.z + 0.8, Math.PI, 7, 'B')];
+var FLOWS = [makeFlow('pf', PFPOS, 'jambutek-studio-flow-v1', RIG.z - 0.8, 0, 0, 'A')]; FLOWS.push(makeFlow('pg', PGPOS, 'jambutek-studio-flow-v1', RIG.z + 0.8, Math.PI, 0, 'B', FLOWS[0]));
 var PF = FLOWS[0].PF;
 function flowUpdate(now, dt){ FLOWS[0].tick(now, dt); FLOWS[1].tick(now, dt); }
