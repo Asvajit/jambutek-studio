@@ -4,7 +4,7 @@
    touch strip that plays the current chord like a harp, three pots (chord level, harp level, and one that does something
    different in each preset) and twelve presets shown by the colour of the big lamp. Its own layout and sound engine;
    the idea and the arrangement of the controls are Benjamin Poilve's minichord (minichord.com). */
-var MCW = 230, MCD = 136, MCH = deskH(0.05), MCTILT = DESK.t;
+var MCW = 230, MCD = 136, MCH = 1.1, MCTILT = 0.56;
 function mcx(u){ return (u - MCW / 2) * SC; }
 function mcz(u){ return (u - MCD / 2) * SC; }
 var MCY = new THREE.Group(); MCY.position.set(MCPOS.x, MCH, MCPOS.z); MCY.rotation.y = MCPOS.r; scene.add(MCY);

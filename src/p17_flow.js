@@ -4,7 +4,7 @@
    picture on its own small panel. The patterns are Patternflow's own (vendor/patternflow-patterns.js, CC BY-SA 4.0),
    each one computed live every frame. Knobs follow Patternflow's model: 48 clicks cross a knob's range, patterns that
    name their knobs set the ranges, the rest get Hue / Speed / Mode / Freq. */
-var PFW = 340, PFD = 236, PFH = deskH(0.07), PFTILT = DESK.t, PFLW = 128, PFLH = 64;
+var PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
 function fx(u){ return (u - PFW / 2) * SC; }
 function fz(u){ return (u - PFD / 2) * SC; }
 var PFY = new THREE.Group(); PFY.position.set(PFPOS.x, PFH, PFPOS.z); PFY.rotation.y = PFPOS.r; scene.add(PFY);

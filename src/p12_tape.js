@@ -2,7 +2,7 @@
 /* ================= the Tape: a 7-voice chromatic sampler and varispeed tape looper, after the open-source CHOMPI (TAPE firmware) =================
    Six click-encoders (speed / start / end / magic / tape / volume, each with a second page behind a click), a two-octave keyboard,
    CHOMP (shift), PLAY and LOOP, laid out like the real thing: black panel, carry handle, keycap keys. It ships with eight samples made in code, and CHOMP + LOOP records a new one from the mixer. */
-var TPW = 300, TPD = 100, TPH = deskH(0.06), TPTILT = DESK.t;
+var TPW = 300, TPD = 100, TPH = 1.1, TPTILT = 0.56;
 function tx(u){ return (u - TPW / 2) * SC; }
 function tz(u){ return (u - TPD / 2) * SC; }
 var TPY = new THREE.Group(); TPY.position.set(TPPOS.x, TPH, TPPOS.z); TPY.rotation.y = TPPOS.r; scene.add(TPY);

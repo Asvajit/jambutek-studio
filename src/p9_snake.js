@@ -9,7 +9,7 @@ function scaleDeg(n, iv){ var L = iv.length, o = Math.floor(n / L); return o * 1
 var SNSHAPE = ['1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16', '1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 16', '1 8 9 16 2 7 10 15 3 6 11 14 4 5 12 13', '1 2 3 4 8 7 6 5 9 10 11 12 16 15 14 13', '4 5 12 13 3 6 11 14 2 7 10 15 1 8 9 16', '4 3 2 1 5 6 7 8 12 11 10 9 13 14 15 16', '4 8 12 16 3 7 11 15 2 6 10 14 1 5 9 13',
   '13 14 15 16 9 10 11 12 5 6 7 8 1 2 3 4', '1 2 3 4 12 13 14 5 11 16 15 6 10 9 8 7', '7 8 9 10 6 15 16 11 5 14 13 12 4 3 2 1', '1 2 6 7 3 5 8 13 4 9 12 14 10 11 15 16', '10 11 15 16 4 9 12 14 3 5 8 13 1 2 6 7', '4 3 2 1 5 14 13 12 6 15 16 11 7 8 9 10', '10 9 8 7 11 16 15 6 12 13 14 5 1 2 3 4']
   .map(function(s){ var ord = s.split(' ').map(Number), path = []; for (var k = 1; k <= 16; k++) path.push(ord.indexOf(k)); return path; });   // path[step] = cell
-var SNW = 300, SND = 190, SNH = bridgeH(0.04), SNTILT = DESK.bt, SNZ = -1.22;
+var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
 var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
@@ -46,7 +46,7 @@ var DK = 'sn' + K, PX = 'sn' + K + '_';
 function snDef(){ var d = snDefaults(), x = DEF && DEF.snakes && DEF.snakes[K];      // this Snake's own factory pattern, when the set has one
   if (x && Array.isArray(x.lanes) && (x.lanes.length === 4 || x.lanes.length === 5) && x.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })){ var cl = d.lanes[4]; d.lanes = defCopy(x.lanes); if (d.lanes.length < 5) d.lanes.push(cl); d.root = clamp(x.root | 0, 0, 11); d.scale = clamp(x.scale | 0, 0, SCALES.length - 1); d.swing = clamp(+x.swing || 0, 0, 1); }
   return d; }
-var SNY = new THREE.Group(); SNY.position.set(HP.x - Math.sin(HP.r) * DESK.sn, SNH, HP.z - Math.cos(HP.r) * DESK.sn); SNY.rotation.y = HP.r; scene.add(SNY);   // on its shelf just behind the synth, towards the middle of the rig
+var SNY = new THREE.Group(); SNY.position.set(HP.x - Math.sin(HP.r) * 0.5, SNH, HP.z - Math.cos(HP.r) * 0.5); SNY.rotation.y = HP.r; scene.add(SNY);   // on its shelf just behind the synth, towards the middle of the rig
 var SNG = new THREE.Group(); SNG.rotation.x = SNTILT; SNY.add(SNG);
 var SN = snDef(); SN.out = DEFOUT; SN.cc = null; SN.learn = false; SN.cell = [0, 0, 0, 0, 0]; SN.vis = []; SN.cv = 0; SN.msgA = ''; SN.msgB = ''; SN.msgUntil = 0; SN.dirty = true; SN.run = false;
 var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes, cc:SN.cc || null })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
@@ -58,6 +58,9 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var W2 = SNW * SC, D2 = SND * SC, TH = 0.04;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:snTex, emissive:0xffffff, emissiveMap:snTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; SNG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SNG.add(body);
+  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.02, D2 + 0.05), woodMat); tray.position.y = -TH - 0.012; SNG.add(tray);
+  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), woodMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
+  [-1, 1].forEach(function(s){ var post = new THREE.Mesh(new THREE.BoxGeometry(0.04, SNH - 0.06, 0.04), metalMat); post.position.set(s * 0.25, -(SNH - 0.06) / 2 - 0.06, -0.13); SNY.add(post); });
   devBody(SNY, DK);
   var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
   SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });

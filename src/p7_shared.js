@@ -51,4 +51,15 @@ function cable(pts, r){
   var c = new THREE.CatmullRomCurve3(pts.map(function(p){ return new THREE.Vector3(p[0], p[1], p[2]); }));
   var m = new THREE.Mesh(new THREE.TubeGeometry(c, 48, r || 0.007, 5, false), new THREE.MeshPhongMaterial({ color:0x2A2B30, shininess:40, specular:0x333333 })); scene.add(m); return m;
 }
-function standFor(){}                 // units rest straight on the desk now: no trays, no legs
+function standFor(Y, G, W2, D2, TH, H, tilt, legX){                 // tray + lip on the tilted group, legs on the upright one
+  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; G.add(tray);
+  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); G.add(lip);
+  [-1, 1].forEach(function(s){
+    var x = s * legX;
+    var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, H - 0.12, 0.045), metalMat); post.position.set(x, -H + (H - 0.12) / 2, -0.02); Y.add(post);
+    var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, -H + 0.0175, 0); Y.add(foot);
+    var brace = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.5), metalMat); brace.position.set(x, -H + 0.46, 0); brace.rotation.x = -1.02; Y.add(brace);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, -(TH + 0.05) * Math.cos(tilt), -(TH + 0.05) * Math.sin(tilt)); arm.rotation.x = tilt; Y.add(arm);
+  });
+  var bar = new THREE.Mesh(new THREE.BoxGeometry(legX * 2, 0.03, 0.03), metalMat); bar.position.set(0, -H + 0.28, -0.02); Y.add(bar);
+}

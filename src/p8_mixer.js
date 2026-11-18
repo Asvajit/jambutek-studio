@@ -1,6 +1,6 @@
 
 /* ================= the mixer: one channel per instrument, three-band EQ, mute and fader each, and a master ================= */
-var MXW = 490, MXD = 270, MXH = deskH(0.09), MXTILT = DESK.t;
+var MXW = 490, MXD = 270, MXH = 1.1, MXTILT = 0.56;
 function qx(u){ return (u - MXW / 2) * SC; }
 function qz(u){ return (u - MXD / 2) * SC; }
 var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotation.y = MXPOS.r; scene.add(MXY);
