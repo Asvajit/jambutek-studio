@@ -186,9 +186,9 @@ var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
    which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
 var RIG = { x:0, z:2.9, R:1.8 };
 var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
-    BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:1.1, z:RIG.z + RIG.R, r:0 },              // south row
+    BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:0.95, z:RIG.z + RIG.R, r:0 },              // south row
     MXPOS = { x:-RIG.R, z:2.0, r:-Math.PI / 2 }, TPPOS = { x:-RIG.R, z:3.05, r:-Math.PI / 2 }, MCPOS = { x:-RIG.R, z:3.95, r:-Math.PI / 2 }, // west row
-    SHPOS = { x:RIG.R, z:2.3, r:Math.PI / 2 }, SCPOS = { x:RIG.R, z:3.5, r:Math.PI / 2 },
+    SHPOS = { x:RIG.R, z:RIG.z, r:Math.PI / 2 }, SCPOS = { x:1.45, z:RIG.z + RIG.R, r:0 },           // the scratch box shares the Blip's end of the south row
     PFPOS = { x:ROOM.x1 - 1.31, z:ROOM.z0 + 1.31, r:Math.PI * 0.75 }, PGPOS = { x:ROOM.x0 + 1.31, z:ROOM.z1 - 1.31, r:-Math.PI * 0.25 };       // east row
 function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
 function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
