@@ -165,10 +165,10 @@ wall(D, ROOM.h, wallMat2, 20, 8, -Math.PI/2, ROOM.x1, cz, 3);
 })();
 
 /* pendant lamps: one bare bulb per station */
-function pendant(x, z, drop, color, intensity, tx, ty, tz, angle, shadow){
+function pendant(x, z, drop, color, intensity, tx, ty, tz, angle, shadow, bare){
   var g = new THREE.Group(); g.position.set(x, ROOM.h, z); scene.add(g);
   var cord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, drop, 4), new THREE.MeshLambertMaterial({ color:0x111111 }));
-  cord.position.y = -drop/2; g.add(cord);
+  cord.position.y = -drop/2; g.add(cord); if (bare) g.visible = false;                  // bare: just the light, the fitting is drawn elsewhere
   var shade = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.2, 7, 1, true), new THREE.MeshLambertMaterial({ color:0x1878C0, side:THREE.DoubleSide }));
   shade.position.y = -drop - 0.08; g.add(shade);
   var bulb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.055, 0), new THREE.MeshBasicMaterial({ color:0xFFF1D6 }));
@@ -192,12 +192,26 @@ var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z -
     PFPOS = { x:ROOM.x1 - 1.31, z:ROOM.z0 + 1.31, r:Math.PI * 0.75 }, PGPOS = { x:ROOM.x0 + 1.31, z:ROOM.z1 - 1.31, r:-Math.PI * 0.25 };       // east row
 function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
 function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
-var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, false);            // one lamp over each side of the rig
+var trLamp = pendant(0, TRPOS.z - 0.9, 0.0, 0xEEF3FF, 2.3, 0, 1.0, TRPOS.z, 1.1, false, true);            // one lamp over each side of the rig
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);
-var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false);
-var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false);
-var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.z, 1.05, false);
+var sideLampR = pendant(0, BSPOS.z + 0.9, 0.0, 0xEEF3FF, 2.3, 0, 1.0, BSPOS.z, 1.1, false, true);
+var endLamp = pendant(-RIG.R - 0.9, RIG.z, 0.0, 0xEEF3FF, 2.2, -RIG.R, 1.0, RIG.z, 1.05, false, true);
+var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.0, 0xEEF3FF, 2.2, RIG.R, 1.0, RIG.z, 1.05, false, true);
+// fluorescent battens on the ceiling: two over each side of the rig, pointing across it (model by Mark Peters, CC BY 4.0, see vendor/FLUORO-NOTICE.md)
+(function(){
+  var F = window.JB_FLUORO; if (!F) return;
+  function u16(b64){ var bin = atob(b64), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Uint16Array(u8.buffer); }
+  function deq(q, lo, hi, n){ var out = new Float32Array(q.length); for (var i = 0; i < q.length; i++){ var a = i % n; out[i] = lo[a] + (hi[a] - lo[a]) * q[i] / 65535; } return out; }
+  var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(deq(u16(F.p), F.lo, F.hi, 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(deq(u16(F.uv), F.ulo, F.uhi, 2), 2));
+  geo.setIndex(new THREE.BufferAttribute(u16(F.i), 1)); geo.computeVertexNormals();
+  function tx(src){ var t = new THREE.TextureLoader().load(src); t.flipY = false; return t; }
+  var mat = new THREE.MeshLambertMaterial({ map:tx(F.map), emissive:0xffffff, emissiveMap:tx(F.emi), emissiveIntensity:1.5 });
+  var d = RIG.R + 0.95, o = 0.9;
+  [[-o, -d, 0], [o, -d, 0], [-o, d, 0], [o, d, 0], [-d, -o, 1], [-d, o, 1], [d, -o, 1], [d, o, 1]].forEach(function(p){
+    var m = new THREE.Mesh(geo, mat); m.position.set(RIG.x + p[0], ROOM.h, RIG.z + p[1]); m.rotation.y = p[2] * Math.PI / 2; m.userData.noShadow = true; scene.add(m);
+  });
+})();
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
