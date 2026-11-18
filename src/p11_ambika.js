@@ -2,7 +2,7 @@
 /* ================= the Ambi: a 6-voice hybrid polysynth module, after Mutable Instruments' Ambika =================
    Eight pots edit the eight parameters on the two-line display; S1-S8 pick the page (press again for a page's second half).
    It has no keyboard: the Snake, its own arpeggiator / sequencer, the encoder (click = C4) or the computer keys play it. */
-var AMW = 320, AMD = 170, AMH = 1.1, AMTILT = 0.56;
+var AMW = 320, AMD = 170, AMH = deskH(0.08), AMTILT = DESK.t;
 function ax(u){ return (u - AMW / 2) * SC; }
 function az(u){ return (u - AMD / 2) * SC; }
 var AMY = new THREE.Group(); AMY.position.set(AMPOS.x, AMH, AMPOS.z); AMY.rotation.y = AMPOS.r; scene.add(AMY);

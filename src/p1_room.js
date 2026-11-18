@@ -185,13 +185,18 @@ var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
    players stand around the outside and look at each other across it. Each position is where the instrument stands and
    which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
 var RIG = { x:0, z:2.9, R:1.8 };
+// the desk: one console bent into a square. A single slope carries every instrument at the same angle; a steeper bridge behind it carries the sequencers
+var DESK = { t:0.56, h0:0.95, din:0.30, dout:0.40, bt:0.95, bw:0.26, sn:0.43 };
+DESK.yi = DESK.h0 + DESK.din * Math.tan(DESK.t); DESK.yo = DESK.h0 - DESK.dout * Math.tan(DESK.t); DESK.yb = DESK.yi + DESK.bw * Math.tan(DESK.bt);
+function deskH(TH){ return DESK.h0 + (TH + 0.002) / Math.cos(DESK.t); }                                   // how high a unit's top face sits so its underside rests on the slope
+function bridgeH(TH){ return DESK.yi + (DESK.sn - DESK.din) * Math.tan(DESK.bt) + (TH + 0.002) / Math.cos(DESK.bt); }
 var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MFPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
-    BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:1.1, z:RIG.z + RIG.R, r:0 },              // south row
+    BSPOS = { x:-0.92, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.12, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:0.95, z:RIG.z + RIG.R, r:0 },              // south row
     MXPOS = { x:-RIG.R, z:2.0, r:-Math.PI / 2 }, TPPOS = { x:-RIG.R, z:3.05, r:-Math.PI / 2 }, MCPOS = { x:-RIG.R, z:3.95, r:-Math.PI / 2 }, // west row
-    SHPOS = { x:RIG.R, z:1.9, r:Math.PI / 2 }, SCPOS = { x:RIG.R, z:2.75, r:Math.PI / 2 }, PFPOS = { x:RIG.R, z:3.75, r:Math.PI / 2 };       // east row
+    SHPOS = { x:RIG.R, z:1.95, r:Math.PI / 2 }, SCPOS = { x:RIG.R, z:2.75, r:Math.PI / 2 }, PFPOS = { x:RIG.R, z:3.75, r:Math.PI / 2 };       // east row
 function devStand(P){ return { x:P.x + Math.sin(P.r) * 0.95, z:P.z + Math.cos(P.r) * 0.95 }; }
 function devBlock(P, hw){ var c = Math.cos(P.r), n = Math.sin(P.r), xs = [], zs = []; [[-hw, -0.5], [hw, -0.5], [-hw, 0.34], [hw, 0.34]].forEach(function(q){ xs.push(P.x + q[0] * c + q[1] * n); zs.push(P.z - q[0] * n + q[1] * c); }); return [Math.min.apply(null, xs), Math.max.apply(null, xs), Math.min.apply(null, zs), Math.max.apply(null, zs)]; }
-var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, true);            // one lamp over each side of the rig
+var trLamp = pendant(0, TRPOS.z - 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, TRPOS.z, 1.1, false);            // one lamp over each side of the rig
 var wash = new THREE.SpotLight(0x7AA6D2, 1.5, 9, 0.95, 0.8, 1.2);
 wash.position.set(0, ROOM.h - 0.1, 2.6); wash.target.position.set(0, 1.4, ROOM.z0); scene.add(wash); scene.add(wash.target);
 var sideLampR = pendant(0, BSPOS.z + 0.9, 0.62, 0xFFE7C8, 2.3, 0, 1.0, BSPOS.z, 1.1, false);
@@ -200,31 +205,25 @@ var eastLamp = pendant(RIG.R + 0.9, RIG.z, 0.62, 0xFFE7C8, 2.2, RIG.R, 1.0, RIG.
 
 /* ================= studio dressing ================= */
 var BLOCKS = [];                              // floor footprints the player can't walk through
-BLOCKS.push([RIG.x - RIG.R - 0.42, RIG.x + RIG.R + 0.42, RIG.z - RIG.R - 0.42, RIG.z + RIG.R + 0.42]);          // nobody walks through the middle of the rig
-// one long desk bent into a square: every instrument sits on it, with a raised bridge along the inside edge for the sequencers
-var TABLE_Y = 0.78, TIER_Y = 1.12, TBL_IN = RIG.R - 0.68, TBL_OUT = RIG.R + 0.42, TIER_OUT = RIG.R - 0.34;
-function riser(Y, H, W, D2, TH, tilt, baseY){            // a solid wedge from the desk up to a tilted tray; Y is the upright group whose origin is H above the floor
-  var u = TH + 0.026, zf = D2 / 2 + 0.03, c = Math.cos(tilt), sn = Math.sin(tilt), yb = baseY - H;
-  var sh = new THREE.Shape();
-  sh.moveTo(-u * sn + zf * c, -u * c - zf * sn); sh.lineTo(-u * sn - zf * c, -u * c + zf * sn);
-  sh.lineTo(-u * sn - zf * c, yb); sh.lineTo(-u * sn + zf * c, yb); sh.closePath();
-  var g = new THREE.ExtrudeGeometry(sh, { depth:W, bevelEnabled:false }); g.translate(0, 0, -W / 2); g.rotateY(-Math.PI / 2);
-  var m = new THREE.Mesh(g, metalMat); m.castShadow = true; Y.add(m); return m;
-}
+BLOCKS.push([RIG.x - RIG.R - DESK.dout, RIG.x + RIG.R + DESK.dout, RIG.z - RIG.R - DESK.dout, RIG.z + RIG.R + DESK.dout]);          // nobody walks through the middle of the rig
 (function(){
-  function ring(rIn, rOut, y0, y1, mat, tag){
-    var w = rOut - rIn, mid = (rIn + rOut) / 2, h = y1 - y0, g = new THREE.Group(); g.position.set(RIG.x, (y0 + y1) / 2, RIG.z); scene.add(g);
-    [-1, 1].forEach(function(s){
-      var a = new THREE.Mesh(new THREE.BoxGeometry(rOut * 2, h, w), mat); a.position.z = s * mid; g.add(a);
-      var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, rIn * 2), mat); b.position.x = s * mid; g.add(b);
-      a.castShadow = b.castShadow = true; a.receiveShadow = b.receiveShadow = true;
-    });
-    solid(g, tag);
+  var deskWood = new THREE.MeshLambertMaterial({ map: canvasTex(woodTex(), [10, 1]), side:THREE.DoubleSide });
+  var deskDark = new THREE.MeshLambertMaterial({ color:0x14161B, side:THREE.DoubleSide });
+  var g = new THREE.Group(); g.position.set(RIG.x, 0, RIG.z); scene.add(g);
+  function band(rTop, yTop, rBot, yBot, mat){                              // one four-sided band of the console, mitred at the corners
+    var geo = new THREE.CylinderGeometry(rTop * Math.SQRT2, rBot * Math.SQRT2, Math.max(yTop - yBot, 0.0005), 4, 1, true); geo.rotateY(Math.PI / 4);
+    geo = geo.toNonIndexed(); geo.computeVertexNormals();
+    var m = new THREE.Mesh(geo, mat); m.position.y = (yTop + yBot) / 2; g.add(m); return m;
   }
-  ring(TBL_IN + 0.1, TBL_OUT - 0.14, 0, TABLE_Y - 0.05, metalMat, 'desk');          // a plinth set back under the top, so there are no legs at all
-  ring(TBL_IN, TBL_OUT, TABLE_Y - 0.05, TABLE_Y, woodMat, 'desk');
-  ring(TBL_IN + 0.03, TIER_OUT - 0.03, TABLE_Y, TIER_Y - 0.03, metalMat, 'desk');
-  ring(TBL_IN, TIER_OUT, TIER_Y - 0.03, TIER_Y, woodMat, 'desk');
+  var R = RIG.R, rO = R + DESK.dout, rI = R - DESK.din, rB = rI - DESK.bw;
+  band(rI, DESK.yi, rO, DESK.yo, deskWood);                 // the playing slope
+  band(rB, DESK.yb, rI, DESK.yi, deskWood);                 // the bridge
+  band(rB - 0.06, DESK.yb + 0.001, rB, DESK.yb, deskWood);  // its top edge
+  band(rB - 0.06, DESK.yb + 0.001, rB - 0.06, 0, deskDark); // the back, down to the floor
+  band(rO, DESK.yo, rO, DESK.yo - 0.07, deskWood);          // front edge
+  band(rO - 0.1, DESK.yo - 0.07, rO, DESK.yo - 0.07, deskDark);
+  band(rO - 0.1, DESK.yo - 0.07, rO - 0.1, 0, deskDark);    // the base, set back a little
+  solid(g, 'desk');
 })();
 // the label's jambu in neon on the back wall, as in the arcade
 /* a moulded cut-out: the artwork's own silhouette, extruded, with the art on its face */

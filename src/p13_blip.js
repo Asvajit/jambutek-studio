@@ -3,7 +3,7 @@
    Two oscillators (pulse with a slow width sweep, or saw) plus a square sub an octave down, into a 24 dB low-pass.
    Decay-only envelopes with a sustain switch, glide, detune, and one LFO that goes to pitch or to the filter.
    It has no keys: its Snake plays it, or the computer keyboard while you lean over it. */
-var MBW = 130, MBD = 124, MBH = 1.1, MBTILT = 0.56;
+var MBW = 130, MBD = 124, MBH = deskH(0.07), MBTILT = DESK.t;
 function mbx(u){ return (u - MBW / 2) * SC; }
 function mbz(u){ return (u - MBD / 2) * SC; }
 var MBY = new THREE.Group(); MBY.position.set(MBPOS.x, MBH, MBPOS.z); MBY.rotation.y = MBPOS.r; scene.add(MBY);

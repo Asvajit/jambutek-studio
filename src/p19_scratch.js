@@ -4,7 +4,7 @@
    cut it in and out, and four corner buttons (previous / next sample, play, cue). The sample is played by a small
    variable-speed reader, so dragging the platter really does drag the sound. Samples are made in code.
    The idea and the arrangement follow rasteri's open-source SC1000; the model and the sound engine here are original. */
-var SCW = 170, SCD = 196, SCH = 1.1, SCTILT = 0.56;
+var SCW = 170, SCD = 196, SCH = deskH(0.075), SCTILT = DESK.t;
 function skx(u){ return (u - SCW / 2) * SC; }
 function skz(u){ return (u - SCD / 2) * SC; }
 var SCY = new THREE.Group(); SCY.position.set(SCPOS.x, SCH, SCPOS.z); SCY.rotation.y = SCPOS.r; scene.add(SCY);

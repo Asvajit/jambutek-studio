@@ -14,7 +14,7 @@ var COLX = [225, 265, 306, 346, 386, 427, 467, 507, 548, 588, 628];
 var PADX = [199, 236, 273, 311, 349, 386, 424, 461, 499, 537, 574, 612, 650, 687, 725, 762];
 var PADCOL = [0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF8A2A, 0xFF8A2A, 0xFF8A2A, 0xFF8A2A, 0xFFE15A, 0xFFE15A, 0xFFE15A, 0xFFE15A, 0xF4F4F4, 0xF4F4F4, 0xF4F4F4, 0xF4F4F4];
 var COLCOL = ['#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FFE15A', '#FFE15A', '#FFE15A'];
-var TILT = 0.56, TRH = 1.1;
+var TILT = DESK.t, TRH = deskH(0.11);
 
 var TRY = new THREE.Group(); TRY.position.set(TRPOS.x, 0, TRPOS.z); TRY.rotation.y = TRPOS.r; scene.add(TRY);
 var TRG = new THREE.Group(); TRG.position.set(0, TRH, 0); TRG.rotation.x = TILT; TRY.add(TRG);
@@ -84,11 +84,6 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:panelTex, emissive:0xffffff, emissiveMap:panelTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; TRG.add(top); solid(top, 'trbody');
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
-  // the stand: a tilted tray with a front lip, on two A-frame legs
-  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; tray.castShadow = true; TRG.add(tray); solid(tray, 'trbody');
-  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); TRG.add(lip);
-  var st = new THREE.Group(); st.position.y = TRH; TRY.add(st); riser(st, TRH, W2 + 0.08, D2, TH, TILT, TABLE_Y);
-  solid(st, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
 })();
 

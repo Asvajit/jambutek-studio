@@ -6,7 +6,7 @@ var MS = 0.0005558;                                  // metres per photo pixel (
 function mx(px){ return (px - 1060) * MS; }
 function mz(py){ return (py - 429) * MS; }
 function mm(px){ return px * MS / SC; }              // photo pixels -> the builders' millimetre units
-var MFH = 1.0, MFTILT = 0.42;
+var MFH = deskH(0.09), MFTILT = DESK.t;
 var MFY = new THREE.Group(); MFY.position.set(MFPOS.x, MFH, MFPOS.z); MFY.rotation.y = MFPOS.r; scene.add(MFY);
 var MFG = new THREE.Group(); MFG.rotation.x = MFTILT; MFY.add(MFG);
 function devBody(o, dev){ solid(o, 'trbody'); o.traverse(function(m){ m.userData.dev = dev; }); }
@@ -82,9 +82,6 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:mfTex, emissive:0xffffff, emissiveMap:mfTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; MFG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MFG.add(body);
-  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; MFG.add(tray);
-  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); MFG.add(lip);
-  riser(MFY, MFH, W2 + 0.08, D2, TH, MFTILT, TABLE_Y);
   devBody(MFY, 'mf');
   BLOCKS.push(devBlock(MFPOS, 0.7));
 })();

@@ -51,8 +51,4 @@ function cable(pts, r){
   var c = new THREE.CatmullRomCurve3(pts.map(function(p){ return new THREE.Vector3(p[0], p[1], p[2]); }));
   var m = new THREE.Mesh(new THREE.TubeGeometry(c, 48, r || 0.007, 5, false), new THREE.MeshPhongMaterial({ color:0x2A2B30, shininess:40, specular:0x333333 })); scene.add(m); return m;
 }
-function standFor(Y, G, W2, D2, TH, H, tilt, legX){                 // tray + lip on the tilted group, legs on the upright one
-  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; G.add(tray);
-  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); G.add(lip);
-  riser(Y, H, W2 + 0.08, D2, TH, tilt, TABLE_Y);
-}
+function standFor(){}                 // units rest straight on the desk now: no trays, no legs

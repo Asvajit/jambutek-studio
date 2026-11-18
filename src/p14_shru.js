@@ -4,7 +4,7 @@
    two ADSR envelopes (filter, amp), two LFOs and a few fixed modulation routes. Six buttons pick the page the
    four pots edit, the two-line display names what they do, the encoder steps pages and patches.
    It has no keys: its Snake plays it, or the computer keyboard while you lean over it. */
-var SHW = 150, SHD = 122, SHH = 1.1, SHTILT = 0.56;
+var SHW = 150, SHD = 122, SHH = deskH(0.07), SHTILT = DESK.t;
 function hx(u){ return (u - SHW / 2) * SC; }
 function hz(u){ return (u - SHD / 2) * SC; }
 var SHY = new THREE.Group(); SHY.position.set(SHPOS.x, SHH, SHPOS.z); SHY.rotation.y = SHPOS.r; scene.add(SHY);

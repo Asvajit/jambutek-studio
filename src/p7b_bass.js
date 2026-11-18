@@ -4,7 +4,7 @@ var BSS = 0.000634;                                   // metres per drawing pixe
 function bx(px){ return (px - 991) * BSS; }
 function bz(py){ return (py - 676.5) * BSS; }
 function bmm(px){ return px * BSS / SC; }
-var BSH = 1.0, BSTILT = 0.45;
+var BSH = deskH(0.09), BSTILT = DESK.t;
 var BSY = new THREE.Group(); BSY.position.set(BSPOS.x, BSH, BSPOS.z); BSY.rotation.y = BSPOS.r; scene.add(BSY);
 var BSG = new THREE.Group(); BSG.rotation.x = BSTILT; BSY.add(BSG);
 var BSRANGE = ["16'", "8'", "4'", "2'"], BSWAVE = ['Sine', 'Triangle', 'Saw', 'Pulse'], BSNM = ['Up', 'Down', 'UpDn 1', 'UpDn 2', 'Played', 'Random', 'Record', 'Play'], BSLW = ['Tri', 'Saw', 'Square', 'S+H'];
