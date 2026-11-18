@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Jambutek Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+<style>
+/* Same shell as the Jambutek Arcade: one full-bleed 3D view, a thin HUD in the corners, a crosshair dead centre */
+:root{
+  --room:#0B0D12; --ink:#05070A;
+  --crimson:#C00048; --blue:#1878C0; --sky:#30A8F0;
+  --mint:#90F0A8; --bone:#D8D8D8; --jambu:#E0193C;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%; overflow:hidden; overscroll-behavior:none}
+body{
+  margin:0; background:var(--ink); color:var(--bone);
+  font:13px/1.45 var(--mono); -webkit-font-smoothing:antialiased;
+  user-select:none; -webkit-user-select:none;
+}
+#view{ position:fixed; inset:0; width:100%; height:100%; display:block; image-rendering:pixelated; touch-action:none }
+#view.nocur{ cursor:none } #view.point{ cursor:pointer } #view.grab{ cursor:ns-resize } #view.grabbing{ cursor:grabbing }
+.hud{ position:fixed; z-index:3; pointer-events:none }
+.hud.bl{ bottom:calc(14px + env(safe-area-inset-bottom, 0px)); left:max(16px, env(safe-area-inset-left, 0px));
+         right:max(70px, env(safe-area-inset-right, 0px)) }
+.hint{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:11px; color:rgba(216,216,216,.62); transition:opacity .8s ease; text-shadow:0 1px 0 #000, 0 0 6px #000 }
+.hint b{ color:var(--bone); font-weight:500 }
+.hint.dim{ opacity:.3 }
+#xh{ position:fixed; left:50%; top:50%; z-index:3; pointer-events:none; width:0; height:0 }
+#xh .plus{ position:absolute; left:-9px; top:-9px; width:18px; height:18px; transition:transform .12s ease }
+#xh .plus::before,#xh .plus::after{ content:""; position:absolute; background:var(--bone); box-shadow:0 0 0 1px rgba(0,0,0,.55) }
+#xh .plus::before{ left:8px; top:2px; width:2px; height:14px }
+#xh .plus::after{ top:8px; left:2px; height:2px; width:14px }
+#xh.hot .plus{ transform:scale(1.25) }
+#xh.hot .plus::before,#xh.hot .plus::after{ background:var(--mint) }
+#xh .lab, #tip{
+  white-space:nowrap; font-size:11px; letter-spacing:.08em; color:var(--mint); text-shadow:0 1px 0 #000, 0 0 6px #000;
+}
+#xh .lab{ position:absolute; top:18px; left:0; transform:translateX(-50%) }
+#tip{ position:fixed; z-index:4; pointer-events:none; transform:translate(-50%, 22px); padding:3px 8px; border-radius:4px; background:rgba(5,7,10,.78); border:1px solid rgba(144,240,168,.35) }
+#toast{
+  position:fixed; left:50%; top:calc(50% + 46px); transform:translateX(-50%); z-index:3; pointer-events:none;
+  font-size:12px; letter-spacing:.06em; color:var(--bone); text-shadow:0 1px 0 #000, 0 0 8px #000;
+  opacity:0; transition:opacity .3s ease; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis;
+}
+#toast.up{ opacity:1 }
+#lockmsg{
+  position:fixed; left:50%; top:24%; transform:translate(-50%,-50%); z-index:4; pointer-events:none;
+  padding:10px 16px; border:1px solid rgba(144,240,168,.45); border-radius:6px;
+  background:rgba(5,7,10,.72); color:var(--bone); font-size:12px; text-align:center; line-height:1.6;
+}
+#lockmsg b{ color:var(--mint); font-weight:500 }
+#mute{
+  position:fixed; z-index:4; top:calc(12px + env(safe-area-inset-top, 0px)); right:max(12px, env(safe-area-inset-right, 0px));
+  width:40px; height:40px; display:grid; place-items:center;
+  border:1px solid rgba(216,216,216,.22); border-radius:50%; background:rgba(11,13,18,.6); color:var(--bone); cursor:pointer; opacity:.6;
+}
+#mute:hover,#mute:focus-visible{ opacity:1; border-color:var(--mint) }
+#mute svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round }
+#mute .off{ display:none } #mute[aria-pressed="true"] .on{ display:none } #mute[aria-pressed="true"] .off{ display:inline }
+:focus-visible{ outline:3px solid var(--mint); outline-offset:3px }
+#loading{ position:fixed; inset:0; z-index:9; display:grid; place-items:center; background:var(--ink);
+  color:var(--mint); letter-spacing:.3em; font-size:11px; text-transform:uppercase; transition:opacity .6s ease }
+#loading.gone{ opacity:0; pointer-events:none }
+/* leaning over the drum machine */
+#trhud{ position:fixed; z-index:4; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  display:grid; gap:8px; justify-items:center; width:min(760px, calc(100% - 32px)); pointer-events:none }
+#trhud .keys{ font-size:11px; color:rgba(216,216,216,.78); text-align:center; text-shadow:0 1px 0 #000, 0 0 6px #000; line-height:1.7 }
+#trhud .keys b{ color:#FFE15A; font-weight:500 }
+#trhud .leave{ pointer-events:auto; font:inherit; font-size:11px; padding:6px 12px; color:var(--bone); background:rgba(8,10,14,.7);
+  border:1px solid rgba(216,216,216,.3); border-radius:5px; cursor:pointer }
+#trhud .leave:hover{ border-color:var(--mint); color:#fff }
+@media (hover:none){ .desk{ display:none } }
+@media (hover:hover){ .touch{ display:none } }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+</style>
+
+<canvas id="view" aria-label="A dark studio room with a grid sequencer, a drum machine, four synthesizers, a sampler and a mixer in a row on angled stands"></canvas>
+
+<div class="hud bl">
+  <div class="hint" id="hint">
+    <span class="desk"><b>WASD</b> walk &middot; <b>Shift</b> run</span>
+    <span class="desk"><b>Click</b> buttons + pads</span>
+    <span class="desk"><b>Scroll</b> or <b>drag</b> knobs + faders</span>
+    <span class="desk"><b>Click</b> to look &middot; <b>Esc</b> frees the cursor</span>
+    <span class="desk"><b>E</b> lean over an instrument</span>
+    <span class="desk"><b>Enter</b> start / stop</span>
+    <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
+    <span id="verFps">studio v1.0</span>
+  </div>
+</div>
+
+<div id="xh" hidden><div class="plus"></div><div class="lab" id="xhLab"></div></div>
+<div id="tip" hidden></div>
+<div id="toast"></div>
+<div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
+
+<div id="trhud" hidden>
+  <div class="keys desk" id="hudTr"><b>Click</b> buttons and pads &middot; <b>scroll</b> or <b>drag up/down</b> on knobs and faders &middot; <b>double-click</b> a knob to reset it<br><b>Enter</b> start / stop &middot; <b>1</b>&ndash;<b>9</b>, <b>0</b>, <b>-</b> play the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudMx" hidden><b>1</b>&ndash;<b>7</b> mute drums, synth, bass, Blip, Ambi, Tape, Shru &middot; <b>scroll</b> or <b>drag</b> faders and EQ knobs &middot; <b>double-click</b> to reset<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity or probability (the chance the step plays)<br><b>OUT</b> sends it to any instrument &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Snake on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudSh" hidden>The six buttons pick a page, the four pots edit what the display shows &middot; <b>scroll</b> EDIT to step pages, or patches after <b>MEMORY</b><br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudAm" hidden><b>S1</b>&ndash;<b>S8</b> pick a page (press again for its second half) &middot; the eight pots edit what the display shows &middot; <b>scroll</b> the encoder to fine-tune, <b>click</b> it for a C4<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudTp" hidden><b>Click</b> keys to play the sample &middot; <b>scroll</b> or <b>drag</b> a knob, <b>click</b> it for its second page &middot; <b>LOOP</b> records, then overdubs &middot; <b>CHOMP</b> + white keys 1&ndash;8 pick a sample, <b>CHOMP + LOOP</b> samples the mixer<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> loop play &middot; <b>Shift</b> = Chomp &middot; <b>Esc</b> steps back</div>
+  <button type="button" class="leave" id="trLeave">Step back</button>
+</div>
+
+<button id="mute" type="button" aria-pressed="false" aria-label="Mute sound">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <g class="on"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></g>
+    <g class="off"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9.5l4.5 5"/><path d="M21.5 9.5l-4.5 5"/></g>
+  </svg>
+</button>
+
+<div id="loading">Loading the studio</div>
+<p class="sr" id="live" role="status" aria-live="polite"></p>
