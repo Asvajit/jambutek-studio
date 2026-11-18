@@ -124,7 +124,7 @@ function trig(i, t, vel){
 }
 function hit(i, vel){                           // a pad played by hand
   unlock(); if (!AU.ready) return;
-  trig(i, ac.currentTime + 0.002, vel || 0.95); SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1;
+  trig(i, ac.currentTime + 0.002, vel || 0.95); SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; if (i === 1 && !M.mutes[1]) SEQ.snare = vel || 0.95;
   if (M.mode === 'instrec' && M.playing){
     var v = playV(), pos = SEQ.step - (SEQ.nextT - ac.currentTime) / stepDur(), n = ((Math.round(pos) % v.last) + v.last) % v.last;
     v.st[i][n] = 1; if (n === SEQ.step) SEQ.skip[i + '_' + n] = 1; saveSoon();
@@ -148,15 +148,15 @@ function schedStep(t){
   }
   var cur = playV(), v = cur;
   if (SEQ.fill){ if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; }
-  var s = SEQ.step, sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [];
+  var s = SEQ.step, sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
   for (var i = 0; i < 11; i++){
     var st = v.st[i][s]; if (!st) continue;
     if (SEQ.skip[i + '_' + s]){ delete SEQ.skip[i + '_' + s]; continue; }
     var vel = (st === 2 ? 0.4 : 0.8) * acc, n = v.sb[i][s] || 1;
     for (var k = 0; k < n; k++) trig(i, tt + k * sd / n, vel * (k ? 0.82 : 1));
-    if (!M.mutes[i]) hits.push(i);
+    if (!M.mutes[i]){ hits.push(i); if (i === 1) sv = vel; }
   }
-  SEQ.vis.push({ t:tt, step:s, hits:hits });
+  SEQ.vis.push({ t:tt, step:s, hits:hits, sv:sv });
   mfClock(t, SEQ.n16, sd, sw); bsClock(t, SEQ.n16, sd, sw); snClock(t, SEQ.n16, sd, sw); amClock(t, SEQ.n16, sd, sw); SEQ.n16++;
   SEQ.step++;
   if (SEQ.step >= cur.last){ SEQ.step = 0; SEQ.bar++; if (SEQ.fill){ SEQ.fill = false; SEQ.fillVar = null; SEQ.crashNext = true; } M.varIx = (M.varIx + 1) % M.varSel.length; SEQ.skip = {}; }
@@ -320,7 +320,7 @@ function paintTempo(){
 /* ---- lights: called every frame ---- */
 var VARL = 'ABCDEFGH';
 function updateTR(now, dt){
-  if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); } }
+  if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); if (e.sv) SEQ.snare = e.sv; } }
   var blink = (now % 420) < 210, fast = (now % 200) < 100, v = editV(), pv = playV(), vs = M.playing ? SEQ.visStep : -1;
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);

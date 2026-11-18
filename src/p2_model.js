@@ -92,7 +92,6 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
     var x = s * 0.36;
     var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, TRH - 0.12, 0.045), metalMat); post.position.set(x, (TRH - 0.12) / 2, -0.02); post.castShadow = true; st.add(post);
     var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, 0.0175, 0); st.add(foot);
-    var brace = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.56), metalMat); brace.position.set(x, 0.5, 0.0); brace.rotation.x = -1.02; st.add(brace);
     var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, TRH - (TH + 0.05) * Math.cos(TILT), -(TH + 0.05) * Math.sin(TILT)); arm.rotation.x = TILT; st.add(arm);
   });
   var bar = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.03), metalMat); bar.position.set(0, 0.28, -0.02); st.add(bar);
