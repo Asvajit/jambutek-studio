@@ -1,30 +1,22 @@
 
-/* ================= snare lights: a fresnel box light hung in each corner of the ceiling, aimed at the rig =================
+/* ================= snare lights: a fresnel stage light hung in each corner of the ceiling, aimed at the rig =================
    They glow on every snare hit and fade; how bright depends on how hard the snare was hit. They are not light sources: only the lens and a soft halo light up, the room does not flash.
-   Model: "Frensel Box Light" by LazyAstronaut3D (Sketchfab), baked to plain geometry in vendor/fresnel.json. */
+   Model: "Stage Light - Fresnel" by Mike Rowley, CC BY-NC 4.0, baked to plain geometry in vendor/stagelight.json (see vendor/MODELS-NOTICE.md). */
 var SNLIGHTS = [];
 (function(){
-  var F = window.JB_FRESNEL; if (!F) return;
-  function geo(d){
-    var bin = atob(d.p), u8 = new Uint8Array(bin.length), i; for (i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    var q = new Uint16Array(u8.buffer), pos = new Float32Array(q.length);
-    for (i = 0; i < q.length; i++){ var a = i % 3; pos[i] = d.lo[a] + (d.hi[a] - d.lo[a]) * q[i] / 65535; }
-    var bi = atob(d.i), i8 = new Uint8Array(bi.length); for (i = 0; i < bi.length; i++) i8[i] = bi.charCodeAt(i);
-    var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(new Uint16Array(i8.buffer), 1)); g.computeVertexNormals(); return g;
-  }
+  var F = window.JB_STAGELIGHT; if (!F) return;
   var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 0, 64, 64, 64);
   gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.18, 'rgba(255,255,255,0.55)'); gr.addColorStop(0.42, 'rgba(255,255,255,0.14)'); gr.addColorStop(0.7, 'rgba(255,255,255,0.025)'); gr.addColorStop(0.9, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128);
   var glowTex = new THREE.CanvasTexture(gc);
-  var bodyGeo = geo(F.body), lensGeo = geo(F.lens);
-  var bodyMat = new THREE.MeshPhongMaterial({ color:0x0E0F12, emissive:0x000000, shininess:18, specular:0x0A0A0A, side:THREE.DoubleSide });
-  var inset = 0.42, y = ROOM.h - 0.42, target = new THREE.Vector3(RIG.x, 0.95, RIG.z);
+  var bodyGeo = bakedGeo(F.body), metalGeo = bakedGeo(F.metal), lensGeo = bakedGeo(F.lens);
+  var bodyMat = new THREE.MeshPhongMaterial({ color:0x16171A, emissive:0x0B0C0E, shininess:18, specular:0x0A0A0A, side:THREE.DoubleSide }), fitMat = new THREE.MeshPhongMaterial({ color:0x2B2D31, emissive:0x121316, shininess:40, specular:0x333333, side:THREE.DoubleSide });
+  var inset = 0.46;
   [[ROOM.x0 + inset, ROOM.z0 + inset], [ROOM.x1 - inset, ROOM.z0 + inset], [ROOM.x0 + inset, ROOM.z1 - inset], [ROOM.x1 - inset, ROOM.z1 - inset]].forEach(function(p){
-    var pole = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.42, 0.04), metalMat); pole.position.set(p[0], ROOM.h - 0.21, p[1]); pole.userData.noShadow = true; scene.add(pole);
-    var g = new THREE.Group(); g.position.set(p[0], y, p[1]); g.lookAt(target); scene.add(g);
-    var body = new THREE.Mesh(bodyGeo, bodyMat); g.add(body);
+    var g = new THREE.Group(); g.position.set(p[0], ROOM.h, p[1]); g.rotation.y = Math.atan2(RIG.x - p[0], RIG.z - p[1]); scene.add(g);        // the model hangs from its clamp and already tilts down at the rig
+    var body = new THREE.Mesh(bodyGeo, bodyMat), fit = new THREE.Mesh(metalGeo, fitMat); g.add(body); g.add(fit);
     var lensMat = new THREE.MeshBasicMaterial({ color:0x120C06, side:THREE.DoubleSide }), lens = new THREE.Mesh(lensGeo, lensMat); g.add(lens);
-    [body, lens].forEach(function(m){ m.userData.noShadow = true; });
-    var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xFFC98A, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false })); halo.position.z = 0.3; halo.scale.set(1.5, 1.5, 1); halo.userData.noShadow = true; g.add(halo);
+    [body, fit, lens].forEach(function(m){ m.userData.noShadow = true; });
+    var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xFFC98A, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false })); halo.position.set(F.lensC[0], F.lensC[1] - 0.02, F.lensC[2] + 0.07); halo.scale.set(1.5, 1.5, 1); halo.userData.noShadow = true; g.add(halo);
     SNLIGHTS.push({ lens:lensMat, halo:halo });
   });
 })();

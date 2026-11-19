@@ -59,8 +59,8 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var W2 = SNW * SC, D2 = SND * SC, TH = 0.04;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:snTex, emissive:0xffffff, emissiveMap:snTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; SNG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SNG.add(body);
-  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.02, D2 + 0.05), woodMat); tray.position.y = -TH - 0.012; SNG.add(tray);
-  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), woodMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
+  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.02, D2 + 0.05), tableMat); tray.position.y = -TH - 0.012; SNG.add(tray);
+  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), tableMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
   devBody(SNY, DK);
   var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
   SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });

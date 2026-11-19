@@ -140,6 +140,13 @@ var floorMat = new THREE.MeshLambertMaterial({ map: canvasTex(floorTex(), [18, 1
 var ceilMat  = new THREE.MeshLambertMaterial({ color:0x0A0D13 });
 var trimMat  = new THREE.MeshLambertMaterial({ color:0x0F1520 });
 var woodMat  = new THREE.MeshLambertMaterial({ map: canvasTex(woodTex(), [2, 1]) });
+var tableMat = new THREE.MeshLambertMaterial({ color:0x1C1D21 });                     // table tops, trays and shelves: matte, nearly black
+function bakedGeo(d){                                                                  // geometry from a vendor/*.json model: 16-bit positions (and uvs) over a bounding box
+  function u16(b64){ var bin = atob(b64), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Uint16Array(u8.buffer); }
+  function deq(q, lo, hi, n){ var out = new Float32Array(q.length); for (var i = 0; i < q.length; i++){ var a = i % n; out[i] = lo[a] + (hi[a] - lo[a]) * q[i] / 65535; } return out; }
+  var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(deq(u16(d.p), d.lo, d.hi, 3), 3)); if (d.uv) g.setAttribute('uv', new THREE.BufferAttribute(deq(u16(d.uv), d.ulo, d.uhi, 2), 2));
+  g.setIndex(new THREE.BufferAttribute(u16(d.i), 1)); g.computeVertexNormals(); return g;
+}
 var blackMat = new THREE.MeshLambertMaterial({ color:0x121418 });
 var metalMat = new THREE.MeshPhongMaterial({ color:0x1A1C22, shininess:20, specular:0x0C0C0C, flatShading:true });
 
@@ -239,18 +246,17 @@ function logoPower(now){                        // mostly steady; every so often
   if (now < logoFx.until){ var f = Math.sin(now * 0.09) + Math.sin(now * 0.23); return f > 0.4 ? 1 : f > -0.2 ? 0.35 : 0.05; }
   return 0.92 + 0.08 * Math.sin(now * 0.004);
 }
-// four monitors, one hung in each corner under its snare light, faced with the Jambutek speaker art and aimed at the rig
+// four wall speakers, one hung in each corner under its snare light and aimed at the rig (model by Elite Big Speakerman, CC BY 4.0, see vendor/MODELS-NOTICE.md)
 var monitors = (function(){
-  var tl = tex(A.spkL), tr = tex(A.spkR); tl.minFilter = tr.minFilter = THREE.LinearFilter;
-  var ins = 0.34, y = 1.84;
-  return [[ROOM.x0 + ins, ROOM.z0 + ins, tl], [ROOM.x1 - ins, ROOM.z0 + ins, tr], [ROOM.x0 + ins, ROOM.z1 - ins, tr], [ROOM.x1 - ins, ROOM.z1 - ins, tl]].map(function(s){
-    var w = 0.42, h = w * 620 / 361, g = new THREE.Group(); g.position.set(s[0], y, s[1]); g.rotation.order = 'YXZ'; g.rotation.y = Math.atan2(RIG.x - s[0], RIG.z - s[1]); g.rotation.x = 0.16; scene.add(g);
-    var box = new THREE.Mesh(new THREE.BoxGeometry(w * 0.92, h * 0.96, 0.3), new THREE.MeshLambertMaterial({ color:0x0C1018 })); box.position.set(0, h / 2, -0.155); g.add(box);
-    var face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshPhongMaterial({ map:s[2], emissive:0xffffff, emissiveMap:s[2], emissiveIntensity:0.25, alphaTest:0.5 }));
-    face.position.y = h / 2; g.add(face);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.3), metalMat); arm.position.set(0, h / 2, -0.42); g.add(arm);                 // the bracket back into the corner
-    var plate = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.3, 0.02), metalMat); plate.position.set(0, h / 2, -0.3); g.add(plate);
-    g.traverse(function(o){ o.userData.noShadow = true; });
-    return { g:g, face:face, box:box, y0:face.position.y };
+  var F = window.JB_SPEAKER; if (!F) return [];
+  function tx(src){ var t = new THREE.TextureLoader().load(src); t.flipY = false; return t; }
+  var gs = bakedGeo(F.support), gk = bakedGeo(F.speaker), sm = tx(F.supMap), ms = new THREE.MeshLambertMaterial({ map:sm, emissive:0xffffff, emissiveMap:sm, emissiveIntensity:0.7, side:THREE.DoubleSide }), emi = tx(F.spkEmi), km = tx(F.spkMap);
+  var cab = new THREE.MeshLambertMaterial({ map:km, emissive:0xffffff, emissiveMap:km, emissiveIntensity:0.7, side:THREE.DoubleSide });      // the corners are dark, so the cabinet carries a little light of its own
+  var ins = 0.3, y = 2.22;
+  return [[ROOM.x0 + ins, ROOM.z0 + ins], [ROOM.x1 - ins, ROOM.z0 + ins], [ROOM.x0 + ins, ROOM.z1 - ins], [ROOM.x1 - ins, ROOM.z1 - ins]].map(function(s){
+    var g = new THREE.Group(); g.position.set(s[0], y, s[1]); g.rotation.order = 'YXZ'; g.rotation.y = Math.atan2(RIG.x - s[0], RIG.z - s[1]); g.rotation.x = 0.2; scene.add(g);
+    var mat = new THREE.MeshBasicMaterial({ map:emi, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2 });      // the cones, drawn again on top: they glow with the kick
+    var sup = new THREE.Mesh(gs, ms), spk = new THREE.Mesh(gk, cab), glow = new THREE.Mesh(gk, mat); spk.add(glow); g.add(sup); g.add(spk); sup.userData.noShadow = spk.userData.noShadow = glow.userData.noShadow = true;
+    return { g:g, spk:spk, mat:mat };
   });
 })();

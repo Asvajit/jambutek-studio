@@ -302,7 +302,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.37 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.38 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -368,7 +368,7 @@ function frame(now){
 
   updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); ecUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); zkUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); flowUpdate(now, dt); bzUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
   var kick = SEQ.kick; snLightUpdate(dt);
-  monitors.forEach(function(m){ var s = 1 + kick * 0.03; m.face.scale.set(s, s, 1); m.face.material.emissiveIntensity = 0.25 + kick * 0.25; });
+  monitors.forEach(function(m){ var s = 1 + kick * 0.025; m.spk.scale.set(s, s, 1); var q = 0.3 + clamp(kick, 0, 1) * 0.7; m.mat.color.setRGB(q, q, q); });
   trLamp.light.intensity = trLamp.base * (1 + kick * 0.08);
   var lp = reduce ? 1 : logoPower(now); var kp = clamp(kick, 0, 1.2);                                   // the neon jambu pumps with the kick, like the speaker cones
   logo.face.emissiveIntensity = (0.12 + 0.48 * lp) * (1 + kp * 0.9); logo.side.emissiveIntensity = (0.1 + 1.2 * lp) * (1 + kp * 1.1); logoGlow.intensity = (0.15 + 1.1 * lp) * (1 + kp * 1.6); logoHalo.material.opacity = Math.min(0.95, (0.05 + 0.32 * lp) * (1 + kp * 1.5)); logoHalo.scale.setScalar(1 + kp * 0.22); logo.mesh.scale.setScalar(0.82 * (1 + kp * 0.035));

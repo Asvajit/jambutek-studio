@@ -10,12 +10,12 @@ function vidBooth(P){                                 // a counter across the co
   var fx0 = P.x - Math.sin(P.r) * 0.5, fz0 = P.z - Math.cos(P.r) * 0.5, blk = new THREE.MeshLambertMaterial({ color:0x2A2D35 });
   pendant(P.x - Math.sin(P.r) * 0.9, P.z - Math.cos(P.r) * 0.9, 0.75, 0xFFE7C8, 2.8, P.x, 0.9, P.z, 0.8, false, true);
   var c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.92, 0.07), blk); c.position.set(fx0, 0.46, fz0); c.rotation.y = P.r; scene.add(c);
-  var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), woodMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = P.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth');
+  var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), tableMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = P.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth');
   for (var i = -2; i <= 2; i++){ var bx = fx0 + Math.cos(P.r) * i * 0.32, bz = fz0 - Math.sin(P.r) * i * 0.32; BLOCKS.push([bx - 0.17, bx + 0.17, bz - 0.17, bz + 0.17]); }
 }
 function vidSwitch(G, x0, z0){                        // the switcher: a little box beside a video synth. Call with HOST / DEV set to that synth
   var box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.25), new THREE.MeshPhongMaterial({ color:0x15171C, shininess:30, specular:0x222222, flatShading:true })); box.position.set(x0, -0.026, z0); G.add(box);
-  var shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.024, 0.3), woodMat); shelf.position.set(x0, -0.07 - 0.014, z0); G.add(shelf);
+  var shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.024, 0.3), tableMat); shelf.position.set(x0, -0.07 - 0.014, z0); G.add(shelf);
   var c = mk(320, 500), g = c.getContext('2d'); g.fillStyle = '#1A1B1F'; g.fillRect(0, 0, 320, 500); g.fillStyle = '#D8D8D8'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 30px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText('ROOF VIDEO', 160, 32);
   g.font = 'bold 20px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = '#8A8C92'; g.fillText('PATTERN', 160, 172); g.fillText('BZZZBZ', 160, 318); g.fillText('SCREENS OFF', 160, 464);
   var top = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.25), new THREE.MeshPhongMaterial({ color:0x707070, map:smoothTex(c), emissive:0xffffff, emissiveMap:smoothTex(c), emissiveIntensity:0.9, shininess:6, specular:0x050505 })); top.rotation.x = -Math.PI / 2; top.position.set(x0, 0.0005, z0); G.add(top);

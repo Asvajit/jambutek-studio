@@ -53,8 +53,8 @@ function cable(pts, r){
 }
 function standFor(Y, G, W2, D2, TH, H, tilt, legX, own){            // tray + lip on the tilted group, legs on the upright one. Without `own` the unit gets no stand of its own: it is only noted, and p24_tables.js seats it on its side's table
   if (!own){ RIGREG.push({ Y:Y, G:G, W2:W2, TH:TH }); return; }
-  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; G.add(tray);
-  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); G.add(lip);
+  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), tableMat); tray.position.y = -TH - 0.014; G.add(tray);
+  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), tableMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); G.add(lip);
   [-1, 1].forEach(function(s){
     var x = s * legX;
     var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, H - 0.12, 0.045), metalMat); post.position.set(x, -H + (H - 0.12) / 2, -0.02); Y.add(post);
