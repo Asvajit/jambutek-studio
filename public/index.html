@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.24</span>
+    <span id="verFps">studio v1.25</span>
   </div>
 </div>
 
@@ -161,8 +161,9 @@ body{
   <div class="keys desk" id="hudTr"><b>Click</b> buttons and pads &middot; <b>scroll</b> or <b>drag up/down</b> on knobs and faders &middot; <b>double-click</b> a knob to reset it<br><b>Enter</b> start / stop &middot; <b>1</b>&ndash;<b>9</b>, <b>0</b>, <b>-</b> play the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudMx" hidden><b>1</b>&ndash;<b>9</b> mute drums, synth, bass, Blip, Ambi, Tape, Shru, Chord, Scratch &middot; <b>scroll</b> or <b>drag</b> faders and EQ knobs &middot; <b>double-click</b> to reset<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudMx" hidden><b>1</b>&ndash;<b>9</b> mute drums, synth, bass, Blip, Ambi, Tape, Shru, Chord, Scratch &middot; <b>scroll</b> or <b>drag</b> faders, EQ and send knobs &middot; <b>SEND A</b> feeds the echo &middot; <b>double-click</b> to reset<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity, probability (the chance the step plays) or <b>Custom</b>: click it, it flashes, then move any knob on the connected synth and the lane turns that knob for you<br><b>OUT</b> sends it to any instrument &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudEc" hidden>Fed by <b>SEND A</b> on the mixer &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Snake on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMc" hidden><b>Click</b> a chord button &middot; <b>click</b> or hold and <b>slide</b> along the black strip to strum it &middot; the two arrows change the preset &middot; the small button by the red lamp keeps the chord ringing<br><b>Q W E R T Y U</b> major &middot; <b>A S D F G H J</b> minor &middot; <b>Z X C V B N M</b> 7th &middot; <b>1</b>&ndash;<b>=</b> harp &middot; <b>Shift</b> sharp &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudSc" hidden><b>Hold</b> the platter and <b>drag</b> up and down to scratch, or <b>scroll</b> on it &middot; the fader at the back cuts the sound &middot; corner buttons: sample &minus; / +, play, cue<br><b>X</b> cuts while held &middot; <b>C</b> cue &middot; <b>Space</b> starts the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
@@ -4409,6 +4410,7 @@ var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
    players stand around the outside and look at each other across it. Each position is where the instrument stands and
    which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
 var RIG = { x:0, z:2.9, R:1.8 };
+var ECPOS = { x:-0.06, z:RIG.z - RIG.R, r:Math.PI };            // the echo, in the gap between the drum machine and the mixer
 var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MXPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
     BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:0.95, z:RIG.z + RIG.R, r:0 },              // south row
     MFPOS = { x:-RIG.R, z:1.95, r:-Math.PI / 2 }, TPPOS = { x:-RIG.R, z:3.05, r:-Math.PI / 2 }, MCPOS = { x:-RIG.R, z:3.95, r:-Math.PI / 2 }, // west row
@@ -4562,18 +4564,6 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:panelTex, emissive:0xffffff, emissiveMap:panelTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; TRG.add(top); solid(top, 'trbody');
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
-  // the stand: a tilted tray with a front lip, on two A-frame legs
-  var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.024, D2 + 0.07), woodMat); tray.position.y = -TH - 0.014; tray.castShadow = true; TRG.add(tray); solid(tray, 'trbody');
-  var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.12, 0.05, 0.024), woodMat); lip.position.set(0, -TH + 0.012, D2 / 2 + 0.035); TRG.add(lip);
-  var st = new THREE.Group(); TRY.add(st);
-  [-1, 1].forEach(function(s){
-    var x = s * 0.36;
-    var post = new THREE.Mesh(new THREE.BoxGeometry(0.045, TRH - 0.12, 0.045), metalMat); post.position.set(x, (TRH - 0.12) / 2, -0.02); post.castShadow = true; st.add(post);
-    var foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.035, 0.62), metalMat); foot.position.set(x, 0.0175, 0); st.add(foot);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, D2 + 0.04), metalMat); arm.position.set(x, TRH - (TH + 0.05) * Math.cos(TILT), -(TH + 0.05) * Math.sin(TILT)); arm.rotation.x = TILT; st.add(arm);
-  });
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.03), metalMat); bar.position.set(0, 0.28, -0.02); st.add(bar);
-  solid(st, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
 })();
 
@@ -4714,9 +4704,9 @@ function unlock(){
     var out = ac.createGain(); out.gain.value = muted ? 0 : 1; out.connect(ac.destination); AU.out = out;
     var comp = ac.createDynamicsCompressor(); comp.threshold.value = -9; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.12;
     var vol = ac.createGain(); AU.vol = vol;
-    AU.ch = []; AU.tap = ac.createGain(); for (var ci = 0; ci < 9; ci++){ var C = { inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), an:ac.createAnalyser() };
+    AU.ch = []; AU.tap = ac.createGain(); AU.sendA = ac.createGain(); AU.sendB = ac.createGain(); for (var ci = 0; ci < 9; ci++){ var C = { sa:ac.createGain(), sb:ac.createGain(), inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), an:ac.createAnalyser() };
       C.lo.type = 'lowshelf'; C.lo.frequency.value = 110; C.mid.type = 'peaking'; C.mid.frequency.value = 1000; C.mid.Q.value = 0.8; C.hi.type = 'highshelf'; C.hi.frequency.value = 7000; C.an.fftSize = 256;
-      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.fad.connect(C.an); C.fad.connect(comp); if (ci !== 5) C.fad.connect(AU.tap); AU.ch.push(C); }
+      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.fad.connect(C.an); C.fad.connect(comp); if (ci !== 5) C.fad.connect(AU.tap); C.sa.gain.value = C.sb.gain.value = 0; C.fad.connect(C.sa); C.sa.connect(AU.sendA); C.fad.connect(C.sb); C.sb.connect(AU.sendB); AU.ch.push(C); }       // sends are post-fader; send B has nothing plugged into it yet
     vol.connect(AU.ch[0].inp); AU.master = ac.createGain();
     var an = ac.createAnalyser(); an.fftSize = 256; an.smoothingTimeConstant = 0.5; AU.comp = comp; comp.connect(AU.master); AU.master.connect(an); an.connect(out); AU.an = an;
     // master FX: a low-pass below centre, a high-pass above it
@@ -6339,17 +6329,18 @@ function bsUpdate(now, dt){
 
 RESTORE[BSSAVE] = function(){ bsRestore(); CT.bsvol.show(); bsSync(); bsApply(); BS.dirty = true; }; SAVENOW.push(bsSave);
 
-/* ================= the mixer: one channel per instrument, three-band EQ, mute and fader each, and a master ================= */
-var MXW = 490, MXD = 270, MXH = 1.1, MXTILT = 0.56;
+/* ================= the mixer: one channel per instrument, three-band EQ, two sends, mute and fader each, and a master ================= */
+var NTTH = 0.11;               // how far the shared table top sits below the panels of the drum machine and the mixer
+var MXW = 490, MXD = 328, MXH = 1.1, MXTILT = 0.56;
 function qx(u){ return (u - MXW / 2) * SC; }
 function qz(u){ return (u - MXD / 2) * SC; }
 var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotation.y = MXPOS.r; scene.add(MXY);
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU', 'CHORD', 'SCRATCH'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF', '#FF6AB0', '#35D8B8'], MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416], MXMX = 464, MXNC = 9;
-var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, vol:0.75, mute:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
-function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 9){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
+var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, vol:0.75, mute:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 9){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
 var mxSaveT = null; function mxSaveNow(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master })); } function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(mxSaveNow, saveMs(800)); }
-var mxC = mk(1960, 1080), mxTex = null;
+var mxC = mk(1960, 1312), mxTex = null;
 function paintMX(){
   var g = mxC.getContext('2d'); g.setTransform(4, 0, 0, 4, 0, 0);
   g.fillStyle = '#1A1C21'; g.fillRect(0, 0, MXW, MXD);
@@ -6357,55 +6348,60 @@ function paintMX(){
   function T(s, x, y, size, col, anton){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E6E2'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
    T('MIX-9', 466, 11, 7, '#E0193C', true);
   MXX.forEach(function(x, i){
-    g.fillStyle = '#23262C'; g.fillRect(x - 21, 19, 42, 244); g.fillStyle = MXCOL[i]; g.fillRect(x - 21, 19, 42, 2.5);
-    g.fillStyle = '#E6E6E2'; g.fillRect(x - 17, 25, 34, 11); T(MXN[i], x, 30.8, 6.2, '#111318', true); T(String(i + 1), x - 15, 255, 7, MXCOL[i], true);
+    g.fillStyle = '#23262C'; g.fillRect(x - 21, 19, 42, 302); g.fillStyle = MXCOL[i]; g.fillRect(x - 21, 19, 42, 2.5);
+    g.fillStyle = '#E6E6E2'; g.fillRect(x - 17, 25, 34, 11); T(MXN[i], x, 30.8, 6.2, '#111318', true); T(String(i + 1), x - 15, 313, 7, MXCOL[i], true);
     [['HI', 52], ['MID', 88], ['LOW', 124]].forEach(function(a){ T(a[0], x, a[1] + 15, 4.2); g.fillStyle = '#B8B8B4'; g.fillRect(x - 0.3, a[1] - 13, 0.6, 2); });
-    g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k = 0; k <= 10; k++){ var yy = 176 + k * 7.6; g.beginPath(); g.moveTo(x - 10, yy); g.lineTo(x - (k % 5 ? 5.5 : 4), yy); g.stroke(); }
-    T('0', x - 13.5, 176 + 2.5 * 7.6, 3.4, '#B8B8B4');
+    [['A', 157, '#F2B544'], ['B', 186, '#7FD0FF']].forEach(function(a){ T('SEND', x - 12.5, a[1] - 3, 2.9, '#B8B8B4'); T(a[0], x - 12.5, a[1] + 2.6, 5.4, a[2], true); g.fillStyle = a[2]; g.fillRect(x - 0.3, a[1] - 9.6, 0.6, 1.6); });
+    g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k = 0; k <= 10; k++){ var yy = 234 + k * 7.6; g.beginPath(); g.moveTo(x - 10, yy); g.lineTo(x - (k % 5 ? 5.5 : 4), yy); g.stroke(); }
+    T('0', x - 13.5, 234 + 2.5 * 7.6, 3.4, '#B8B8B4');
   });
-  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 244); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('OUT', MXMX, 162, 4);
-  g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k2 = 0; k2 <= 10; k2++){ var y2 = 176 + k2 * 7.6; g.beginPath(); g.moveTo(MXMX - 10, y2); g.lineTo(MXMX - (k2 % 5 ? 5.5 : 4), y2); g.stroke(); }
+  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('OUT', MXMX, 220, 4);
+  g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k2 = 0; k2 <= 10; k2++){ var y2 = 234 + k2 * 7.6; g.beginPath(); g.moveTo(MXMX - 10, y2); g.lineTo(MXMX - (k2 % 5 ? 5.5 : 4), y2); g.stroke(); }
   g.setTransform(1, 0, 0, 1, 0, 0); if (mxTex) mxTex.needsUpdate = true;
 }
 paintMX(); mxTex = smoothTex(mxC);
 if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintMX).catch(function(){});
 var MXMET = [];
 (function(){
-  var W2 = MXW * SC, D2 = MXD * SC, TH = 0.09;
+  var W2 = MXW * SC, D2 = MXD * SC, TH = NTTH;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:mxTex, emissive:0xffffff, emissiveMap:mxTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; MXG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; MXG.add(body);
-  standFor(MXY, MXG, W2, D2, TH, MXH, MXTILT, 0.4); devBody(MXY, 'mx');
-  BLOCKS.push(devBlock(MXPOS, 0.6));
+  devBody(MXY, 'mx');
+  BLOCKS.push(devBlock(MXPOS, 0.6)); BLOCKS.push(devBlock(ECPOS, 0.3));
+  // one long table for the whole row: drum machine, echo, mixer. Same height and slant as their own stands had
+  var x0 = TRPOS.x - PANEL.w * SC / 2, x1 = MXPOS.x + W2 / 2, NTY = new THREE.Group(); NTY.position.set((x0 + x1) / 2, MXH, MXPOS.z); NTY.rotation.y = MXPOS.r; scene.add(NTY);
+  var NTG = new THREE.Group(); NTG.rotation.x = MXTILT; NTY.add(NTG); standFor(NTY, NTG, x1 - x0, D2, TH, MXH, MXTILT, (x1 - x0) / 2 - 0.12); solid(NTY, 'table');
   // level meters: a column of segments beside each fader
   var geo = new THREE.BoxGeometry(0.007, 0.002, 0.009);
-  MXX.concat([MXMX]).forEach(function(x, i){ var segs = []; for (var k = 0; k < 10; k++){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(qx(x + 13), 0.0012, qz(250 - k * 7.6)); m.userData.noShadow = true; MXG.add(m); segs.push(m.material); } MXMET.push(segs); });
+  MXX.concat([MXMX]).forEach(function(x, i){ var segs = []; for (var k = 0; k < 10; k++){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(qx(x + 13), 0.0012, qz(308 - k * 7.6)); m.userData.noShadow = true; MXG.add(m); segs.push(m.material); } MXMET.push(segs); });
 })();
 HOST = MXG; LX = qx; LZ = qz; DEV = 'mx';
 MXX.forEach(function(x, i){
   knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
-  button('mxmute' + i, x, 152, 16, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i;
-  vfader('mxvol' + i, x, 176, 252, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
+  knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
+  button('mxmute' + i, x, 210, 16, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i;
+  vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
 });
-vfader('mxmaster', MXMX, 176, 252, 'Master volume', MX.master, { color:0xC8343A, stripe:0xFFFFFF });
-CTLIST.forEach(function(c){ if (c.dev === 'mx' && c.kind === 'knob') c.def = 0.5; else if (c.dev === 'mx' && c.kind === 'fader') c.def = c.id === 'mxmaster' ? 0.8 : 0.75; });
+vfader('mxmaster', MXMX, 234, 310, 'Master volume', MX.master, { color:0xC8343A, stripe:0xFFFFFF });
+CTLIST.forEach(function(c){ if (c.dev === 'mx' && c.kind === 'knob') c.def = /^mxs[ab]/.test(c.id) ? 0 : 0.5; else if (c.dev === 'mx' && c.kind === 'fader') c.def = c.id === 'mxmaster' ? 0.8 : 0.75; });
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 function mxDb(v){ var d = Math.round((v - 0.5) * 30); return (d > 0 ? '+' : '') + d + ' dB'; }
 function mxApply(){
   if (!AU.ready) return; var t = ac.currentTime;
   MX.ch.forEach(function(c, i){ var C = AU.ch[i]; C.hi.gain.setTargetAtTime((c.hi - 0.5) * 30, t, 0.02); C.mid.gain.setTargetAtTime((c.mid - 0.5) * 30, t, 0.02); C.lo.gain.setTargetAtTime((c.lo - 0.5) * 30, t, 0.02);
-    C.fad.gain.setTargetAtTime(c.mute ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); });
+    C.fad.gain.setTargetAtTime(c.mute ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3, t, 0.02); });
   AU.master.gain.setTargetAtTime(Math.pow(MX.master, 1.7) * 1.46, t, 0.02);
 }
 function mxMute(i){ var c = MX.ch[i]; c.mute = c.mute ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.mute ? ' muted' : ' on')); }
 function mxCtl(c){
   var id = c.id, v = c.v;
   if (id === 'mxmaster') MX.master = v;
-  else { var k = id.indexOf('mxhi') === 0 ? 'hi' : id.indexOf('mxmid') === 0 ? 'mid' : id.indexOf('mxlo') === 0 ? 'lo' : 'vol'; if (k !== 'vol' && Math.abs(v - 0.5) < 0.025){ v = 0.5; } MX.ch[c.ch][k] = v; }
+  else { var k = id.indexOf('mxhi') === 0 ? 'hi' : id.indexOf('mxmid') === 0 ? 'mid' : id.indexOf('mxlo') === 0 ? 'lo' : id.indexOf('mxsa') === 0 ? 'sa' : id.indexOf('mxsb') === 0 ? 'sb' : 'vol'; if ((k === 'hi' || k === 'mid' || k === 'lo') && Math.abs(v - 0.5) < 0.025){ v = 0.5; } MX.ch[c.ch][k] = v; }
   mxApply(); mxSaveSoon();
 }
 function mxLabel(c){
   if (c.kind === 'btn') return c.name + (MX.ch[c.ch].mute ? ' · muted' : '') + ' · key ' + (c.ch + 1);
-  var id = c.id; if (id === 'mxmaster' || id.indexOf('mxvol') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
+  var id = c.id; if (id.indexOf('mxsb') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · nothing plugged in yet'; if (id === 'mxmaster' || id.indexOf('mxvol') === 0 || id.indexOf('mxsa') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
   return c.name + ' ' + mxDb(c.v) + ' · scroll or drag';
 }
 function mxPress(c){ if (c.ch != null) mxMute(c.ch); }
@@ -6423,7 +6419,7 @@ var NOP = function(){};
 var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, turn:mfTurn }, bs:{ label:bsLabel, press:bsPress, release:bsRelease, ctl:bsCtl, turn:bsTurn }, mx:{ label:mxLabel, press:mxPress, release:NOP, ctl:mxCtl, turn:NOP },
   am:{ label:amLabel, press:amPress, release:NOP, ctl:amCtl, turn:amTurn }, tp:{ label:tpLabel, press:tpPress, release:tpRelease, ctl:tpCtl, turn:NOP } };
 
-RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);
+RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);
 
 /* ================= the Ambi: a 6-voice hybrid polysynth module, after Mutable Instruments' Ambika =================
    Eight pots edit the eight parameters on the two-line display; S1-S8 pick the page (press again for a page's second half).
@@ -7407,6 +7403,91 @@ function skUpdate(now, dt){
   ['skprev', 'sknext', 'skplay', 'skcue'].forEach(function(id){ var c = CT[id], L = id === 'skplay' ? (SK.motor ? 0.85 : 0.05) : (c.down ? 1 : 0.12); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }
 
+/* ================= the echo: a tape-style delay on the table between the drum machine and the mixer =================
+   It is wired to the mixer's SEND A: whatever a channel sends there comes back through here, repeating, into the mix. */
+var ECW = 170, ECD = 110, ECTH = 0.06;
+function ecx(u){ return (u - ECW / 2) * SC; }
+function ecz(u){ return (u - ECD / 2) * SC; }
+var ECY = new THREE.Group(); ECY.position.set(ECPOS.x, MXH, ECPOS.z); ECY.rotation.y = ECPOS.r; scene.add(ECY);
+var ECT = new THREE.Group(); ECT.rotation.x = MXTILT; ECY.add(ECT);
+var ECG = new THREE.Group(); ECG.position.y = -(NTTH - ECTH); ECT.add(ECG);                  // a thinner box than its neighbours, so it sits lower on the same table
+var EC = { p:{ time:0.42, rep:0.45, tone:0.55, level:0.7, sync:1, on:1 }, lv:0 };
+var ECDIV = [['1/16', 0.25], ['1/8', 0.5], ['1/8 dot', 0.75], ['1/4', 1], ['1/4 dot', 1.5], ['1/2', 2]];
+function ecRestore(){ try { var s = JSON.parse(store('jambutek-studio-echo-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(EC.p).forEach(function(k){ if (typeof s.p[k] === 'number') EC.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} } ecRestore();
+var ecSaveT = null; function ecSaveNow(){ store('jambutek-studio-echo-v1', JSON.stringify({ v:1, p:EC.p })); } function ecSaveSoon(){ clearTimeout(ecSaveT); ecSaveT = setTimeout(ecSaveNow, saveMs(800)); }
+var ecC = mk(ECW * 6, ECD * 6), ecTex = null;
+function paintEC(){
+  var g = ecC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
+  g.fillStyle = '#20382F'; g.fillRect(0, 0, ECW, ECD);
+  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '170,200,180') + ',' + rnd(.02, .06) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
+  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#EDE6CF'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  g.strokeStyle = '#EDE6CF'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
+  T('ECHO', 10, 15, 11, '#EDE6CF', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#F2B544', false, 'right');
+  g.fillStyle = '#EDE6CF'; g.fillRect(10, 24, ECW - 20, 0.6);
+  [['TIME', 30], ['REPEAT', 67], ['TONE', 104], ['LEVEL', 141]].forEach(function(a){
+    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(237,230,207,.7)'; g.lineWidth = 0.4;
+    for (var k = 0; k <= 10; k++){ var an = (-135 + k * 27) * Math.PI / 180, r0 = 11.2, r1 = k % 5 ? 12.6 : 13.6; g.beginPath(); g.moveTo(a[1] + Math.sin(an) * r0, 48 - Math.cos(an) * r0); g.lineTo(a[1] + Math.sin(an) * r1, 48 - Math.cos(an) * r1); g.stroke(); }
+  });
+  T('TEMPO SYNC', 30, 99.5, 3.6); T('PEAK', 85, 99.5, 3.6); T('ON', 141, 99.5, 3.6);
+  g.setTransform(1, 0, 0, 1, 0, 0); if (ecTex) ecTex.needsUpdate = true;
+}
+paintEC(); ecTex = smoothTex(ecC);
+if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintEC).catch(function(){});
+var ECLED = {};
+(function(){
+  var W2 = ECW * SC, D2 = ECD * SC;
+  var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:ecTex, emissive:0xffffff, emissiveMap:ecTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; ECG.add(top);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x15241E, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -ECTH / 2 - 0.0015; ECG.add(body);
+  devBody(ECY, 'ec');
+})();
+HOST = ECG; LX = ecx; LZ = ecz; DEV = 'ec';
+knob('ectime', 30, 48, 8.2, 'Echo time', EC.p.time, { h:11, sides:16, color:0x0E0F11 }).pk = 'time';
+knob('ecrep', 67, 48, 8.2, 'Repeats', EC.p.rep, { h:11, sides:16, color:0x0E0F11 }).pk = 'rep';
+knob('ectone', 104, 48, 8.2, 'Tone', EC.p.tone, { h:11, sides:16, color:0x0E0F11 }).pk = 'tone';
+knob('eclevel', 141, 48, 8.2, 'Echo level', EC.p.level, { h:11, sides:16, color:0x0E0F11 }).pk = 'level';
+button('ecsync', 30, 87, 20, 10, 'SYNC', 'Tempo sync', 0xF2B544).pk = 'sync';
+button('econ', 141, 87, 20, 10, 'ON', 'Echo on / off', 0x3BFF6A).pk = 'on';
+ledAt(ECLED, 'pk', 85, 87, 0.0034, 0xFF2A3C);
+CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob') c.def = { time:0.42, rep:0.45, tone:0.55, level:0.7 }[c.pk]; });
+HOST = TRG; LX = lx; LZ = lz; DEV = null;
+
+var ECA = null;
+function ecAudio(){
+  if (ECA) return true; if (!ac || !AU.ready || !AU.sendA) return false;
+  var A = ECA = {}, G = function(v){ var g = ac.createGain(); g.gain.value = v; return g; };
+  A.inp = G(1); A.dl = ac.createDelay(2.5); A.lp = ac.createBiquadFilter(); A.lp.type = 'lowpass'; A.lp.Q.value = 0.5; A.hp = ac.createBiquadFilter(); A.hp.type = 'highpass'; A.hp.frequency.value = 140; A.hp.Q.value = 0.5;
+  A.fb = G(0); A.sat = ac.createWaveShaper(); var cv = new Float32Array(257); for (var i = 0; i < 257; i++){ var x = i / 128 - 1; cv[i] = Math.tanh(x * 1.6) / 1.6; } A.sat.curve = cv;   // the loop saturates like tape, so long repeats never run away
+  A.wet = G(0); A.an = ac.createAnalyser(); A.an.fftSize = 256;
+  A.wow = ac.createOscillator(); A.wow.frequency.value = 0.37; A.wowG = G(0.0012); A.wow.connect(A.wowG); A.wowG.connect(A.dl.delayTime); A.wow.start();
+  AU.sendA.connect(A.inp); A.inp.connect(A.dl); A.dl.connect(A.lp); A.lp.connect(A.hp); A.hp.connect(A.sat); A.sat.connect(A.wet); A.wet.connect(AU.comp); A.wet.connect(A.an);
+  A.sat.connect(A.fb); A.fb.connect(A.dl);
+  ecApply(true); return true;
+}
+function ecDiv(){ return ECDIV[Math.min(ECDIV.length - 1, Math.floor(EC.p.time * ECDIV.length))]; }
+function ecSecs(){ return EC.p.sync ? Math.min(2.4, ecDiv()[1] * 60 / M.bpm) : 0.03 + EC.p.time * EC.p.time * 1.4; }
+function ecApply(jump){
+  if (!ECA) return; var t = ac.currentTime, A = ECA;
+  A.dl.delayTime.setTargetAtTime(ecSecs(), t, jump ? 0.001 : 0.08); EC.bpm = M.bpm;                 // a slow glide, so turning TIME bends the pitch of the repeats like a tape machine
+  A.fb.gain.setTargetAtTime(EC.p.rep * 0.96, t, 0.03); A.lp.frequency.setTargetAtTime(450 * Math.pow(2, EC.p.tone * 4.7), t, 0.03);
+  A.wet.gain.setTargetAtTime(Math.pow(EC.p.level, 1.5) * 2.2, t, 0.03); A.inp.gain.setTargetAtTime(EC.p.on ? 1 : 0, t, 0.015);   // switching it off stops feeding it; the tail rings out
+}
+function ecLabel(c){
+  if (c.id === 'ecsync') return 'Tempo sync: ' + (EC.p.sync ? 'on' : 'off') + ' · click';
+  if (c.id === 'econ') return 'Echo ' + (EC.p.on ? 'on' : 'off') + ' · click';
+  if (c.id === 'ectime') return 'Echo time ' + (EC.p.sync ? ecDiv()[0] : Math.round(ecSecs() * 1000) + ' ms') + ' · scroll or drag';
+  return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
+}
+function ecPress(c){ if (c.kind !== 'btn') return; EC.p[c.pk] = EC.p[c.pk] ? 0 : 1; ecAudio(); ecApply(); ecSaveSoon(); toast(c.id === 'econ' ? 'Echo ' + (EC.p.on ? 'on' : 'off') : 'Echo tempo sync ' + (EC.p.sync ? 'on' : 'off')); }
+function ecCtl(c){ EC.p[c.pk] = c.v; ecAudio(); ecApply(); ecSaveSoon(); }
+DEVH.ec = { label:ecLabel, press:ecPress, release:NOP, ctl:ecCtl, turn:NOP };
+function ecUpdate(now, dt){
+  if (!ECA) ecAudio(); else if (EC.bpm !== M.bpm && EC.p.sync) ecApply();
+  var pk = 0; if (ECA){ var buf = ecUpdate.buf || (ecUpdate.buf = new Float32Array(256)); ECA.an.getFloatTimeDomainData(buf); for (var k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } }
+  EC.lv = Math.max(pk, EC.lv - dt * 2.5); ledOn(ECLED.pk, clamp(EC.lv * 3, 0.06, 1));
+  ['ecsync', 'econ'].forEach(function(id){ var c = CT[id], L = EC.p[c.pk] ? 1 : 0.12; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+}
+RESTORE['jambutek-studio-echo-v1'] = function(){ ecRestore(); CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob'){ c.v = EC.p[c.pk]; c.show(); } }); ecApply(); }; SAVENOW.push(ecSaveNow);
+
 /* ================= the Snake: a 4 x 4 grid sequencer after Maxime Dangles' MDD SnAkE (Max for Live) =================
    Notes (each step has a pitch knob and an on/off button), velocities, a probability lane and a custom lane that learns a knob on the synth each walk the same 16 cells along a "snake shape",
    each with its own direction, speed, length and shift. Scales and the 14 shapes are read from the device itself.
@@ -8165,9 +8246,10 @@ var DEVS = {
   sh:{ key:'sh', g:SHG, name:'Shru synth', stand:devStand(SHPOS), yaw:SHPOS.r, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
   am:{ key:'am', g:AMG, name:'Ambi synth', stand:devStand(AMPOS), yaw:AMPOS.r, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
   tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:devStand(TPPOS), yaw:TPPOS.r, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
-  mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.66, asp:1.84, off:0.05, lookz:0.03, hud:'hudMx' }
+  mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.74, asp:1.5, off:0.05, lookz:0.03, hud:'hudMx' }
 };
 DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
+DEVS.ec = { key:'ec', g:ECG, name:'Echo', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.4, asp:1.5, off:0.04, lookz:0.01, hud:'hudEc' };
 DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 FLOWS.forEach(function(f){ DEVS[f.key] = { key:f.key, g:f.G, name:'Pattern synth', stand:devStand(f.pos), yaw:f.pos.r, pitch:-0.42, d:0.6, asp:1.5, off:0.04, lookz:0.05, hud:'hudPf' }; });
 SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:devStand(s.hp), yaw:s.hp.r, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
@@ -8182,7 +8264,7 @@ function enterTR(dev){
   var D = typeof dev === 'string' ? DEVS[dev] : dev; if (mode !== 'walk' || !D) return;      // dev is a key or a DEVS entry; the wall buttons have none
   LEAN = D;
   unlock(); mode = 'tr'; keys = {}; cam.walkTo = null; cam.homing = false; relock = locked; releaseLock(); trBlend = 0;
-  trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
+  trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
   resize(); refreshLockUi();
 }
 function leaveTR(){
@@ -8374,7 +8456,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.24 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.25 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -8438,7 +8520,7 @@ function frame(now){
     if (cen) xhLab.textContent = dl; else { tip.hidden = false; tip.textContent = dl; tip.style.left = pointer.cx + 'px'; tip.style.top = pointer.cy + 'px'; }
   }
 
-  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); flowUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
+  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); ecUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); flowUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
   var kick = SEQ.kick; snLightUpdate(dt);
   monitors.forEach(function(m){ var s = 1 + kick * 0.03; m.face.scale.set(s, s, 1); m.face.material.emissiveIntensity = 0.25 + kick * 0.25; });
   trLamp.light.intensity = trLamp.base * (1 + kick * 0.08);
@@ -8475,7 +8557,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>

@@ -12,9 +12,9 @@ function unlock(){
     var out = ac.createGain(); out.gain.value = muted ? 0 : 1; out.connect(ac.destination); AU.out = out;
     var comp = ac.createDynamicsCompressor(); comp.threshold.value = -9; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.12;
     var vol = ac.createGain(); AU.vol = vol;
-    AU.ch = []; AU.tap = ac.createGain(); for (var ci = 0; ci < 9; ci++){ var C = { inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), an:ac.createAnalyser() };
+    AU.ch = []; AU.tap = ac.createGain(); AU.sendA = ac.createGain(); AU.sendB = ac.createGain(); for (var ci = 0; ci < 9; ci++){ var C = { sa:ac.createGain(), sb:ac.createGain(), inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), an:ac.createAnalyser() };
       C.lo.type = 'lowshelf'; C.lo.frequency.value = 110; C.mid.type = 'peaking'; C.mid.frequency.value = 1000; C.mid.Q.value = 0.8; C.hi.type = 'highshelf'; C.hi.frequency.value = 7000; C.an.fftSize = 256;
-      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.fad.connect(C.an); C.fad.connect(comp); if (ci !== 5) C.fad.connect(AU.tap); AU.ch.push(C); }
+      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.fad.connect(C.an); C.fad.connect(comp); if (ci !== 5) C.fad.connect(AU.tap); C.sa.gain.value = C.sb.gain.value = 0; C.fad.connect(C.sa); C.sa.connect(AU.sendA); C.fad.connect(C.sb); C.sb.connect(AU.sendB); AU.ch.push(C); }       // sends are post-fader; send B has nothing plugged into it yet
     vol.connect(AU.ch[0].inp); AU.master = ac.createGain();
     var an = ac.createAnalyser(); an.fftSize = 256; an.smoothingTimeConstant = 0.5; AU.comp = comp; comp.connect(AU.master); AU.master.connect(an); an.connect(out); AU.an = an;
     // master FX: a low-pass below centre, a high-pass above it
