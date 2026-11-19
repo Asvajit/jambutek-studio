@@ -103,8 +103,9 @@ function knob(id, px, py, r, name, def, opt){
   var skirt = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.22, R * 1.3, 0.004, 12), new THREE.MeshLambertMaterial({ color:0x0C0D10 })); skirt.position.y = 0.002; g.add(skirt);
   var rot = new THREE.Group(); g.add(rot);
   var body = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.9, R, H, opt.sides || 10), mat); body.position.y = H / 2 + 0.003; body.castShadow = true; rot.add(body);
-  var tick = new THREE.Mesh(new THREE.BoxGeometry(R * 0.2, 0.0025, R * 0.8), new THREE.MeshBasicMaterial({ color:0xFFFFFF })); tick.position.set(0, H + 0.004, -R * 0.5); rot.add(tick);
-  var tick2 = new THREE.Mesh(new THREE.BoxGeometry(R * 0.2, H * 0.6, 0.002), new THREE.MeshBasicMaterial({ color:0xFFFFFF })); tick2.position.set(0, H * 0.7, -R * 0.96); rot.add(tick2);
+  var tick = new THREE.Mesh(new THREE.BoxGeometry(R * 0.2, 0.0025, R * 0.8), new THREE.MeshBasicMaterial({ color:opt.tick || 0xFFFFFF })); tick.position.set(0, H + 0.004, -R * 0.5); rot.add(tick);
+  if (opt.cap){ var cap = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.56, R * 0.56, 0.0016, 14), new THREE.MeshLambertMaterial({ color:opt.cap, emissive:opt.cap, emissiveIntensity:0.25 })); cap.position.y = H + 0.0034; rot.add(cap); }
+  var tick2 = new THREE.Mesh(new THREE.BoxGeometry(R * 0.2, H * 0.6, 0.002), new THREE.MeshBasicMaterial({ color:opt.tick || 0xFFFFFF })); tick2.position.set(0, H * 0.7, -R * 0.96); rot.add(tick2);
   var ring = null;
   if (opt.ring){ ring = new THREE.Mesh(new THREE.TorusGeometry(R * 1.32, R * 0.12, 4, 20), new THREE.MeshBasicMaterial({ color:opt.ring })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.004; g.add(ring); }
   var hit = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.45, R * 1.45, H + 0.012, 8), HITMAT); hit.position.y = H / 2 + 0.004; g.add(hit);

@@ -186,6 +186,7 @@ var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
    which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
 var RIG = { x:0, z:2.9, R:1.8 };
 var RIGREG = [];                 // every unit that sits on one of the rig's four tables: its groups, width and body thickness
+var ZKPOS = { x:RIG.R, z:RIG.z + 0.5, r:Math.PI / 2 };          // the Kit, beside the Shru (p24_tables.js sets the exact spot)
 var ECPOS = { x:-0.06, z:RIG.z - RIG.R, r:Math.PI };            // the echo, in the gap between the drum machine and the mixer
 var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MXPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
     BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:0.95, z:RIG.z + RIG.R, r:0 },              // south row
@@ -238,19 +239,18 @@ function logoPower(now){                        // mostly steady; every so often
   if (now < logoFx.until){ var f = Math.sin(now * 0.09) + Math.sin(now * 0.23); return f > 0.4 ? 1 : f > -0.2 ? 0.35 : 0.05; }
   return 0.92 + 0.08 * Math.sin(now * 0.004);
 }
-// two monitors on stands, faced with the Jambutek speaker art
+// four monitors, one hung in each corner under its snare light, faced with the Jambutek speaker art and aimed at the rig
 var monitors = (function(){
   var tl = tex(A.spkL), tr = tex(A.spkR); tl.minFilter = tr.minFilter = THREE.LinearFilter;
-  return [[-4.1, tl], [4.1, tr]].map(function(s){
-    var w = 0.42, h = w * 620 / 361, g = new THREE.Group(); g.position.set(s[0], 0, 0.9); g.rotation.y = (s[0] > 0 ? -1 : 1) * (Math.PI / 2 + 0.35); scene.add(g);
-    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 6), metalMat); pole.position.y = 0.45; g.add(pole);
-    var foot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.04, 8), metalMat); foot.position.y = 0.02; g.add(foot);
-    var top = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.03, 0.34), metalMat); top.position.set(0, 0.9, -0.1); g.add(top);
-    var box = new THREE.Mesh(new THREE.BoxGeometry(w * 0.92, h * 0.96, 0.3), new THREE.MeshLambertMaterial({ color:0x0C1018 })); box.position.set(0, 0.915 + h / 2, -0.155); g.add(box);
-    var face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshPhongMaterial({ map:s[1], emissive:0xffffff, emissiveMap:s[1], emissiveIntensity:0.25, alphaTest:0.5 }));
-    face.position.y = 0.915 + h / 2; g.add(face);
-    solid(g, 'monitor');
-    BLOCKS.push([s[0] - 0.4, s[0] + 0.4, 0.5, 1.3]);
+  var ins = 0.34, y = 1.84;
+  return [[ROOM.x0 + ins, ROOM.z0 + ins, tl], [ROOM.x1 - ins, ROOM.z0 + ins, tr], [ROOM.x0 + ins, ROOM.z1 - ins, tr], [ROOM.x1 - ins, ROOM.z1 - ins, tl]].map(function(s){
+    var w = 0.42, h = w * 620 / 361, g = new THREE.Group(); g.position.set(s[0], y, s[1]); g.rotation.order = 'YXZ'; g.rotation.y = Math.atan2(RIG.x - s[0], RIG.z - s[1]); g.rotation.x = 0.16; scene.add(g);
+    var box = new THREE.Mesh(new THREE.BoxGeometry(w * 0.92, h * 0.96, 0.3), new THREE.MeshLambertMaterial({ color:0x0C1018 })); box.position.set(0, h / 2, -0.155); g.add(box);
+    var face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshPhongMaterial({ map:s[2], emissive:0xffffff, emissiveMap:s[2], emissiveIntensity:0.25, alphaTest:0.5 }));
+    face.position.y = h / 2; g.add(face);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.3), metalMat); arm.position.set(0, h / 2, -0.42); g.add(arm);                 // the bracket back into the corner
+    var plate = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.3, 0.02), metalMat); plate.position.set(0, h / 2, -0.3); g.add(plate);
+    g.traverse(function(o){ o.userData.noShadow = true; });
     return { g:g, face:face, box:box, y0:face.position.y };
   });
 })();

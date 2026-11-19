@@ -170,10 +170,10 @@ var MP = (function(){
   MPNET.tempo = function(){ if (!M.playing || Q.applying) return; clearTimeout(Q.tempoT); Q.tempoT = setTimeout(function(){ if (M.playing && ac){ var v = anchor(); Q.anchor = v; send({ t:'set', k:'transport', v:v }); } }, 120); };
 
   // ---- live: knobs and faders as they move, notes and pads as they are played ----
-  var NOTE = { mf:[mfKeyDown, mfKeyUp], bs:[bsKeyDown, bsKeyUp], am:[amKeyDown, amKeyUp], tp:[tpKeyDown, tpKeyUp], mb:[mbKeyDown, mbKeyUp], sh:[shKeyDown, shKeyUp] };
+  var NOTE = { mf:[mfKeyDown, mfKeyUp], bs:[bsKeyDown, bsKeyUp], am:[amKeyDown, amKeyUp], tp:[tpKeyDown, tpKeyUp], mb:[mbKeyDown, mbKeyUp], sh:[shKeyDown, shKeyUp], zk:[zkKeyDown, zkKeyUp] };
   function liveNote(dev, on){ return function(n, vel){ NOTE[dev][on ? 0 : 1](n, vel); if (Q.ws && !Q.applying) send({ t:'ev', e:['n', dev, n, on, vel == null ? null : +(+vel).toFixed(2)] }); }; }
   mfKeyDown = liveNote('mf', 1); mfKeyUp = liveNote('mf', 0); bsKeyDown = liveNote('bs', 1); bsKeyUp = liveNote('bs', 0); amKeyDown = liveNote('am', 1); amKeyUp = liveNote('am', 0);
-  tpKeyDown = liveNote('tp', 1); tpKeyUp = liveNote('tp', 0); mbKeyDown = liveNote('mb', 1); mbKeyUp = liveNote('mb', 0); shKeyDown = liveNote('sh', 1); shKeyUp = liveNote('sh', 0);
+  tpKeyDown = liveNote('tp', 1); tpKeyUp = liveNote('tp', 0); mbKeyDown = liveNote('mb', 1); mbKeyUp = liveNote('mb', 0); shKeyDown = liveNote('sh', 1); shKeyUp = liveNote('sh', 0); zkKeyDown = liveNote('zk', 1); zkKeyUp = liveNote('zk', 0);
   var mcChord0 = mcChord, mcHarp0 = mcHarp;                    // the chord box: its buttons and strip are heard by everyone too
   mcChord = function(c, r, on){ mcChord0(c, r, on); if (Q.ws && !Q.applying) send({ t:'ev', e:['m', 0, c, r, on ? 1 : 0] }); };
   mcHarp = function(i, on){ mcHarp0(i, on); if (on && Q.ws && !Q.applying) send({ t:'ev', e:['m', 1, i] }); };

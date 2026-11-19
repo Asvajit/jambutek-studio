@@ -11,7 +11,7 @@ var TBL = { L:(MXPOS.x + MXW * SC / 2) - (TRPOS.x - PANEL.w * SC / 2), D:MXD * S
   // each side: where its middle is, which way it faces, and its slots in order. A slot is one or two units and maybe the Snake above them
   [ { P:{ x:-RIG.R, z:RIG.z, r:-Math.PI / 2 }, slots:[{ u:[[MFY, MFPOS]], sn:0 }, { u:[[TPY, TPPOS]], sn:3 }, { u:[[MCY, MCPOS]] }] },
     { P:{ x:RIG.x, z:RIG.z + RIG.R, r:0 }, slots:[{ u:[[BSY, BSPOS]], sn:1 }, { u:[[AMY, AMPOS]], sn:2 }, { u:[[MBY, MBPOS], [SCY, SCPOS]], sn:4 }] },
-    { P:{ x:RIG.R, z:RIG.z, r:Math.PI / 2 }, slots:[{ u:[[SHY, SHPOS]], sn:5 }] }
+    { P:{ x:RIG.R, z:RIG.z, r:Math.PI / 2 }, slots:[{ u:[[SHY, SHPOS]], sn:5 }, { u:[[ZKY, ZKPOS]], sn:6 }] }
   ].forEach(function(side){
     var P = side.P, cx = Math.cos(P.r), sx = Math.sin(P.r);
     var TY = new THREE.Group(); TY.position.set(P.x, MXH, P.z); TY.rotation.y = P.r; scene.add(TY);
