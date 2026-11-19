@@ -1,9 +1,32 @@
 
-/* ================= the LED pattern synths, after Patternflow =================
-   Two of them, in booths in opposite corners of the room, twinned: turn a knob on one and the other follows. Each has a 128 x 64 LED screen on the ceiling showing the same picture; the two
-   screens sit side by side over the rig and make a square. Four endless knobs and the same picture on the unit's own panel. The patterns are Patternflow's own (vendor/patternflow-patterns.js, CC BY-SA 4.0),
-   each one computed live every frame. Knobs follow Patternflow's model: 48 clicks cross a knob's range, patterns that
-   name their knobs set the ranges, the rest get Hue / Speed / Mode / Freq. */
+/* ================= video synth A: the LED pattern synth, after Patternflow =================
+   It sits in a booth in one corner; video synth B (p23_video.js) sits in the opposite one. A switcher beside each picks which of the
+   two feeds the roof: two 128 x 64 LED screens side by side over the rig. Four endless knobs and the same picture on the unit's own
+   panel. The patterns are Patternflow's own (vendor/patternflow-patterns.js, CC BY-SA 4.0), each one computed live every frame.
+   Knobs follow Patternflow's model: 48 clicks cross a knob's range, patterns that name their knobs set the ranges, the rest get
+   Hue / Speed / Mode / Freq. */
+var VID = { src:0, scr:[], mats:[] };                 // what feeds the roof: 0 nothing, 1 synth A (Patternflow), 2 synth B. Always 0 when the room loads
+function vidBooth(P){                                 // a counter across the corner, the unit behind it
+  var fx0 = P.x - Math.sin(P.r) * 0.5, fz0 = P.z - Math.cos(P.r) * 0.5, blk = new THREE.MeshLambertMaterial({ color:0x2A2D35 });
+  pendant(P.x - Math.sin(P.r) * 0.9, P.z - Math.cos(P.r) * 0.9, 0.75, 0xFFE7C8, 2.8, P.x, 0.9, P.z, 0.8, false, true);
+  var c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.92, 0.07), blk); c.position.set(fx0, 0.46, fz0); c.rotation.y = P.r; scene.add(c);
+  var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), woodMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = P.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth');
+  for (var i = -2; i <= 2; i++){ var bx = fx0 + Math.cos(P.r) * i * 0.32, bz = fz0 - Math.sin(P.r) * i * 0.32; BLOCKS.push([bx - 0.17, bx + 0.17, bz - 0.17, bz + 0.17]); }
+}
+function vidSwitch(G, x0, z0){                        // the switcher: a little box beside a video synth. Call with HOST / DEV set to that synth
+  var box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.25), new THREE.MeshPhongMaterial({ color:0x15171C, shininess:30, specular:0x222222, flatShading:true })); box.position.set(x0, -0.026, z0); G.add(box);
+  var shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.024, 0.3), woodMat); shelf.position.set(x0, -0.07 - 0.014, z0); G.add(shelf);
+  var c = mk(320, 500), g = c.getContext('2d'); g.fillStyle = '#1A1B1F'; g.fillRect(0, 0, 320, 500); g.fillStyle = '#D8D8D8'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 30px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText('ROOF VIDEO', 160, 32);
+  g.font = 'bold 20px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = '#8A8C92'; g.fillText('PATTERN', 160, 172); g.fillText('BZZZBZ', 160, 318); g.fillText('SCREENS OFF', 160, 464);
+  var top = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.25), new THREE.MeshPhongMaterial({ color:0x707070, map:smoothTex(c), emissive:0xffffff, emissiveMap:smoothTex(c), emissiveIntensity:0.9, shininess:6, specular:0x050505 })); top.rotation.x = -Math.PI / 2; top.position.set(x0, 0.0005, z0); G.add(top);
+  var oLX = LX, oLZ = LZ; LX = function(u){ return x0 + (u - 40) * SC; }; LZ = function(u){ return z0 + (u - 62.5) * SC; };
+  var out = [button(DEV + 'vsA', 40, 28, 44, 20, 'A', 'Roof video: synth A (patterns)', 0x56C6FF), button(DEV + 'vsB', 40, 64.5, 44, 20, 'B', 'Roof video: synth B (bzzzbz)', 0xFF4FD8), button(DEV + 'vsO', 40, 101, 44, 20, 'OFF', 'Roof video off', 0xFFFFFF)];
+  out[0].vs = 1; out[1].vs = 2; out[2].vs = 0; LX = oLX; LZ = oLZ; return out;
+}
+var VIDSW = [];
+function vidSet(n, quiet){ n = n === 1 || n === 2 ? n : 0; if (n === VID.src) return; VID.src = n; vidApply(); if (!quiet){ store('jambutek-studio-video-v1', JSON.stringify({ v:1, src:n })); toast(n === 1 ? 'Roof: synth A, patterns' : n === 2 ? 'Roof: synth B, bzzzbz' : 'Roof video off'); } }
+function vidApply(){ VID.scr.forEach(function(m){ m.material = VID.mats[VID.src] || VID.mats[0]; }); }
+function vidSwitchTick(){ VIDSW.forEach(function(c){ var L = VID.src === c.vs ? 1 : 0.08; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; }); }
 var PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
 function fx(u){ return (u - PFW / 2) * SC; }
 function fz(u){ return (u - PFD / 2) * SC; }
@@ -23,18 +46,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
   if (!M){ pfClear(); pfCtx.putImageData(pfImg, 0, 0); }
   // its screen on the ceiling
   var pfGlow = new THREE.PointLight(0xffffff, 0, 6, 1.5); pfGlow.position.set(RIG.x, ROOM.h - 0.5, SCRZ); scene.add(pfGlow);
-  (function(){
-    var frame = new THREE.Mesh(new THREE.BoxGeometry(SCRW + 0.1, 0.06, SCRW / 2 + 0.06), new THREE.MeshLambertMaterial({ color:0x08090B })); frame.position.set(RIG.x, ROOM.h - 0.035, SCRZ); frame.userData.noShadow = true; scene.add(frame);
-    var scr = new THREE.Mesh(new THREE.PlaneGeometry(SCRW, SCRW / 2), new THREE.MeshBasicMaterial({ map:pfTex })); scr.position.set(RIG.x, ROOM.h - 0.068, SCRZ); scr.rotation.x = Math.PI / 2; scr.rotation.z = SCRROT; scr.userData.noShadow = true; scene.add(scr);
-  })();
-  // the booth: a counter across the corner, the unit behind it
-  (function(){
-    var fx0 = PFPOS.x - Math.sin(PFPOS.r) * 0.5, fz0 = PFPOS.z - Math.cos(PFPOS.r) * 0.5, blk = new THREE.MeshLambertMaterial({ color:0x2A2D35 });
-    pendant(PFPOS.x - Math.sin(PFPOS.r) * 0.9, PFPOS.z - Math.cos(PFPOS.r) * 0.9, 0.75, 0xFFE7C8, 2.8, PFPOS.x, 0.9, PFPOS.z, 0.8, false, true);                 // a small lamp over the booth so it reads from across the room
-  var c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.92, 0.07), blk); c.position.set(fx0, 0.46, fz0); c.rotation.y = PFPOS.r; scene.add(c);
-    var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), woodMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = PFPOS.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth');
-    for (var i = -2; i <= 2; i++){ var bx = fx0 + Math.cos(PFPOS.r) * i * 0.32, bz = fz0 - Math.sin(PFPOS.r) * i * 0.32; BLOCKS.push([bx - 0.17, bx + 0.17, bz - 0.17, bz + 0.17]); }
-  })();
+  vidBooth(PFPOS);
   // the instrument
   var pfPanC = mk(PFW * 5, PFD * 5), pfPanT = null, pfDispC = mk(880, 96), pfDispT = canvasTex(pfDispC); pfDispT.minFilter = THREE.LinearFilter; pfDispT.magFilter = THREE.LinearFilter;
   if (M){ pfDispC = M.dc; pfDispT = M.dt; }
@@ -51,13 +63,14 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
     var W2 = PFW * SC, D2 = PFD * SC, TH = 0.07;
     var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x707070, map:pfPanT, emissive:0xffffff, emissiveMap:pfPanT, emissiveIntensity:1.0, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; PFG.add(top);
     var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, TH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x121316, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; PFG.add(body);
-    standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, DK); BLOCKS.push(devBlock(PFPOS, 0.46));
+    standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, DK); BLOCKS.push(devBlock(PFPOS, 0.56));
     var led = new THREE.Mesh(new THREE.PlaneGeometry(300 * SC, 150 * SC), new THREE.MeshBasicMaterial({ map:pfTex })); led.rotation.x = -Math.PI / 2; led.position.set(fx(170), 0.002, fz(84)); led.userData.noShadow = true; led.userData.ia = 'trbody'; led.userData.dev = DK; PFG.add(led); solids.push(led);
     var d = new THREE.Mesh(new THREE.PlaneGeometry(220 * SC, 24 * SC * 0.72), new THREE.MeshBasicMaterial({ map:pfDispT })); d.rotation.x = -Math.PI / 2; d.position.set(fx(170), 0.002, fz(176)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; PFG.add(d); solids.push(d);
   })();
   HOST = PFG; LX = fx; LZ = fz; DEV = DK; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
   PFKX.forEach(function(x, i){ var c = knob(DK + 'k' + i, x, 210, 8, 'Knob ' + (i + 1), 0, { h:11, endless:true, sides:16, color:0x3A3C42 }); c.ki = i; c.click = function(){ PF.btn[i] = true; PF.dirty = true; }; });
   button(DK + 'prev', 36, 176, 22, 13, '◀', 'Previous pattern', 0xFFFFFF); button(DK + 'next', 304, 176, 22, 13, '▶', 'Next pattern', 0xFFFFFF); button(DK + 'pow', 318, 212, 16, 12, 'ON', 'Light on / off', 0x3BFF6A);
+  vidSwitch(PFG, PFW * SC / 2 + 0.14, 0.02).forEach(function(c){ VIDSW.push(c); });
   HOST = TRG; LX = lx; LZ = lz; DEV = null;
 
   function pfFmt(v, r){ var sp = r[1] - r[0]; return sp >= 50 ? String(Math.round(v)) : sp >= 5 ? v.toFixed(1) : v.toFixed(2); }
@@ -82,6 +95,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
     return c.name + ' · click';
   }
   function pfPress(c){
+    if (c.vs != null){ vidSet(c.vs); return; }
     c.down = 1; setTimeout(function(){ c.down = 0; }, 130);
     if (c.id === DK + 'pow'){ PF.on = !PF.on; PF.dirty = true; }
     else pfLoad(PF.pat + (c.id === DK + 'next' ? 1 : -1));
@@ -112,7 +126,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
     if (M){ pfGlow.color.copy(M.glow.color); pfGlow.intensity = M.glow.intensity; return; }
     if (PF.dirty){ PF.dirty = false; pfPaintDisp(); }
     var k = 1 - Math.exp(-dt * 6);
-    if (!PF.on || !PF.mod){ if (!PF.dark){ PF.dark = true; pfClear(); pfCtx.putImageData(pfImg, 0, 0); pfTex.needsUpdate = true; } pfGlow.intensity = lerp(pfGlow.intensity, 0, k); return; }
+    if (!PF.on || !PF.mod || VID.src !== 1){ if (!PF.dark){ PF.dark = true; pfClear(); pfCtx.putImageData(pfImg, 0, 0); pfTex.needsUpdate = true; } pfGlow.intensity = lerp(pfGlow.intensity, 0, k); return; }
     PF.dark = false; PF.acc += dt; if (PF.acc < 1 / PF.hz) return;
     var step = Math.min(PF.acc, 0.05), t0 = performance.now(); PF.acc = 0;
     try { pfStep(step); } catch (e) { PF.mod = null; toast('That pattern stopped; skipping it'); pfLoad(PF.pat + 1); return; }
@@ -125,6 +139,12 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
   return { key:DK, G:PFG, PF:PF, pos:PFPOS, tick:flowTick, c:pfC, ctx:pfCtx, img:pfImg, buf:pfBuf, tex:pfTex, dc:pfDispC, dt:pfDispT, glow:pfGlow };
 }
 var SCRW = (ROOM.x1 - ROOM.x0) - 2 * 0.5;                // the two ceiling screens together fill the roof, less a frame one floor tile (half a metre) wide
-var FLOWS = [makeFlow('pf', PFPOS, 'jambutek-studio-flow-v1', RIG.z - SCRW / 4, 0, 0, 'A')]; FLOWS.push(makeFlow('pg', PGPOS, 'jambutek-studio-flow-v1', RIG.z + SCRW / 4, Math.PI, 0, 'B', FLOWS[0]));
+var FLOWS = [makeFlow('pf', PFPOS, 'jambutek-studio-flow-v1', RIG.z, 0, 0, 'A')];
 var PF = FLOWS[0].PF;
-function flowUpdate(now, dt){ FLOWS[0].tick(now, dt); FLOWS[1].tick(now, dt); }
+// the roof: two screens side by side making a square. Both always show the same source
+VID.mats = [new THREE.MeshBasicMaterial({ color:0x020203 }), new THREE.MeshBasicMaterial({ map:FLOWS[0].tex }), null];
+[[RIG.z - SCRW / 4, 0], [RIG.z + SCRW / 4, Math.PI]].forEach(function(a){
+  var frame = new THREE.Mesh(new THREE.BoxGeometry(SCRW + 0.1, 0.06, SCRW / 2 + 0.06), new THREE.MeshLambertMaterial({ color:0x08090B })); frame.position.set(RIG.x, ROOM.h - 0.035, a[0]); frame.userData.noShadow = true; scene.add(frame);
+  var scr = new THREE.Mesh(new THREE.PlaneGeometry(SCRW, SCRW / 2), VID.mats[0]); scr.position.set(RIG.x, ROOM.h - 0.068, a[0]); scr.rotation.x = Math.PI / 2; scr.rotation.z = a[1]; scr.userData.noShadow = true; scene.add(scr); VID.scr.push(scr);
+});
+function flowUpdate(now, dt){ FLOWS[0].tick(now, dt); }
