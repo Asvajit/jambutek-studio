@@ -320,6 +320,7 @@ function paintTempo(){
 /* ---- lights: called every frame ---- */
 var VARL = 'ABCDEFGH';
 function updateTR(now, dt){
+  for (var hb = 0; hb < 2; hb++){ HALFBAR[hb].visible = M.mode === 'trrec'; HALFBAR[hb].material.color.setHex((M.kbHalf ? 1 : 0) === hb ? 0x3BFF6A : 0x1E2A22); }
   if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; SEQ.visN = e.n; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); if (e.sv) SEQ.snare = e.sv; } }
   var blink = (now % 420) < 210, fast = (now % 200) < 100, v = editV(), pv = playV(), vs = M.playing ? SEQ.visStep : -1;
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);

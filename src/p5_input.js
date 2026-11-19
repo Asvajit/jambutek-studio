@@ -51,6 +51,27 @@ function enterTR(dev){
   trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
   resize(); refreshLockUi();
 }
+function switchLean(dev){                                      // hop straight from one instrument to another without stepping back
+  var D = typeof dev === 'string' ? DEVS[dev] : dev; if (!D) return false; if (mode !== 'tr'){ enterTR(D); return mode === 'tr'; } if (D === LEAN) return true;
+  endCtl(true); setHover(null);
+  Object.keys(MF.kb).forEach(mfKbUp); Object.keys(BS.kb).forEach(bsKbUp); Object.keys(AM.kb).forEach(amKbUp); Object.keys(TP.kb).forEach(tpKbUp); Object.keys(MB.kb).forEach(mbKbUp); Object.keys(MC.kb).forEach(mcKbUp); Object.keys(SH.kb).forEach(shKbUp);
+  LEAN = D; cam.x = D.stand.x; cam.z = D.stand.z; cam.yaw = cam.ty = D.yaw; cam.pitch = cam.tp = D.pitch; trBlend = 0.35; keys = {};
+  ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
+  resize(); return true;
+}
+var LASTSN = {};                                               // per synth, the sequencer you last came from
+function swapLean(){                                           // Q: between a synth and the sequencer that plays it
+  var i, S;
+  if (LEAN.key.indexOf('sn') === 0){
+    for (i = 0; i < SNAKES.length; i++) if (SNAKES[i].key === LEAN.key) S = SNAKES[i];
+    var dk = S && SNDEV[S.SN.out]; if (!dk){ toast('Set OUT on this sequencer first'); return; }
+    LASTSN[dk] = S.key; switchLean(dk); toast(DEVS[dk].name.charAt(0).toUpperCase() + DEVS[dk].name.slice(1) + ' · Q goes back to its sequencer'); return;
+  }
+  var want = LASTSN[LEAN.key], pick = null;
+  for (i = 0; i < SNAKES.length; i++){ S = SNAKES[i]; if (SNDEV[S.SN.out] !== LEAN.key) continue; if (S.key === want){ pick = S; break; } if (!pick || S.hp === (DEVS[LEAN.key].hp || null)) pick = pick || S; }
+  if (!pick){ toast('No sequencer is set to play this'); return; }
+  switchLean(pick.key);
+}
 function leaveTR(){
   if (mode !== 'tr') return;
   mode = 'walk'; trhud.hidden = true; hintEl.hidden = false; endCtl(true); setHover(null);
@@ -92,6 +113,7 @@ CT.dtime.detents = DIVS.length - 1; CT.fillknob.detents = 5;
 var drag = null, pressed = null;
 function startCtl(c, e, h){
   if (c.kind === 'knob' || c.kind === 'fader'){
+    if (SNLEARN){ SNLEARN(c); if (!SNLEARN) return; }                 // a sequencer is listening: clicking the control is enough to pick it
     if (e.detail >= 2 && !c.endless && !c.click){ setCtl(c, c.def); toast(c.name + ' reset'); return; }
     drag = { c:c, y:e.clientY, py:e.clientY, v0:c.v, acc:0, clicks:0, moved:false }; if (c.grab) c.grab(true);
     if (!locked){ try { canvas.setPointerCapture(e.pointerId); } catch (x) {} canvas.className = 'grabbing'; }
@@ -198,6 +220,7 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr' && LEAN.keys){                                       // the two keyboards: letters play notes, so only Esc steps back
     if (e.key === 'Escape'){ leaveTR(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Tab' || (k === 'q' && LEAN.key !== 'mc')){ e.preventDefault(); if (!e.repeat) swapLean(); return; }      // the chord box plays a chord on Q, so there it is Tab
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) LEAN.keys.play(); return; }
     if (!e.repeat && LEAN.keys.down(k)) e.preventDefault();
     return;
@@ -205,7 +228,15 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr'){
     if ((k === 'e' && !e.repeat) || e.key === 'Escape' || 'wasd'.indexOf(k) >= 0 && k.length === 1){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
+    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat) swapLean(); return; }
     if (LEAN === DEVS.mx){ var mi = '123456789'.indexOf(e.key); if (mi >= 0 && !e.repeat) mxMute(mi); return; }
+    if (LEAN === DEVS.tr){                                             // on the drum machine the number keys follow its mode
+      if (e.code === 'Backquote' || e.key === '`' || e.key === '\u00AC'){ e.preventDefault(); if (!e.repeat){ M.kbHalf = M.kbHalf ? 0 : 1; say('KEYS 1-8  STEPS ' + (M.kbHalf ? '9-16' : '1-8'), 1600); } return; }
+      var ti = '1234567890-'.indexOf(e.key); if (ti < 0 || e.repeat) return;
+      if (M.mode === 'instplay' || M.mode === 'instrec') hit(ti);        // playing: each key is a drum
+      else if (M.mode === 'trrec' && ti < 8) pressPad((M.kbHalf ? 8 : 0) + ti);   // step record: keys 1-8 switch steps in the selected half
+      return;
+    }
     var di = '1234567890-'.indexOf(e.key); if (di >= 0 && !e.repeat){ hit(di); return; }
     return;
   }
@@ -240,7 +271,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.29 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.30 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -341,5 +372,5 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();

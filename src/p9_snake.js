@@ -120,7 +120,8 @@ function snLearn(on){
   if (!on){ if (SNLEARN === snHear) SNLEARN = null; return; }
   if (!SN.out){ SN.learn = false; snSay('CUSTOM', 'set OUT to a synth first', 2200); return; }
   if (SNLEARN && SNLEARN !== snHear) SNLEARN(null);          // only one Snake listens at a time
-  SNLEARN = snHear; snSay('LEARN', 'move a knob on the ' + SNOUT[SN.out], 60000);
+  SNLEARN = snHear; snSay('LEARN', 'click a knob on the ' + SNOUT[SN.out], 60000);
+  if (!MPQUIET && typeof switchLean === 'function' && mode === 'tr' && LEAN.key === DK){ LASTSN[SNDEV[SN.out]] = DK; SN.back = true; switchLean(SNDEV[SN.out]); toast('Click the knob or fader for CUSTOM to turn · Q goes back'); }     // jump to the synth so the control can be picked
 }
 function snHear(c){
   if (!c){ SN.learn = false; SN.dirty = true; return; }
@@ -130,7 +131,8 @@ function snHear(c){
   else if (c.dev === 'am'){ k = c.vol ? 'volu' : c.pi2 != null ? amKeys()[c.pi2] : null; if (!k || k === 'bpm') return; d = { dev:'am', key:k, name:AMP[k] ? AMP[k][1] : 'Volume' }; }
   else if (c.dev === 'tp'){ if (c.ei == null) return; d = { dev:'tp', k:c.ei, pg:TP.pg[c.ei], name:TPPG[c.ei][TP.pg[c.ei]][0] }; }
   else d = { dev:c.dev, id:c.id, name:c.name };
-  SN.cc = d; SN.learn = false; SNLEARN = null; SN.dirty = true; snSay('CUSTOM turns', d.name, 2600); snSaveSoon();
+  SN.cc = d; SN.learn = false; SNLEARN = null; SN.dirty = true; snSay('CUSTOM turns', d.name, 2600); snSaveSoon(); toast('CUSTOM turns ' + d.name);
+  if (SN.back){ SN.back = false; setTimeout(function(){ if (mode === 'tr' && LEAN.key === d.dev) switchLean(DK); }, 450); }      // and back to the sequencer to write the lane
 }
 function snTurnCC(v){
   var d = SN.cc; if (!d) return; MPQUIET = true;

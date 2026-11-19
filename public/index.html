@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.29</span>
+    <span id="verFps">studio v1.30</span>
   </div>
 </div>
 
@@ -158,11 +158,11 @@ body{
 <div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
 
 <div id="trhud" hidden>
-  <div class="keys desk" id="hudTr"><b>Click</b> buttons and pads &middot; <b>scroll</b> or <b>drag up/down</b> on knobs and faders &middot; <b>double-click</b> a knob to reset it<br><b>Enter</b> start / stop &middot; <b>1</b>&ndash;<b>9</b>, <b>0</b>, <b>-</b> play the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudTr"><b>Click</b> buttons and pads &middot; <b>scroll</b> or <b>drag up/down</b> on knobs and faders &middot; <b>double-click</b> a knob to reset it<br><b>Enter</b> start / stop &middot; in <b>TR-REC</b> keys <b>1</b>&ndash;<b>8</b> switch steps and <b>`</b> swaps between steps 1&ndash;8 and 9&ndash;16 (green bar) &middot; in <b>INST PLAY</b> <b>1</b>&ndash;<b>9</b>, <b>0</b>, <b>-</b> play the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMx" hidden><b>1</b>&ndash;<b>9</b> mute drums, synth, bass, Blip, Ambi, Tape, Shru, Chord, Scratch &middot; <b>scroll</b> or <b>drag</b> faders, EQ and send knobs &middot; <b>SOLO</b> plays only that channel &middot; <b>SEND A</b> feeds the echo &middot; <b>double-click</b> to reset<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity, probability (the chance the step plays) or <b>Custom</b>: click it, it flashes, then move any knob on the connected synth and the lane turns that knob for you; the button then shows its name, and <b>holding</b> it forgets it<br><b>OUT</b> sends it to any instrument &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity, probability (the chance the step plays) or <b>Custom</b>: click it and you are taken to the connected synth, click any knob or fader there and the lane turns it for you; the button then shows its name, and <b>holding</b> it forgets it<br><b>OUT</b> sends it to any instrument &middot; <b>Q</b> hops between this and its synth &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudEc" hidden>Fed by <b>SEND A</b> on the mixer &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Snake on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMc" hidden><b>Click</b> a chord button &middot; <b>click</b> or hold and <b>slide</b> along the black strip to strum it &middot; the two arrows change the preset &middot; the small button by the red lamp keeps the chord ringing<br><b>Q W E R T Y U</b> major &middot; <b>A S D F G H J</b> minor &middot; <b>Z X C V B N M</b> 7th &middot; <b>1</b>&ndash;<b>=</b> harp &middot; <b>Shift</b> sharp &middot; <b>Esc</b> steps back</div>
@@ -4679,6 +4679,10 @@ button('ctrlsel', 686, 338, 12, 8.5, 'CTRL\nSELECT', 'Ctrl select', GRN); button
 button('mute', 692, 492, 14, 8.5, 'MUTE', 'Mute', ORG);
 pad('instpad', 766, 478, 19, 20, 0xF4F4F4, 'Inst pad');
 PADX.forEach(function(x, i){ pad('pad' + i, x, 555, 15.5, 19, PADCOL[i], 'Pad ' + (i + 1)).pi = i; });
+var HALFBAR = [0, 1].map(function(h){                          // a thin bar over pads 1-8 or 9-16: the half the number keys switch in step record
+  var x0 = LX(PADX[h * 8] - 8), x1 = LX(PADX[h * 8 + 7] + 8), m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.003, Math.abs(LZ(523.4) - LZ(521.4))), new THREE.MeshBasicMaterial({ color:0x202226 }));
+  m.position.set((x0 + x1) / 2, 0.0016, LZ(522.4)); m.userData.noShadow = true; HOST.add(m); return m;
+});
 
 /* ---- the two screens ---- */
 var dispC = mk(512, 144), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
@@ -5155,6 +5159,7 @@ function paintTempo(){
 /* ---- lights: called every frame ---- */
 var VARL = 'ABCDEFGH';
 function updateTR(now, dt){
+  for (var hb = 0; hb < 2; hb++){ HALFBAR[hb].visible = M.mode === 'trrec'; HALFBAR[hb].material.color.setHex((M.kbHalf ? 1 : 0) === hb ? 0x3BFF6A : 0x1E2A22); }
   if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; SEQ.visN = e.n; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); if (e.sv) SEQ.snare = e.sv; } }
   var blink = (now % 420) < 210, fast = (now % 200) < 100, v = editV(), pv = playV(), vs = M.playing ? SEQ.visStep : -1;
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
@@ -7623,7 +7628,8 @@ function snLearn(on){
   if (!on){ if (SNLEARN === snHear) SNLEARN = null; return; }
   if (!SN.out){ SN.learn = false; snSay('CUSTOM', 'set OUT to a synth first', 2200); return; }
   if (SNLEARN && SNLEARN !== snHear) SNLEARN(null);          // only one Snake listens at a time
-  SNLEARN = snHear; snSay('LEARN', 'move a knob on the ' + SNOUT[SN.out], 60000);
+  SNLEARN = snHear; snSay('LEARN', 'click a knob on the ' + SNOUT[SN.out], 60000);
+  if (!MPQUIET && typeof switchLean === 'function' && mode === 'tr' && LEAN.key === DK){ LASTSN[SNDEV[SN.out]] = DK; SN.back = true; switchLean(SNDEV[SN.out]); toast('Click the knob or fader for CUSTOM to turn · Q goes back'); }     // jump to the synth so the control can be picked
 }
 function snHear(c){
   if (!c){ SN.learn = false; SN.dirty = true; return; }
@@ -7633,7 +7639,8 @@ function snHear(c){
   else if (c.dev === 'am'){ k = c.vol ? 'volu' : c.pi2 != null ? amKeys()[c.pi2] : null; if (!k || k === 'bpm') return; d = { dev:'am', key:k, name:AMP[k] ? AMP[k][1] : 'Volume' }; }
   else if (c.dev === 'tp'){ if (c.ei == null) return; d = { dev:'tp', k:c.ei, pg:TP.pg[c.ei], name:TPPG[c.ei][TP.pg[c.ei]][0] }; }
   else d = { dev:c.dev, id:c.id, name:c.name };
-  SN.cc = d; SN.learn = false; SNLEARN = null; SN.dirty = true; snSay('CUSTOM turns', d.name, 2600); snSaveSoon();
+  SN.cc = d; SN.learn = false; SNLEARN = null; SN.dirty = true; snSay('CUSTOM turns', d.name, 2600); snSaveSoon(); toast('CUSTOM turns ' + d.name);
+  if (SN.back){ SN.back = false; setTimeout(function(){ if (mode === 'tr' && LEAN.key === d.dev) switchLean(DK); }, 450); }      // and back to the sequencer to write the lane
 }
 function snTurnCC(v){
   var d = SN.cc; if (!d) return; MPQUIET = true;
@@ -8294,6 +8301,27 @@ function enterTR(dev){
   trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
   resize(); refreshLockUi();
 }
+function switchLean(dev){                                      // hop straight from one instrument to another without stepping back
+  var D = typeof dev === 'string' ? DEVS[dev] : dev; if (!D) return false; if (mode !== 'tr'){ enterTR(D); return mode === 'tr'; } if (D === LEAN) return true;
+  endCtl(true); setHover(null);
+  Object.keys(MF.kb).forEach(mfKbUp); Object.keys(BS.kb).forEach(bsKbUp); Object.keys(AM.kb).forEach(amKbUp); Object.keys(TP.kb).forEach(tpKbUp); Object.keys(MB.kb).forEach(mbKbUp); Object.keys(MC.kb).forEach(mcKbUp); Object.keys(SH.kb).forEach(shKbUp);
+  LEAN = D; cam.x = D.stand.x; cam.z = D.stand.z; cam.yaw = cam.ty = D.yaw; cam.pitch = cam.tp = D.pitch; trBlend = 0.35; keys = {};
+  ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
+  resize(); return true;
+}
+var LASTSN = {};                                               // per synth, the sequencer you last came from
+function swapLean(){                                           // Q: between a synth and the sequencer that plays it
+  var i, S;
+  if (LEAN.key.indexOf('sn') === 0){
+    for (i = 0; i < SNAKES.length; i++) if (SNAKES[i].key === LEAN.key) S = SNAKES[i];
+    var dk = S && SNDEV[S.SN.out]; if (!dk){ toast('Set OUT on this sequencer first'); return; }
+    LASTSN[dk] = S.key; switchLean(dk); toast(DEVS[dk].name.charAt(0).toUpperCase() + DEVS[dk].name.slice(1) + ' · Q goes back to its sequencer'); return;
+  }
+  var want = LASTSN[LEAN.key], pick = null;
+  for (i = 0; i < SNAKES.length; i++){ S = SNAKES[i]; if (SNDEV[S.SN.out] !== LEAN.key) continue; if (S.key === want){ pick = S; break; } if (!pick || S.hp === (DEVS[LEAN.key].hp || null)) pick = pick || S; }
+  if (!pick){ toast('No sequencer is set to play this'); return; }
+  switchLean(pick.key);
+}
 function leaveTR(){
   if (mode !== 'tr') return;
   mode = 'walk'; trhud.hidden = true; hintEl.hidden = false; endCtl(true); setHover(null);
@@ -8335,6 +8363,7 @@ CT.dtime.detents = DIVS.length - 1; CT.fillknob.detents = 5;
 var drag = null, pressed = null;
 function startCtl(c, e, h){
   if (c.kind === 'knob' || c.kind === 'fader'){
+    if (SNLEARN){ SNLEARN(c); if (!SNLEARN) return; }                 // a sequencer is listening: clicking the control is enough to pick it
     if (e.detail >= 2 && !c.endless && !c.click){ setCtl(c, c.def); toast(c.name + ' reset'); return; }
     drag = { c:c, y:e.clientY, py:e.clientY, v0:c.v, acc:0, clicks:0, moved:false }; if (c.grab) c.grab(true);
     if (!locked){ try { canvas.setPointerCapture(e.pointerId); } catch (x) {} canvas.className = 'grabbing'; }
@@ -8441,6 +8470,7 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr' && LEAN.keys){                                       // the two keyboards: letters play notes, so only Esc steps back
     if (e.key === 'Escape'){ leaveTR(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Tab' || (k === 'q' && LEAN.key !== 'mc')){ e.preventDefault(); if (!e.repeat) swapLean(); return; }      // the chord box plays a chord on Q, so there it is Tab
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) LEAN.keys.play(); return; }
     if (!e.repeat && LEAN.keys.down(k)) e.preventDefault();
     return;
@@ -8448,7 +8478,15 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr'){
     if ((k === 'e' && !e.repeat) || e.key === 'Escape' || 'wasd'.indexOf(k) >= 0 && k.length === 1){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
+    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat) swapLean(); return; }
     if (LEAN === DEVS.mx){ var mi = '123456789'.indexOf(e.key); if (mi >= 0 && !e.repeat) mxMute(mi); return; }
+    if (LEAN === DEVS.tr){                                             // on the drum machine the number keys follow its mode
+      if (e.code === 'Backquote' || e.key === '`' || e.key === '\u00AC'){ e.preventDefault(); if (!e.repeat){ M.kbHalf = M.kbHalf ? 0 : 1; say('KEYS 1-8  STEPS ' + (M.kbHalf ? '9-16' : '1-8'), 1600); } return; }
+      var ti = '1234567890-'.indexOf(e.key); if (ti < 0 || e.repeat) return;
+      if (M.mode === 'instplay' || M.mode === 'instrec') hit(ti);        // playing: each key is a drum
+      else if (M.mode === 'trrec' && ti < 8) pressPad((M.kbHalf ? 8 : 0) + ti);   // step record: keys 1-8 switch steps in the selected half
+      return;
+    }
     var di = '1234567890-'.indexOf(e.key); if (di >= 0 && !e.repeat){ hit(di); return; }
     return;
   }
@@ -8483,7 +8521,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.29 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.30 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -8584,7 +8622,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>

@@ -199,6 +199,10 @@ button('ctrlsel', 686, 338, 12, 8.5, 'CTRL\nSELECT', 'Ctrl select', GRN); button
 button('mute', 692, 492, 14, 8.5, 'MUTE', 'Mute', ORG);
 pad('instpad', 766, 478, 19, 20, 0xF4F4F4, 'Inst pad');
 PADX.forEach(function(x, i){ pad('pad' + i, x, 555, 15.5, 19, PADCOL[i], 'Pad ' + (i + 1)).pi = i; });
+var HALFBAR = [0, 1].map(function(h){                          // a thin bar over pads 1-8 or 9-16: the half the number keys switch in step record
+  var x0 = LX(PADX[h * 8] - 8), x1 = LX(PADX[h * 8 + 7] + 8), m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.003, Math.abs(LZ(523.4) - LZ(521.4))), new THREE.MeshBasicMaterial({ color:0x202226 }));
+  m.position.set((x0 + x1) / 2, 0.0016, LZ(522.4)); m.userData.noShadow = true; HOST.add(m); return m;
+});
 
 /* ---- the two screens ---- */
 var dispC = mk(512, 144), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
