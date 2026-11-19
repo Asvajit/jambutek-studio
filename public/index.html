@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.26</span>
+    <span id="verFps">studio v1.27</span>
   </div>
 </div>
 
@@ -6356,7 +6356,7 @@ function paintMX(){
     g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k = 0; k <= 10; k++){ var yy = 234 + k * 7.6; g.beginPath(); g.moveTo(x - 10, yy); g.lineTo(x - (k % 5 ? 5.5 : 4), yy); g.stroke(); }
     T('0', x - 13.5, 234 + 2.5 * 7.6, 3.4, '#B8B8B4');
   });
-  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('OUT', MXMX, 220, 4);
+  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('SEND A', MXMX, 147.5, 3.2, '#F2B544'); T('SEND B', MXMX, 176.5, 3.2, '#7FD0FF'); T('OUT', MXMX, 220, 4);
   g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k2 = 0; k2 <= 10; k2++){ var y2 = 234 + k2 * 7.6; g.beginPath(); g.moveTo(MXMX - 10, y2); g.lineTo(MXMX - (k2 % 5 ? 5.5 : 4), y2); g.stroke(); }
   g.setTransform(1, 0, 0, 1, 0, 0); if (mxTex) mxTex.needsUpdate = true;
 }
@@ -6383,6 +6383,9 @@ MXX.forEach(function(x, i){
   button('mxmute' + i, x, 210, 16, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
 });
+FACE = { bg:'#F2B544', fg:'#141005' }; button('mxclra', MXMX, 157, 26, 10, 'CLEAR', 'Clear send A on every channel', 0xF2B544).clr = 'sa';
+FACE = { bg:'#7FD0FF', fg:'#06131B' }; button('mxclrb', MXMX, 186, 26, 10, 'CLEAR', 'Clear send B on every channel', 0x7FD0FF).clr = 'sb';
+FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 vfader('mxmaster', MXMX, 234, 310, 'Master volume', MX.master, { color:0xC8343A, stripe:0xFFFFFF });
 CTLIST.forEach(function(c){ if (c.dev === 'mx' && c.kind === 'knob') c.def = /^mxs[ab]/.test(c.id) ? 0 : 0.5; else if (c.dev === 'mx' && c.kind === 'fader') c.def = c.id === 'mxmaster' ? 0.8 : 0.75; });
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
@@ -6401,11 +6404,15 @@ function mxCtl(c){
   mxApply(); mxSaveSoon();
 }
 function mxLabel(c){
+  if (c.clr) return c.name + ' · click';
   if (c.kind === 'btn') return c.name + (MX.ch[c.ch].mute ? ' · muted' : '') + ' · key ' + (c.ch + 1);
   var id = c.id; if (id.indexOf('mxsb') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · nothing plugged in yet'; if (id === 'mxmaster' || id.indexOf('mxvol') === 0 || id.indexOf('mxsa') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
   return c.name + ' ' + mxDb(c.v) + ' · scroll or drag';
 }
-function mxPress(c){ if (c.ch != null) mxMute(c.ch); }
+function mxPress(c){
+  if (c.clr){ for (var i = 0; i < MXNC; i++){ MX.ch[i][c.clr] = 0; var k = CT['mx' + c.clr + i]; k.v = 0; k.show(); } mxApply(); mxSaveSoon(); toast('Send ' + (c.clr === 'sa' ? 'A' : 'B') + ' cleared'); return; }
+  if (c.ch != null) mxMute(c.ch);
+}
 function mxUpdate(now, dt){
   var buf = mxUpdate.buf || (mxUpdate.buf = new Float32Array(256)), i, k;
   for (i = 0; i <= MXNC; i++){
@@ -6414,6 +6421,7 @@ function mxUpdate(now, dt){
     var db = MX.lv[i] > 0.0005 ? 20 * Math.log10(MX.lv[i]) : -90, n = clamp(Math.round((db + 42) / 4.2), 0, 10), segs = MXMET[i];
     for (k = 0; k < 10; k++) segs[k].color.setHex(k < n ? (k >= 9 ? 0xFF2A3C : k >= 7 ? 0xFFE15A : 0x3BFF6A) : 0x15171C);
   }
+  ['mxclra', 'mxclrb'].forEach(function(id){ var b = CT[id], bl = b.down ? 0.9 : 0.25; if (bl !== b.lit){ b.lit = bl; b.paintLit(); } var by = b.y0 - (b.down ? 0.003 : 0); if (b.m.position.y !== by) b.m.position.y = by; });
   for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], L = MX.ch[i].mute ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; }
 }
 var NOP = function(){};
@@ -8468,7 +8476,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.26 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.27 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
