@@ -211,7 +211,9 @@ function update(now, dt){
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }
 DEVH[DK] = { label:snLabel, press:snPress, release:snRelease, ctl:snCtl, turn:snTurn };
-function patterns(def){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; } if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
+function patterns(def, jam){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; }
+  var jx = jam && DEF && DEF.snakes && DEF.snakes[K]; if (jx && typeof jx.out === 'number'){ SN.out = clamp(jx.out | 0, 0, 7); SN.cv = 0; }      // a saved jam also says which synth each Snake plays
+  if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
 return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
