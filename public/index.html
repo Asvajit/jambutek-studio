@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.27</span>
+    <span id="verFps">studio v1.28</span>
   </div>
 </div>
 
@@ -4611,9 +4611,10 @@ function fader(i){
 function faceTex(text, w, h, sub){
   var c = mk(128, Math.max(32, Math.round(128 * h / w / 8) * 8)), t = canvasTex(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
   var bg = FACE.bg, fg = FACE.fg;
-  function paint(nt){
+  function paint(nt, fill){                                   // fill 0..1: a progress bar across the face, for press-and-hold buttons
     if (typeof nt === 'string') text = nt;                    // a new caption, e.g. the Snake's CUSTOM button naming what it has learned
     var g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
+    if (fill > 0){ g.fillStyle = '#E0193C'; g.fillRect(0, 0, c.width * Math.min(1, fill), c.height); }
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 4; g.strokeRect(0, 0, c.width, c.height);
     var lines = text.split('\n'), fs = Math.min(c.height * (lines.length > 1 ? 0.4 : 0.56), 110 / Math.max.apply(null, lines.map(function(l){ return Math.max(2.2, l.length * 0.52); })));
     g.fillStyle = fg; g.font = Math.round(fs) + 'px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
@@ -7510,7 +7511,7 @@ var SNSHAPE = ['1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16', '1 5 9 13 2 6 10 14 3 7
 var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
-var SNHOLD = 900;                 // ms to hold CUSTOM to forget what it learned
+var SNHOLD = 1100;                 // ms to hold CUSTOM to forget what it learned
 var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
@@ -7644,7 +7645,9 @@ function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i
 function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
 function snRelease(c){ var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
 function snHoldTick(){
-  var h = SN.hold; if (!h || h.done || performance.now() - h.t0 < SNHOLD) return;
+  var h = SN.hold, b = CT[(PX + 'pg') + 4];
+  if (!h || h.done){ if (SN.holdBar){ SN.holdBar = 0; if (b) b.repaintFace(undefined, 0); } return; }          // let go early, or finished: wipe the bar
+  var f = (performance.now() - h.t0) / SNHOLD; if (f < 1){ var q = Math.max(0.02, Math.round(f * 40) / 40); if (q !== SN.holdBar){ SN.holdBar = q; b.repaintFace(undefined, q); } return; }
   h.done = true; SN.cc = null; snLearn(false); SN.page = 4; snSync(); SN.dirty = true; snSay('CUSTOM', 'cleared', 2000); snSaveSoon();
 }
 function snBtnFace(){                                         // the CUSTOM button names what it has learned
@@ -8476,7 +8479,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.27 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.28 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

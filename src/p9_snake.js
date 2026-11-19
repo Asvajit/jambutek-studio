@@ -12,7 +12,7 @@ var SNSHAPE = ['1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16', '1 5 9 13 2 6 10 14 3 7
 var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
-var SNHOLD = 900;                 // ms to hold CUSTOM to forget what it learned
+var SNHOLD = 1100;                 // ms to hold CUSTOM to forget what it learned
 var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
@@ -146,7 +146,9 @@ function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i
 function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
 function snRelease(c){ var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
 function snHoldTick(){
-  var h = SN.hold; if (!h || h.done || performance.now() - h.t0 < SNHOLD) return;
+  var h = SN.hold, b = CT[(PX + 'pg') + 4];
+  if (!h || h.done){ if (SN.holdBar){ SN.holdBar = 0; if (b) b.repaintFace(undefined, 0); } return; }          // let go early, or finished: wipe the bar
+  var f = (performance.now() - h.t0) / SNHOLD; if (f < 1){ var q = Math.max(0.02, Math.round(f * 40) / 40); if (q !== SN.holdBar){ SN.holdBar = q; b.repaintFace(undefined, q); } return; }
   h.done = true; SN.cc = null; snLearn(false); SN.page = 4; snSync(); SN.dirty = true; snSay('CUSTOM', 'cleared', 2000); snSaveSoon();
 }
 function snBtnFace(){                                         // the CUSTOM button names what it has learned
