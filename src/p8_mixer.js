@@ -7,8 +7,8 @@ function qz(u){ return (u - MXD / 2) * SC; }
 var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotation.y = MXPOS.r; scene.add(MXY);
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU', 'CHORD', 'SCRATCH'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF', '#FF6AB0', '#35D8B8'], MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416], MXMX = 464, MXNC = 9;
-var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, vol:0.75, mute:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
-function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 9){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
+var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, vol:0.75, mute:0, solo:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 9){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; MX.ch[i].solo = c.solo ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
 var mxSaveT = null; function mxSaveNow(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master })); } function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(mxSaveNow, saveMs(800)); }
 var mxC = mk(1960, 1312), mxTex = null;
 function paintMX(){
@@ -49,7 +49,7 @@ HOST = MXG; LX = qx; LZ = qz; DEV = 'mx';
 MXX.forEach(function(x, i){
   knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
   knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
-  button('mxmute' + i, x, 210, 16, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i;
+  button('mxmute' + i, x - 9.6, 210, 17.5, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 210, 17.5, 9, 'SOLO', MXN[i] + ' solo', 0xFFE15A); so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
 });
 FACE = { bg:'#F2B544', fg:'#141005' }; button('mxclra', MXMX, 157, 26, 10, 'CLEAR', 'Clear send A on every channel', 0xF2B544).clr = 'sa';
@@ -61,8 +61,9 @@ HOST = TRG; LX = lx; LZ = lz; DEV = null;
 function mxDb(v){ var d = Math.round((v - 0.5) * 30); return (d > 0 ? '+' : '') + d + ' dB'; }
 function mxApply(){
   if (!AU.ready) return; var t = ac.currentTime;
+  var anySolo = MX.ch.some(function(c){ return c.solo; });                    // with any channel soloed, only the soloed ones are heard
   MX.ch.forEach(function(c, i){ var C = AU.ch[i]; C.hi.gain.setTargetAtTime((c.hi - 0.5) * 30, t, 0.02); C.mid.gain.setTargetAtTime((c.mid - 0.5) * 30, t, 0.02); C.lo.gain.setTargetAtTime((c.lo - 0.5) * 30, t, 0.02);
-    C.fad.gain.setTargetAtTime(c.mute ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3, t, 0.02); });
+    C.fad.gain.setTargetAtTime(c.mute || (anySolo && !c.solo) ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3, t, 0.02); });
   AU.master.gain.setTargetAtTime(Math.pow(MX.master, 1.7) * 1.46, t, 0.02);
 }
 function mxMute(i){ var c = MX.ch[i]; c.mute = c.mute ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.mute ? ' muted' : ' on')); }
@@ -74,12 +75,14 @@ function mxCtl(c){
 }
 function mxLabel(c){
   if (c.clr) return c.name + ' · click';
+  if (c.solo) return c.name + (MX.ch[c.ch].solo ? ' · on' : '') + ' · click';
   if (c.kind === 'btn') return c.name + (MX.ch[c.ch].mute ? ' · muted' : '') + ' · key ' + (c.ch + 1);
   var id = c.id; if (id.indexOf('mxsb') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · nothing plugged in yet'; if (id === 'mxmaster' || id.indexOf('mxvol') === 0 || id.indexOf('mxsa') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
   return c.name + ' ' + mxDb(c.v) + ' · scroll or drag';
 }
 function mxPress(c){
   if (c.clr){ for (var i = 0; i < MXNC; i++){ MX.ch[i][c.clr] = 0; var k = CT['mx' + c.clr + i]; k.v = 0; k.show(); } mxApply(); mxSaveSoon(); toast('Send ' + (c.clr === 'sa' ? 'A' : 'B') + ' cleared'); return; }
+  if (c.solo){ var h = MX.ch[c.ch]; h.solo = h.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[c.ch] + (h.solo ? ' solo' : ' solo off')); return; }
   if (c.ch != null) mxMute(c.ch);
 }
 function mxUpdate(now, dt){
@@ -91,7 +94,8 @@ function mxUpdate(now, dt){
     for (k = 0; k < 10; k++) segs[k].color.setHex(k < n ? (k >= 9 ? 0xFF2A3C : k >= 7 ? 0xFFE15A : 0x3BFF6A) : 0x15171C);
   }
   ['mxclra', 'mxclrb'].forEach(function(id){ var b = CT[id], bl = b.down ? 0.9 : 0.25; if (bl !== b.lit){ b.lit = bl; b.paintLit(); } var by = b.y0 - (b.down ? 0.003 : 0); if (b.m.position.y !== by) b.m.position.y = by; });
-  for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], L = MX.ch[i].mute ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; }
+  for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], L = MX.ch[i].mute ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
+    var so = CT['mxsolo' + i], SL = MX.ch[i].solo ? 1 : 0; if (so.down) SL = Math.max(SL, 0.8); if (SL !== so.lit){ so.lit = SL; so.paintLit(); } var sy = so.y0 - (so.down ? 0.003 : 0); if (so.m.position.y !== sy) so.m.position.y = sy; }
 }
 var NOP = function(){};
 var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, turn:mfTurn }, bs:{ label:bsLabel, press:bsPress, release:bsRelease, ctl:bsCtl, turn:bsTurn }, mx:{ label:mxLabel, press:mxPress, release:NOP, ctl:mxCtl, turn:NOP },
