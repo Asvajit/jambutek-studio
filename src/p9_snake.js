@@ -12,6 +12,7 @@ var SNSHAPE = ['1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16', '1 5 9 13 2 6 10 14 3 7
 var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
+var SNHOLD = 900;                 // ms to hold CUSTOM to forget what it learned
 var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
@@ -142,11 +143,20 @@ function snTurnCC(v){
   MPQUIET = false;
 }
 function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i] = p === 0 ? 12 + ((Math.random() * 25) | 0) : p === 1 ? (Math.random() < 0.7 ? 1 : 0) : 30 + ((Math.random() * 98) | 0); }
+function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
+function snRelease(c){ var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
+function snHoldTick(){
+  var h = SN.hold; if (!h || h.done || performance.now() - h.t0 < SNHOLD) return;
+  h.done = true; SN.cc = null; snLearn(false); SN.page = 4; snSync(); SN.dirty = true; snSay('CUSTOM', 'cleared', 2000); snSaveSoon();
+}
+function snBtnFace(){                                         // the CUSTOM button names what it has learned
+  var t = SN.cc ? 'CUSTOM\n' + String(SN.cc.name || '').toUpperCase().slice(0, 18) : 'CUSTOM'; if (t === SN.btnTxt) return; SN.btnTxt = t; var b = CT[(PX + 'pg') + 4]; if (b && b.repaintFace) b.repaintFace(t);
+}
 function snPress(c){
   var id = c.id, L = SN.lanes[SN.page], D = snDef();
   if (c.gate != null){ var gv = SN.lanes[1].vals; gv[c.gate] = gv[c.gate] ? 0 : 1; c.down = 1; setTimeout(function(){ c.down = 0; }, 120); snSay('Step ' + (c.gate + 1), gv[c.gate] ? 'On' : 'Off'); snSaveSoon(); return; }
   if (c.pg != null){
-    if (c.pg === 4){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name : 'click again to learn'); return; }   // the custom lane: first click with nothing learned, or a second click, listens for a knob
+    if (c.pg === 4){ if (SN.cc && !SN.learn){ SN.hold = { c:c, t0:performance.now(), done:false }; return; } snCustomClick(); return; }       // with something learned, wait: a short click acts on release, a long hold clears it   // the custom lane: first click with nothing learned, or a second click, listens for a knob
     snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
   if (c.sw){ SN.out = (c.pos + 1) % 8; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
   switch (id){
@@ -192,10 +202,11 @@ function update(now, dt){
   for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); CT[(PX + 'c') + i].mat.color.setHex(g[i] ? 0x202226 : 0x121316); }
   for (i = 0; i < 16; i++){ var gp = CT[(PX + 'g') + i], gl = (g[i] ? 0.75 : 0) + (vc[0] === i ? 0.3 : 0); if (gl !== gp.lit){ gp.lit = gl; gp.col.copy(gp.base); if (vc[0] === i && !g[i]) gp.col.setHex(0xFFFFFF); gp.paintLit(); } var gy = gp.y0 - (gp.down ? 0.003 : 0); if (gp.m.position.y !== gy) gp.m.position.y = gy; }
   CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  snHoldTick(); snBtnFace();
   if (now > SN.msgUntil && SN.msgA){ SN.msgA = ''; SN.dirty = true; }
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }
-DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
+DEVH[DK] = { label:snLabel, press:snPress, release:snRelease, ctl:snCtl, turn:snTurn };
 function patterns(def){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; } if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
 return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };

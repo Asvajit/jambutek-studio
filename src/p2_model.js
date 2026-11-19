@@ -131,7 +131,8 @@ function fader(i){
 function faceTex(text, w, h, sub){
   var c = mk(128, Math.max(32, Math.round(128 * h / w / 8) * 8)), t = canvasTex(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
   var bg = FACE.bg, fg = FACE.fg;
-  function paint(){
+  function paint(nt){
+    if (typeof nt === 'string') text = nt;                    // a new caption, e.g. the Snake's CUSTOM button naming what it has learned
     var g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 4; g.strokeRect(0, 0, c.width, c.height);
     var lines = text.split('\n'), fs = Math.min(c.height * (lines.length > 1 ? 0.4 : 0.56), 110 / Math.max.apply(null, lines.map(function(l){ return Math.max(2.2, l.length * 0.52); })));

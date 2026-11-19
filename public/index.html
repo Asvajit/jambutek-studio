@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.25</span>
+    <span id="verFps">studio v1.26</span>
   </div>
 </div>
 
@@ -162,7 +162,7 @@ body{
   <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMx" hidden><b>1</b>&ndash;<b>9</b> mute drums, synth, bass, Blip, Ambi, Tape, Shru, Chord, Scratch &middot; <b>scroll</b> or <b>drag</b> faders, EQ and send knobs &middot; <b>SEND A</b> feeds the echo &middot; <b>double-click</b> to reset<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity, probability (the chance the step plays) or <b>Custom</b>: click it, it flashes, then move any knob on the connected synth and the lane turns that knob for you<br><b>OUT</b> sends it to any instrument &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity, probability (the chance the step plays) or <b>Custom</b>: click it, it flashes, then move any knob on the connected synth and the lane turns that knob for you; the button then shows its name, and <b>holding</b> it forgets it<br><b>OUT</b> sends it to any instrument &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudEc" hidden>Fed by <b>SEND A</b> on the mixer &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Snake on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMc" hidden><b>Click</b> a chord button &middot; <b>click</b> or hold and <b>slide</b> along the black strip to strum it &middot; the two arrows change the preset &middot; the small button by the red lamp keeps the chord ringing<br><b>Q W E R T Y U</b> major &middot; <b>A S D F G H J</b> minor &middot; <b>Z X C V B N M</b> 7th &middot; <b>1</b>&ndash;<b>=</b> harp &middot; <b>Shift</b> sharp &middot; <b>Esc</b> steps back</div>
@@ -4611,7 +4611,8 @@ function fader(i){
 function faceTex(text, w, h, sub){
   var c = mk(128, Math.max(32, Math.round(128 * h / w / 8) * 8)), t = canvasTex(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
   var bg = FACE.bg, fg = FACE.fg;
-  function paint(){
+  function paint(nt){
+    if (typeof nt === 'string') text = nt;                    // a new caption, e.g. the Snake's CUSTOM button naming what it has learned
     var g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 4; g.strokeRect(0, 0, c.width, c.height);
     var lines = text.split('\n'), fs = Math.min(c.height * (lines.length > 1 ? 0.4 : 0.56), 110 / Math.max.apply(null, lines.map(function(l){ return Math.max(2.2, l.length * 0.52); })));
@@ -7501,6 +7502,7 @@ var SNSHAPE = ['1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16', '1 5 9 13 2 6 10 14 3 7
 var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
+var SNHOLD = 900;                 // ms to hold CUSTOM to forget what it learned
 var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
@@ -7631,11 +7633,20 @@ function snTurnCC(v){
   MPQUIET = false;
 }
 function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i] = p === 0 ? 12 + ((Math.random() * 25) | 0) : p === 1 ? (Math.random() < 0.7 ? 1 : 0) : 30 + ((Math.random() * 98) | 0); }
+function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
+function snRelease(c){ var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
+function snHoldTick(){
+  var h = SN.hold; if (!h || h.done || performance.now() - h.t0 < SNHOLD) return;
+  h.done = true; SN.cc = null; snLearn(false); SN.page = 4; snSync(); SN.dirty = true; snSay('CUSTOM', 'cleared', 2000); snSaveSoon();
+}
+function snBtnFace(){                                         // the CUSTOM button names what it has learned
+  var t = SN.cc ? 'CUSTOM\n' + String(SN.cc.name || '').toUpperCase().slice(0, 18) : 'CUSTOM'; if (t === SN.btnTxt) return; SN.btnTxt = t; var b = CT[(PX + 'pg') + 4]; if (b && b.repaintFace) b.repaintFace(t);
+}
 function snPress(c){
   var id = c.id, L = SN.lanes[SN.page], D = snDef();
   if (c.gate != null){ var gv = SN.lanes[1].vals; gv[c.gate] = gv[c.gate] ? 0 : 1; c.down = 1; setTimeout(function(){ c.down = 0; }, 120); snSay('Step ' + (c.gate + 1), gv[c.gate] ? 'On' : 'Off'); snSaveSoon(); return; }
   if (c.pg != null){
-    if (c.pg === 4){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name : 'click again to learn'); return; }   // the custom lane: first click with nothing learned, or a second click, listens for a knob
+    if (c.pg === 4){ if (SN.cc && !SN.learn){ SN.hold = { c:c, t0:performance.now(), done:false }; return; } snCustomClick(); return; }       // with something learned, wait: a short click acts on release, a long hold clears it   // the custom lane: first click with nothing learned, or a second click, listens for a knob
     snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
   if (c.sw){ SN.out = (c.pos + 1) % 8; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
   switch (id){
@@ -7681,10 +7692,11 @@ function update(now, dt){
   for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); CT[(PX + 'c') + i].mat.color.setHex(g[i] ? 0x202226 : 0x121316); }
   for (i = 0; i < 16; i++){ var gp = CT[(PX + 'g') + i], gl = (g[i] ? 0.75 : 0) + (vc[0] === i ? 0.3 : 0); if (gl !== gp.lit){ gp.lit = gl; gp.col.copy(gp.base); if (vc[0] === i && !g[i]) gp.col.setHex(0xFFFFFF); gp.paintLit(); } var gy = gp.y0 - (gp.down ? 0.003 : 0); if (gp.m.position.y !== gy) gp.m.position.y = gy; }
   CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  snHoldTick(); snBtnFace();
   if (now > SN.msgUntil && SN.msgA){ SN.msgA = ''; SN.dirty = true; }
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }
-DEVH[DK] = { label:snLabel, press:snPress, release:NOP, ctl:snCtl, turn:snTurn };
+DEVH[DK] = { label:snLabel, press:snPress, release:snRelease, ctl:snCtl, turn:snTurn };
 function patterns(def){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; } if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
 return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
@@ -8456,7 +8468,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.25 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.26 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -8557,7 +8569,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>
