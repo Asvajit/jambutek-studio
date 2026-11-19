@@ -72,7 +72,7 @@ paintBZ(); bzTex = smoothTex(bzC);
   var W2 = BZW * SC, D2 = BZD * SC;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:bzTex, emissive:0xffffff, emissiveMap:bzTex, emissiveIntensity:0.55, shininess:14, specular:0x0A140C })); top.rotation.x = -Math.PI / 2; BZG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, BZTH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x0E2A18, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -BZTH / 2 - 0.0015; BZG.add(body);
-  standFor(BZY, BZG, W2, D2, BZTH, PFH, PFTILT, 0.24); devBody(BZY, 'bz'); BLOCKS.push(devBlock(PGPOS, 0.56)); vidBooth(PGPOS);
+  standFor(BZY, BZG, W2, D2, BZTH, PFH, PFTILT, 0.24, true); devBody(BZY, 'bz'); BLOCKS.push(devBlock(PGPOS, 0.56)); vidBooth(PGPOS);
   var d = new THREE.Mesh(new THREE.PlaneGeometry(104 * SC, 30 * SC), new THREE.MeshBasicMaterial({ map:bzDispT })); d.rotation.x = -Math.PI / 2; d.position.set(bzx(218), 0.0012, bzz(37)); d.userData.noShadow = true; d.userData.dev = 'bz'; BZG.add(d);
   for (var j = 0; j < 3; j++){ var jack = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.022, 10), new THREE.MeshPhongMaterial({ color:0x101114 })); jack.rotation.x = Math.PI / 2; jack.position.set(bzx(186 + j * 32), 0.008, bzz(2)); BZG.add(jack); }
 })();

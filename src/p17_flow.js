@@ -63,7 +63,7 @@ function makeFlow(DK, PFPOS, SKEY, SCRZ, SCRROT, PAT0, TAG, M){          // M: t
     var W2 = PFW * SC, D2 = PFD * SC, TH = 0.07;
     var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x707070, map:pfPanT, emissive:0xffffff, emissiveMap:pfPanT, emissiveIntensity:1.0, shininess:6, specular:0x000000 })); top.rotation.x = -Math.PI / 2; PFG.add(top);
     var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, TH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x121316, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; PFG.add(body);
-    standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26); devBody(PFY, DK); BLOCKS.push(devBlock(PFPOS, 0.56));
+    standFor(PFY, PFG, W2, D2, TH, PFH, PFTILT, 0.26, true); devBody(PFY, DK); BLOCKS.push(devBlock(PFPOS, 0.56));
     var led = new THREE.Mesh(new THREE.PlaneGeometry(300 * SC, 150 * SC), new THREE.MeshBasicMaterial({ map:pfTex })); led.rotation.x = -Math.PI / 2; led.position.set(fx(170), 0.002, fz(84)); led.userData.noShadow = true; led.userData.ia = 'trbody'; led.userData.dev = DK; PFG.add(led); solids.push(led);
     var d = new THREE.Mesh(new THREE.PlaneGeometry(220 * SC, 24 * SC * 0.72), new THREE.MeshBasicMaterial({ map:pfDispT })); d.rotation.x = -Math.PI / 2; d.position.set(fx(170), 0.002, fz(176)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; PFG.add(d); solids.push(d);
   })();

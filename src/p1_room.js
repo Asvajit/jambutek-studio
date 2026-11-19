@@ -185,6 +185,7 @@ var ambient = new THREE.AmbientLight(0x2E3A52, 1.05); scene.add(ambient);
    players stand around the outside and look at each other across it. Each position is where the instrument stands and
    which way its player faces it: r is the turn about the upright axis (0 = the player stands on the +z side). */
 var RIG = { x:0, z:2.9, R:1.8 };
+var RIGREG = [];                 // every unit that sits on one of the rig's four tables: its groups, width and body thickness
 var ECPOS = { x:-0.06, z:RIG.z - RIG.R, r:Math.PI };            // the echo, in the gap between the drum machine and the mixer
 var TRPOS = { x:-0.75, z:RIG.z - RIG.R, r:Math.PI }, MXPOS = { x:0.72, z:RIG.z - RIG.R, r:Math.PI },                                     // north row
     BSPOS = { x:-0.9, z:RIG.z + RIG.R, r:0 }, AMPOS = { x:0.2, z:RIG.z + RIG.R, r:0 }, MBPOS = { x:0.95, z:RIG.z + RIG.R, r:0 },              // south row

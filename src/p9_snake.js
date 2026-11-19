@@ -61,7 +61,6 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SNG.add(body);
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.02, D2 + 0.05), woodMat); tray.position.y = -TH - 0.012; SNG.add(tray);
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), woodMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
-  [-1, 1].forEach(function(s){ var post = new THREE.Mesh(new THREE.BoxGeometry(0.04, SNH - 0.06, 0.04), metalMat); post.position.set(s * 0.25, -(SNH - 0.06) / 2 - 0.06, -0.13); SNY.add(post); });
   devBody(SNY, DK);
   var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
   SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });

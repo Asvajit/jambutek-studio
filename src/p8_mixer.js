@@ -40,7 +40,7 @@ var MXMET = [];
   BLOCKS.push(devBlock(MXPOS, 0.6)); BLOCKS.push(devBlock(ECPOS, 0.3));
   // one long table for the whole row: drum machine, echo, mixer. Same height and slant as their own stands had
   var x0 = TRPOS.x - PANEL.w * SC / 2, x1 = MXPOS.x + W2 / 2, NTY = new THREE.Group(); NTY.position.set((x0 + x1) / 2, MXH, MXPOS.z); NTY.rotation.y = MXPOS.r; scene.add(NTY);
-  var NTG = new THREE.Group(); NTG.rotation.x = MXTILT; NTY.add(NTG); standFor(NTY, NTG, x1 - x0, D2, TH, MXH, MXTILT, (x1 - x0) / 2 - 0.12); solid(NTY, 'table');
+  var NTG = new THREE.Group(); NTG.rotation.x = MXTILT; NTY.add(NTG); standFor(NTY, NTG, x1 - x0, D2, TH, MXH, MXTILT, (x1 - x0) / 2 - 0.12, true); solid(NTY, 'table');
   // level meters: a column of segments beside each fader
   var geo = new THREE.BoxGeometry(0.007, 0.002, 0.009);
   MXX.concat([MXMX]).forEach(function(x, i){ var segs = []; for (var k = 0; k < 10; k++){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(qx(x + 13), 0.0012, qz(308 - k * 7.6)); m.userData.noShadow = true; MXG.add(m); segs.push(m.material); } MXMET.push(segs); });
