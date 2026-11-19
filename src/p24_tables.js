@@ -9,17 +9,18 @@ var TBL = { L:(MXPOS.x + MXW * SC / 2) - (TRPOS.x - PANEL.w * SC / 2), D:MXD * S
   function strut(a, b){ var len = a.distanceTo(b), m = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.028, len), metalMat); m.position.copy(a).add(b).multiplyScalar(0.5); m.lookAt(b); m.userData.noShadow = true; scene.add(m); }
   var t = MXTILT, ct = Math.cos(t), st = Math.sin(t);
   // each side: where its middle is, which way it faces, and its slots in order. A slot is one or two units and maybe the Snake above them
-  [ { P:{ x:-RIG.R, z:RIG.z, r:-Math.PI / 2 }, slots:[{ u:[[MFY, MFPOS]], sn:0 }, { u:[[TPY, TPPOS]], sn:3 }, { u:[[MCY, MCPOS]] }] },
+  [ { P:{ x:-RIG.R, z:RIG.z, r:-Math.PI / 2 }, slots:[{ u:[[MFY, MFPOS]], sn:0 }, { u:[[MCY, MCPOS]] }] },
     { P:{ x:RIG.x, z:RIG.z + RIG.R, r:0 }, slots:[{ u:[[BSY, BSPOS]], sn:1 }, { u:[[AMY, AMPOS]], sn:2 }, { u:[[MBY, MBPOS], [SCY, SCPOS]], sn:4 }] },
-    { P:{ x:RIG.R, z:RIG.z, r:Math.PI / 2 }, slots:[{ u:[[SHY, SHPOS]], sn:5 }, { u:[[ZKY, ZKPOS]], sn:6 }] }
+    { P:{ x:RIG.R, z:RIG.z, r:Math.PI / 2 }, slots:[{ u:[[SHY, SHPOS]], sn:5 }, { u:[[ZKY, ZKPOS]], sn:6 }, { u:[[TPY, TPPOS]], sn:3 }] }
   ].forEach(function(side){
     var P = side.P, cx = Math.cos(P.r), sx = Math.sin(P.r);
     var TY = new THREE.Group(); TY.position.set(P.x, MXH, P.z); TY.rotation.y = P.r; scene.add(TY);
     var TG = new THREE.Group(); TG.rotation.x = t; TY.add(TG); standFor(TY, TG, TBL.L, TBL.D, NTTH, MXH, t, TBL.L / 2 - 0.12, true); solid(TY, 'table'); BLOCKS.push(devBlock(P, TBL.L / 2 + 0.06));
-    var w = side.slots.map(function(s){ var q = 0; s.u.forEach(function(a, i){ q += reg(a[0]).W2 + (i ? TBL.gap : 0); }); return q; }), tot = w.reduce(function(a, b){ return a + b; }, 0);
+    var w = side.slots.map(function(s){ var q = 0; s.u.forEach(function(a, i){ q += reg(a[0]).W2 + (i ? TBL.gap : 0); }); s.w0 = q; return s.sn == null ? q : Math.max(q, SNW * SC + 0.08); }),      // a slot is at least as wide as the Snake above it, so neighbouring Snakes never overlap
+        tot = w.reduce(function(a, b){ return a + b; }, 0);
     var g = Math.max(0.02, (TBL.L - tot) / (side.slots.length + 1)), u = -(tot + g * (side.slots.length - 1)) / 2;
     side.slots.forEach(function(s, k){
-      var u0 = u, mid = u + w[k] / 2;
+      var mid = u + w[k] / 2, u0 = mid - s.w0 / 2;
       s.u.forEach(function(a){
         var R = reg(a[0]), uc = u0 + R.W2 / 2, d = NTTH - R.TH; u0 += R.W2 + TBL.gap;
         a[1].x = P.x + cx * uc; a[1].z = P.z - sx * uc; a[1].r = P.r;
