@@ -190,7 +190,7 @@ var MP = (function(){
     try {
       if (e[0] === 'c' && Array.isArray(e[1])) e[1].forEach(function(a){ var c = CT[a[0]]; if (c && (c.kind === 'knob' || c.kind === 'fader') && !c.endless && typeof a[1] === 'number'){ setCtl0(c, a[1]); if (c.show) c.show(); } });
       else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } NOTE[e[1]][e[3] ? 0 : 1](e[2], e[4] == null ? undefined : e[4]); }
-      else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] < 7 && e[3] >= 0 && e[3] < 3) mcChord0(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
+      else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) mcChord0(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
       else if (e[0] === 'q') skRemote(e[1]);
       else if (e[0] === 'h' && e[1] >= 0 && e[1] < 11) hit0(e[1] | 0, typeof e[2] === 'number' ? e[2] : 0.8);
     } catch (err2) {}

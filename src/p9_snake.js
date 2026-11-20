@@ -181,7 +181,7 @@ function clock(t, N, sd, sw){                       // one call per 16th from th
     var li = e[2], L = SN.lanes[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell }); if (li === 4 && SN.cc) SN.vis.push({ t:e[0], cc:L.vals[cell] / 127 });
     if (li !== 0 || !SN.out || !SN.lanes[1].vals[cell] || snDice(N * 31 + e[3] * 7 + K * 131) * 127 >= SN.lanes[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
     var n = snNote(L.vals[cell]), vel = clamp(SN.lanes[2].vals[SN.cell[2]] / 127, 0.05, 1), dur = sd * e[4] * 0.6;
-    var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else if (o === 6) shNoteAt(n + 12, vel, e[0], dur); else if (o === 8) zkNoteAt(n + 12, vel, e[0], dur); else mcPluckAt(n + 24, vel, e[0]);
+    var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else if (o === 6) shNoteAt(n + 12, vel, e[0], dur); else if (o === 8) zkNoteAt(n + 12, vel, e[0], dur); else mcSeqAt(n, vel, e[0], dur);
   });
 }
 function onStop(){ SN.vis = []; SN.cv = 0; }
@@ -217,7 +217,7 @@ RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); };
 return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
-var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
+var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8], [MCPOS, 7]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
 function snClock(t, N, sd, sw){ SNAKES.forEach(function(s){ s.clock(t, N, sd, sw); }); }
 function snOnStop(){ SNAKES.forEach(function(s){ s.onStop(); }); }
 function snUpdate(now, dt){ SNAKES.forEach(function(s){ s.update(now, dt); }); }

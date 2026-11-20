@@ -33,7 +33,7 @@ var DEVS = {
   tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:devStand(TPPOS), yaw:TPPOS.r, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
   mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.78, asp:1.63, off:0.05, lookz:0.03, hud:'hudMx' }
 };
-DEVS.mc = { key:'mc', g:MCG, name:'Chord box', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.44, asp:1.85, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
+DEVS.mc = { key:'mc', g:MCG, name:'Chord synth', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.56, asp:2.0, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
 DEVS.ec = { key:'ec', g:ECG, name:'Echo and reverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.82, asp:0.8, off:0.04, lookz:RVOFF / 2 + 0.07, hud:'hudEc' };
 DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 FLOWS.forEach(function(f){ DEVS[f.key] = { key:f.key, g:f.G, name:'Video synth A', stand:devStand(f.pos), yaw:f.pos.r, pitch:-0.42, d:0.72, asp:1.9, off:0.04, lookz:0.05, hud:'hudPf' }; });
@@ -251,7 +251,7 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr' && LEAN.keys){                                       // the two keyboards: letters play notes, so only Esc steps back
     if (e.key === 'Escape'){ leaveTR(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.key === 'Tab' || (k === 'q' && LEAN.key !== 'mc')){ e.preventDefault(); if (!e.repeat) swapLean(); return; }      // the chord box plays a chord on Q, so there it is Tab
+    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat) swapLean(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) LEAN.keys.play(); return; }
     if (!e.repeat && LEAN.keys.down(k)) e.preventDefault();
     return;
@@ -302,7 +302,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.40 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.41 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
