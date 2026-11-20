@@ -25,7 +25,7 @@ function vidSwitch(G, x0, z0){                        // the switcher: a little 
 }
 var VIDSW = [];
 function vidSet(n, quiet){ n = n === 1 || n === 2 ? n : 0; if (n === VID.src) return; VID.src = n; vidApply(); if (!quiet){ store('jambutek-studio-video-v1', JSON.stringify({ v:1, src:n })); toast(n === 1 ? 'Roof: synth A, patterns' : n === 2 ? 'Roof: synth B, Fosfora' : 'Roof video off'); } }
-function vidApply(){ VID.scr.forEach(function(m){ m.material = VID.mats[VID.src] || VID.mats[0]; }); }
+function vidApply(){ VID.scr.forEach(function(m){ m.material = VID.src === 1 ? VID.mats[1] : VID.mats[0]; }); if (VID.sq) VID.sq.visible = VID.src === 2; }      // synth A draws a strip, shown twice; synth B draws one square across the whole roof
 function vidSwitchTick(){ VIDSW.forEach(function(c){ var L = VID.src === c.vs ? 1 : 0.08; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; }); }
 var PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
 function fx(u){ return (u - PFW / 2) * SC; }

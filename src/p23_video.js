@@ -2,7 +2,7 @@
 /* ================= video synth B: an audio-reactive visualiser, after Fosfora =================
    Fosfora (github.com/kevinraymond/fosfora, (c) 2025-2026 Kevin Raymond, MIT OR Apache-2.0) is a music visualiser whose effects are
    mostly particle simulations run on the graphics card. Ten of them are rebuilt here, by name and behaviour, as small simulations
-   that run on the processor straight onto the roof's 128 x 64 LED grid: Reticle, Strand, Cascade, Cymatics, Morph, Panorama,
+   that run on the processor straight onto the roof as one 128 x 128 square: Reticle, Strand, Cascade, Cymatics, Morph, Panorama,
    Symbiosis, Tide, Tesla and Flux. They are this room's own code written from Fosfora's descriptions of each effect, with a few
    thousand particles where Fosfora uses hundreds of thousands (see vendor/FOSFORA-NOTICE.md). It listens to the room's master output,
    left and right, and the drum machine's kick and snare stand in for Fosfora's beat detector. The unit has its own small screen,
@@ -19,21 +19,21 @@ function bzRestore(){ try { var s = JSON.parse(store('jambutek-studio-bz-v1') ||
 var bzSaveT = null; function bzSaveNow(){ store('jambutek-studio-bz-v1', JSON.stringify({ v:1, p:BZ.p })); } function bzSaveSoon(){ clearTimeout(bzSaveT); bzSaveT = setTimeout(bzSaveNow, saveMs(800)); }
 
 
-/* the picture: particles drawn into a 128 x 64 buffer that fades, so everything leaves a trail */
-var FX = { W:128, H:64, N:2600, mode:-1, n:0, tau:0.2, seed:1 };
+/* the picture: particles drawn into a square 128 x 128 buffer that fades, so everything leaves a trail. x and y both run -1..1 */
+var FX = { W:128, H:128, N:2600, mode:-1, n:0, tau:0.2, seed:1 };
 FX.buf = new Float32Array(FX.W * FX.H * 3); FX.c = mk(FX.W, FX.H); FX.ctx = FX.c.getContext('2d'); FX.img = FX.ctx.createImageData(FX.W, FX.H); for (var fxi = 3; fxi < FX.img.data.length; fxi += 4) FX.img.data[fxi] = 255;
 FX.tex = new THREE.CanvasTexture(FX.c); FX.tex.magFilter = FX.tex.minFilter = THREE.NearestFilter; FX.tex.generateMipmaps = false;
 ['px', 'py', 'vx', 'vy', 'pa', 'pb'].forEach(function(k){ FX[k] = new Float32Array(FX.N); });
 var fxMat = new THREE.MeshBasicMaterial({ map:FX.tex });
-VID.mats[2] = fxMat;
+VID.sq = new THREE.Mesh(new THREE.PlaneGeometry(SCRW, SCRW), fxMat); VID.sq.position.set(RIG.x, ROOM.h - 0.071, RIG.z); VID.sq.rotation.x = Math.PI / 2; VID.sq.userData.noShadow = true; VID.sq.visible = false; scene.add(VID.sq);      // one square over the two half screens
 function fxRnd(){ return Math.random(); }
 function fxHash(a, b){ var h = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return h - Math.floor(h); }
 function fxPal(t, cn, ph, o){                              // the warm-to-cool cosine palette, steered by how bright the sound is
   var A = [0.5 - 0.2 * cn, 0.3 + 0.1 * cn, 0.2 + 0.4 * cn], B = [0.5 - 0.1 * cn, 0.3, 0.2 + 0.2 * cn], C = [1, 0.7 + 0.3 * cn, 0.4 + 0.8 * cn], D = [0, 0.15 + 0.18 * cn, 0.2 + 0.47 * cn];
   for (var k = 0; k < 3; k++) o[k] = Math.max(0, A[k] + B[k] * Math.cos(6.28318 * (C[k] * t + D[k] + ph))); return o;
 }
-function fxDot(x, y, r, g, b){                              // x -1..1, y -0.5..0.5
-  var ix = ((x + 1) * 64) | 0, iy = ((0.5 - y) * 64) | 0; if (ix < 0 || ix >= 128 || iy < 0 || iy >= 64) return; var o = (iy * 128 + ix) * 3, B = FX.buf; B[o] += r; B[o + 1] += g; B[o + 2] += b;
+function fxDot(x, y, r, g, b){
+  var ix = ((x + 1) * 64) | 0, iy = ((1 - y) * 64) | 0; if (ix < 0 || ix >= 128 || iy < 0 || iy >= 128) return; var o = (iy * 128 + ix) * 3, B = FX.buf; B[o] += r; B[o + 1] += g; B[o + 2] += b;
 }
 function fxLine(x0, y0, x1, y1, r, g, b){ var n = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 64)); for (var i = 0; i <= n; i++){ var f = i / n; fxDot(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, r, g, b); } }
 function fxBox(x, y, h, r, g, b){ fxLine(x - h, y - h, x + h, y - h, r, g, b); fxLine(x + h, y - h, x + h, y + h, r, g, b); fxLine(x + h, y + h, x - h, y + h, r, g, b); fxLine(x - h, y + h, x - h, y - h, r, g, b); }
@@ -54,8 +54,8 @@ function fxShape(k, u, o){                                  // the outlines Morp
 }
 function fxInit(m){
   FX.mode = m; FX.buf.fill(0); FX.seed = 7 + m * 101; var i, N = FX.N;
-  FX.n = [6, 0, 2200, 2400, 2000, 2000, 420, 2400, 700, 2600][m]; FX.tau = [0.07, 0.05, 0.25, 0.14, 0.1, 0.3, 0.07, 0.2, 0.7, 0.4][m];
-  for (i = 0; i < N; i++){ FX.px[i] = fxRnd() * 2 - 1; FX.py[i] = fxRnd() - 0.5; FX.vx[i] = FX.vy[i] = 0; FX.pa[i] = fxRnd(); FX.pb[i] = fxRnd(); }
+  FX.n = [6, 0, 2600, 2600, 2400, 2400, 520, 2600, 1100, 2600][m]; FX.tau = [0.07, 0.05, 0.25, 0.14, 0.1, 0.3, 0.07, 0.2, 0.7, 0.4][m];
+  for (i = 0; i < N; i++){ FX.px[i] = fxRnd() * 2 - 1; FX.py[i] = fxRnd() * 2 - 1; FX.vx[i] = FX.vy[i] = 0; FX.pa[i] = fxRnd(); FX.pb[i] = fxRnd(); }
   if (m === 5) for (i = 0; i < N; i++) FX.pa[i] = 0;                       // panorama: nothing alive yet
   if (m === 8) for (i = 0; i < N; i++){ var a = fxRnd() * 6.283; FX.vx[i] = Math.cos(a) * 0.4; FX.vy[i] = Math.sin(a) * 0.4; }
   FX.mat = []; for (i = 0; i < 36; i++) FX.mat.push(fxRnd() * 2 - 1); FX.pol = 1; FX.head = 0; FX.matBar = -1;
@@ -65,64 +65,64 @@ function fxStep(dt, F){                                     // F: what the music
   var m = FX.mode, n = FX.n, px = FX.px, py = FX.py, vx = FX.vx, vy = FX.vy, pa = FX.pa, pb = FX.pb, A = F.A, B = F.B, C = F.C, t = F.t, i, j, c = FXT, fl = FXV, bass = (F.band[0] + F.band[1]) * 0.5, x, y;
   var dec = Math.exp(-dt / FX.tau), buf = FX.buf; for (i = 0; i < buf.length; i++) buf[i] *= dec;
   if (m === 0){                                             // Reticle: crosshairs that jump to a new target every bar and lock on with the beat
-    var cnt = 1 + Math.floor(A * 5.99), size = 0.05 + B * 0.16, k = C > 0.5 ? 3 : 20, lock = Math.exp(-F.ph * 4), br = 0.5 + F.kick * 0.9;
+    var cnt = 1 + Math.floor(A * 5.99), size = 0.06 + B * 0.2, k = C > 0.5 ? 3 : 20, lock = Math.exp(-F.ph * 4), br = 0.5 + F.kick * 0.9;
     for (i = 0; i < cnt; i++){
-      var tx = (fxHash(F.bar + 3, i * 7 + 1) * 2 - 1) * 0.82, ty = (fxHash(F.bar + 11, i * 13 + 5) - 0.5) * 0.72; px[i] += (tx - px[i]) * Math.min(1, dt * k); py[i] += (ty - py[i]) * Math.min(1, dt * k); x = px[i]; y = py[i];
+      var tx = (fxHash(F.bar + 3, i * 7 + 1) * 2 - 1) * 0.82, ty = (fxHash(F.bar + 11, i * 13 + 5) * 2 - 1) * 0.8; px[i] += (tx - px[i]) * Math.min(1, dt * k); py[i] += (ty - py[i]) * Math.min(1, dt * k); x = px[i]; y = py[i];
       fxPal(i / 6 + t * 0.03, F.cent, 0, c); var r = c[0] * br, g = c[1] * br, b = c[2] * br, h = size * (0.75 + 1.1 * lock), q = h * 0.4;
       for (j = 0; j < 28; j++){ var an = j / 28 * 6.283; fxDot(x + Math.cos(an) * size * 0.5, y + Math.sin(an) * size * 0.5, r, g, b); }
       fxLine(x - size * 0.9, y, x - size * 0.25, y, r, g, b); fxLine(x + size * 0.25, y, x + size * 0.9, y, r, g, b); fxLine(x, y - size * 0.9, x, y - size * 0.25, r, g, b); fxLine(x, y + size * 0.25, x, y + size * 0.9, r, g, b);
       [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(function(s){ fxLine(x + s[0] * h, y + s[1] * h, x + s[0] * (h - q), y + s[1] * h, r * 1.3, g * 1.3, b * 1.3); fxLine(x + s[0] * h, y + s[1] * h, x + s[0] * h, y + s[1] * (h - q), r * 1.3, g * 1.3, b * 1.3); });
     }
   } else if (m === 1){                                      // Strand: helices of hollow boxes with no depth, until the drums put the depth back
-    var S = 1 + Math.floor(A * 4.99), tw = (B - 0.2) * 7, bx = 0.012 + C * 0.035, cue = F.drum, R = 15;
+    var S = 1 + Math.floor(A * 4.99), tw = (B - 0.2) * 7, bx = 0.014 + C * 0.04, cue = F.drum, R = 26;
     for (var s2 = 0; s2 < S; s2++){ var xc = S === 1 ? 0 : -0.75 + 1.5 * s2 / (S - 1); fxPal(s2 / S + t * 0.03, F.cent, 0.1, c);
-      for (j = 0; j < R; j++){ var ang = t * 1.4 + j * tw * 0.25 + s2 * 2.1, dp = Math.cos(ang), bb = (0.55 + cue * 0.5 * dp) * 0.9; fxBox(xc + Math.sin(ang) * (S > 3 ? 0.15 : 0.24), -0.44 + 0.88 * j / (R - 1), bx * (1 + cue * 0.7 * dp), c[0] * bb, c[1] * bb, c[2] * bb); } }
+      for (j = 0; j < R; j++){ var ang = t * 1.4 + j * tw * 0.16 + s2 * 2.1, dp = Math.cos(ang), bb = (0.55 + cue * 0.5 * dp) * 0.9; fxBox(xc + Math.sin(ang) * (S > 3 ? 0.15 : 0.24), -0.9 + 1.8 * j / (R - 1), bx * (1 + cue * 0.7 * dp), c[0] * bb, c[1] * bb, c[2] * bb); } }
   } else if (m === 2){                                      // Cascade: streams come in from the edges, bass from below, mids from the sides, highs from above
-    var sp = 0.15 + A * 0.7, lv = [bass, (F.band[2] + F.band[3]) * 0.5, (F.band[3] + F.band[4]) * 0.5, (F.band[5] + F.band[6]) * 0.5], EC = [[1.0, 0.3, 0.1], [0.9, 0.8, 0.2], [0.2, 1.0, 0.4], [0.3, 0.4, 1.0]];
+    var sp = 0.2 + A * 0.9, lv = [bass, (F.band[2] + F.band[3]) * 0.5, (F.band[3] + F.band[4]) * 0.5, (F.band[5] + F.band[6]) * 0.5], EC = [[1.0, 0.3, 0.1], [0.9, 0.8, 0.2], [0.2, 1.0, 0.4], [0.3, 0.4, 1.0]];
     for (i = 0; i < n; i++){ var e = i & 3; pb[i] -= dt;
       if (pb[i] <= 0){ if (fxRnd() < 0.04 + lv[e] * 0.9){ pb[i] = 1 + fxRnd() * 2.5; var u = fxRnd() * 2 - 1, w = (fxRnd() - 0.5) * B * 0.5, v0 = sp * (0.5 + lv[e]);
-          if (e === 0){ px[i] = u; py[i] = -0.5; vx[i] = w; vy[i] = v0; } else if (e === 3){ px[i] = u; py[i] = 0.5; vx[i] = w; vy[i] = -v0; } else if (e === 1){ px[i] = -1; py[i] = u * 0.5; vx[i] = v0 * 1.4; vy[i] = w; } else { px[i] = 1; py[i] = u * 0.5; vx[i] = -v0 * 1.4; vy[i] = w; } var j0 = fxRnd() * dt; px[i] += vx[i] * j0; py[i] += vy[i] * j0; } else { pb[i] = 0.05; px[i] = 9; continue; } }
+          if (e === 0){ px[i] = u; py[i] = -1; vx[i] = w; vy[i] = v0; } else if (e === 3){ px[i] = u; py[i] = 1; vx[i] = w; vy[i] = -v0; } else if (e === 1){ px[i] = -1; py[i] = u; vx[i] = v0; vy[i] = w; } else { px[i] = 1; py[i] = u; vx[i] = -v0; vy[i] = w; } var j0 = fxRnd() * dt; px[i] += vx[i] * j0; py[i] += vy[i] * j0; } else { pb[i] = 0.05; px[i] = 9; continue; } }
       if (px[i] > 5) continue; fxFlow(px[i] * 1.5, py[i] * 1.5, t, fl); px[i] += (vx[i] + fl[0] * C * 0.06) * dt; py[i] += (vy[i] + fl[1] * C * 0.06) * dt; var q2 = 0.11 * Math.min(1, pb[i]); fxDot(px[i], py[i], EC[e][0] * q2, EC[e][1] * q2, EC[e][2] * q2); }
   } else if (m === 3){                                      // Cymatics: sand on a vibrating plate, settling on the lines that stand still
     var md = FXCH[Math.min(8, Math.floor(clamp(A + (F.band[1] - F.band[4]) * 0.06, 0, 0.999) * 9))], pull = 0.6 + B * 5, rot = t * (C - 0.5) * 0.8, cr = Math.cos(rot), sr = Math.sin(rot), jit = 0.12 + F.rms * 1.2 + F.kick * 1.6, eps = 0.01;
-    for (i = 0; i < n; i++){ x = px[i]; y = py[i] * 2; var v = fxChl(x, y, md), gx = (fxChl(x + eps, y, md) - v) / eps, gy = (fxChl(x, y + eps, md) - v) / eps;
-      var st = pull * dt * 0.09, mx2 = clamp(-v * gx * st, -0.02, 0.02), my2 = clamp(-v * gy * st, -0.02, 0.02); x += mx2 + (fxRnd() - 0.5) * jit * dt * 0.35; y += my2 + (fxRnd() - 0.5) * jit * dt * 0.35;      // slide downhill toward the still lines; the music shakes the sand loose if (x < -1 || x > 1) { x = fxRnd() * 2 - 1; } if (y < -1 || y > 1){ y = fxRnd() * 2 - 1; } px[i] = x; py[i] = y / 2;
-      fxPal(Math.sqrt(x * x + y * y) * 0.5 + t * 0.04, F.cent, 0.1, c); fxDot(x * cr - y * 0.5 * sr * 2, (x * sr + y * cr) * 0.5, c[0] * 0.12, c[1] * 0.12, c[2] * 0.12); }
+    for (i = 0; i < n; i++){ x = px[i]; y = py[i]; var v = fxChl(x, y, md), gx = (fxChl(x + eps, y, md) - v) / eps, gy = (fxChl(x, y + eps, md) - v) / eps;
+      var st = pull * dt * 0.09, mx2 = clamp(-v * gx * st, -0.02, 0.02), my2 = clamp(-v * gy * st, -0.02, 0.02); x += mx2 + (fxRnd() - 0.5) * jit * dt * 0.35; y += my2 + (fxRnd() - 0.5) * jit * dt * 0.35;      // slide downhill toward the still lines; the music shakes the sand loose if (x < -1 || x > 1) { x = fxRnd() * 2 - 1; } if (y < -1 || y > 1){ y = fxRnd() * 2 - 1; } px[i] = x; py[i] = y;
+      fxPal(Math.sqrt(x * x + y * y) * 0.5 + t * 0.04, F.cent, 0.1, c); fxDot((x * cr - y * sr) * 0.72, (x * sr + y * cr) * 0.72, c[0] * 0.14, c[1] * 0.14, c[2] * 0.14); }
   } else if (m === 4){                                      // Morph: particles spring from one outline to the next, changing every two bars
     var shp = Math.floor(F.bar / 2) % 6, ks = 6 + A * 40, tb = B * (0.4 + F.rms * 3), o = FXV;
-    for (i = 0; i < n; i++){ fxShape(shp, (i + 0.5) / n, o); var gx2 = o[0] + (pa[i] - 0.5) * 0.03, gy2 = o[1] + (pb[i] - 0.5) * 0.03;
+    for (i = 0; i < n; i++){ fxShape(shp, (i + 0.5) / n, o); var gx2 = o[0] * 1.9 + (pa[i] - 0.5) * 0.05, gy2 = o[1] * 1.9 + (pb[i] - 0.5) * 0.05;
       vx[i] += ((gx2 - px[i]) * ks + (fxRnd() - 0.5) * tb * 8) * dt; vy[i] += ((gy2 - py[i]) * ks + (fxRnd() - 0.5) * tb * 8) * dt; if (F.kickNow){ vx[i] += (fxRnd() - 0.5) * C * 1.6; vy[i] += (fxRnd() - 0.5) * C * 1.6; }
       vx[i] *= 0.9; vy[i] *= 0.9; px[i] += vx[i] * dt; py[i] += vy[i] * dt; fxPal(i / n + t * 0.05, F.cent, 0, c); fxDot(px[i], py[i], c[0] * 0.2, c[1] * 0.2, c[2] * 0.2); }
   } else if (m === 5){                                      // Panorama: left to right is where a sound sits between the speakers, bottom to top is its pitch
     if (F.L) for (var bk = 0; bk < 28; bk++){ var i0 = Math.floor(2 * Math.pow(1.19, bk)), i1 = Math.max(i0 + 1, Math.floor(2 * Math.pow(1.19, bk + 1))), l = 0, r2 = 0; for (j = i0; j < i1 && j < 512; j++){ l += F.L[j]; r2 += F.R[j]; } l /= (i1 - i0) * 255; r2 /= (i1 - i0) * 255;
-      var lev = Math.max(l, r2), pan = (r2 - l) / (r2 + l + 0.02), born = Math.floor(lev * lev * 9 + fxRnd()); for (j = 0; j < born; j++){ var id = FX.head; FX.head = (FX.head + 1) % n; px[id] = clamp(pan * 2.2 * (0.3 + A * 0.9) + (fxRnd() - 0.5) * (0.03 + B * 0.5) * (0.4 + bk / 28), -0.99, 0.99); py[id] = -0.46 + 0.92 * (bk + fxRnd()) / 28; pa[id] = 1; pb[id] = bk / 28; } }
+      var lev = Math.max(l, r2), pan = (r2 - l) / (r2 + l + 0.02), born = Math.floor(lev * lev * 9 + fxRnd()); for (j = 0; j < born; j++){ var id = FX.head; FX.head = (FX.head + 1) % n; px[id] = clamp(pan * 2.2 * (0.3 + A * 0.9) + (fxRnd() - 0.5) * (0.03 + B * 0.5) * (0.4 + bk / 28), -0.99, 0.99); py[id] = -0.92 + 1.84 * (bk + fxRnd()) / 28; pa[id] = 1; pb[id] = bk / 28; } }
     for (i = 0; i < n; i++){ if (pa[i] <= 0) continue; pa[i] -= dt * 1.8; py[i] += dt * 0.02; fxPal(pb[i] * 0.8 + C, 0.5, 0, c); var q3 = pa[i] * 0.2; fxDot(px[i], py[i], c[0] * q3, c[1] * q3, c[2] * q3); }
   } else if (m === 6){                                      // Symbiosis: particle life. Each species is drawn to some and flees others, and little ecosystems form
     var SP = 2 + Math.floor(A * 4.99), fs = (0.4 + B * 2.2) * (1 + F.rms * 1.5), fr = Math.pow(0.5, dt / (0.02 + (1 - C) * 0.25)), rmax = 0.26, rmin = 0.035, MAT = FX.mat;
     if (Math.floor(F.bar / 16) !== FX.matBar){ FX.matBar = Math.floor(F.bar / 16); for (i = 0; i < 36; i++) MAT[i] = fxRnd() * 2 - 1; }
     for (i = 0; i < n; i++){ var si = (i % SP) * 6, ax = 0, ay = 0; x = px[i]; y = py[i];
-      for (j = 0; j < n; j++){ if (j === i) continue; var dx = px[j] - x, dy = py[j] - y; if (dx > 1) dx -= 2; else if (dx < -1) dx += 2; if (dy > 0.5) dy -= 1; else if (dy < -0.5) dy += 1; var d2 = dx * dx + dy * dy; if (d2 > rmax * rmax || d2 < 1e-8) continue; var d = Math.sqrt(d2), f = d < rmin ? d / rmin - 1 : MAT[si + (j % SP)] * (1 - Math.abs(2 * d - rmax - rmin) / (rmax - rmin)); ax += dx / d * f; ay += dy / d * f; }
+      for (j = 0; j < n; j++){ if (j === i) continue; var dx = px[j] - x, dy = py[j] - y; if (dx > 1) dx -= 2; else if (dx < -1) dx += 2; if (dy > 1) dy -= 2; else if (dy < -1) dy += 2; var d2 = dx * dx + dy * dy; if (d2 > rmax * rmax || d2 < 1e-8) continue; var d = Math.sqrt(d2), f = d < rmin ? d / rmin - 1 : MAT[si + (j % SP)] * (1 - Math.abs(2 * d - rmax - rmin) / (rmax - rmin)); ax += dx / d * f; ay += dy / d * f; }
       vx[i] = (vx[i] + ax * fs * dt * 0.6) * fr; vy[i] = (vy[i] + ay * fs * dt * 0.6) * fr; }
-    for (i = 0; i < n; i++){ px[i] += vx[i] * dt; py[i] += vy[i] * dt; if (px[i] > 1) px[i] -= 2; else if (px[i] < -1) px[i] += 2; if (py[i] > 0.5) py[i] -= 1; else if (py[i] < -0.5) py[i] += 1; fxPal((i % SP) / SP + 0.05, 0.5, 0, c); fxDot(px[i], py[i], c[0] * 0.7, c[1] * 0.7, c[2] * 0.7); }
+    for (i = 0; i < n; i++){ px[i] += vx[i] * dt; py[i] += vy[i] * dt; if (px[i] > 1) px[i] -= 2; else if (px[i] < -1) px[i] += 2; if (py[i] > 1) py[i] -= 2; else if (py[i] < -1) py[i] += 2; fxPal((i % SP) / SP + 0.05, 0.5, 0, c); fxDot(px[i], py[i], c[0] * 0.7, c[1] * 0.7, c[2] * 0.7); }
   } else if (m === 7){                                      // Tide: a waterfall that parts round a stone; drums break it into white water
-    var fall = (0.25 + A * 0.9) * (0.6 + F.rms * 0.8), ed = B * 0.16, hue = C, wh = Math.min(1, F.kick * 0.9 + F.onset * 0.6), RS = 0.17;
+    var fall = (0.4 + A * 1.3) * (0.6 + F.rms * 0.8), ed = B * 0.16, hue = C, wh = Math.min(1, F.kick * 0.9 + F.onset * 0.6), RS = 0.26;
     for (i = 0; i < n; i++){ fxFlow(px[i] * 2, py[i] * 2, t * 0.6, fl); var tvx = fl[0] * ed + (wh > 0.2 ? (fxRnd() - 0.5) * wh * 1.2 : 0), tvy = -fall * (0.7 + pa[i] * 0.6) + fl[1] * ed * 0.5; vx[i] += (tvx - vx[i]) * Math.min(1, dt * 5); vy[i] += (tvy - vy[i]) * Math.min(1, dt * 5);
       x = px[i] + vx[i] * dt; y = py[i] + vy[i] * dt; var rr = Math.sqrt(x * x + (y - 0.02) * (y - 0.02)); if (rr < RS){ var nx = x / (rr + 1e-6), ny = (y - 0.02) / (rr + 1e-6); x = nx * RS; y = 0.02 + ny * RS; var dn = vx[i] * nx + vy[i] * ny; vx[i] -= dn * nx; vy[i] -= dn * ny; vx[i] += (nx >= 0 ? 1 : -1) * fall * 0.6 * dt * 8; }
-      if (y < -0.52){ y = 0.52; x = fxRnd() * 2 - 1; vx[i] = 0; } if (x > 1) x -= 2; else if (x < -1) x += 2; px[i] = x; py[i] = y;
+      if (y < -1.02){ y = 1.02; x = fxRnd() * 2 - 1; vx[i] = 0; } if (x > 1) x -= 2; else if (x < -1) x += 2; px[i] = x; py[i] = y;
       c[0] = 0.1 + 0.5 * hue; c[1] = 0.55 + 0.2 * pa[i]; c[2] = 1.0 - 0.45 * hue; var w2 = wh * pb[i], q4 = 0.1; fxDot(x, y, (c[0] * (1 - w2) + w2) * q4, (c[1] * (1 - w2) + w2) * q4, (c[2] * (1 - w2) + w2) * q4); }
   } else if (m === 8){                                      // Tesla: charged particles corkscrewing round two magnets; the snare flips the poles
-    if (F.snareNow) FX.pol = -FX.pol; var K = (1.5 + A * 10) * (0.6 + bass * 1.5) * FX.pol, tight = 0.4 + C * 1.6, spd = 0.3 + F.rms * 0.5, ra = t * 0.3, mx = Math.cos(ra) * 0.5, my = Math.sin(ra) * 0.22;
+    if (F.snareNow) FX.pol = -FX.pol; var K = (1.5 + A * 10) * (0.6 + bass * 1.5) * FX.pol, tight = 0.4 + C * 1.6, spd = 0.3 + F.rms * 0.5, ra = t * 0.3, mx = Math.cos(ra) * 0.5, my = Math.sin(ra) * 0.5;
     for (i = 0; i < n; i++){ var qch = pa[i] < B ? -1 : 1; x = px[i]; y = py[i]; var a1 = (x - mx) * (x - mx) + (y - my) * (y - my) + 0.01, a2 = (x + mx) * (x + mx) + (y + my) * (y + my) + 0.01, Bz = (0.22 / a1 - 0.22 / a2) * K * tight * qch, cs = Math.cos(Bz * dt), sn = Math.sin(Bz * dt), ux = vx[i] * cs - vy[i] * sn, uy = vx[i] * sn + vy[i] * cs, sl = Math.sqrt(ux * ux + uy * uy) + 1e-6;
-      vx[i] = ux / sl * spd; vy[i] = uy / sl * spd; x += vx[i] * dt; y += vy[i] * dt; if (x > 1) x -= 2; else if (x < -1) x += 2; if (y > 0.5) y -= 1; else if (y < -0.5) y += 1; px[i] = x; py[i] = y;
+      vx[i] = ux / sl * spd; vy[i] = uy / sl * spd; x += vx[i] * dt; y += vy[i] * dt; if (x > 1) x -= 2; else if (x < -1) x += 2; if (y > 1) y -= 2; else if (y < -1) y += 2; px[i] = x; py[i] = y;
       if (qch > 0) fxDot(x, y, 0.03, 0.07, 0.13); else fxDot(x, y, 0.13, 0.06, 0.025); }
   } else {                                                  // Flux: smoke carried on a swirling current
     var act = Math.floor(n * (0.3 + 0.7 * C)), fi = (0.05 + A * 0.3) * (1 + bass * 2) + F.kick * 0.25;
     for (i = 0; i < act; i++){ fxFlow(px[i] * 1.6, py[i] * 1.6, t * 0.5, fl); vx[i] += (fl[0] * fi - vx[i]) * Math.min(1, dt * 4); vy[i] += (fl[1] * fi - vy[i]) * Math.min(1, dt * 4); x = px[i] + vx[i] * dt; y = py[i] + vy[i] * dt;
-      if (x > 1) x -= 2; else if (x < -1) x += 2; if (y > 0.5) y -= 1; else if (y < -0.5) y += 1; px[i] = x; py[i] = y; fxPal(Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i]) * 1.5 + B + t * 0.02, F.cent, 0, c); fxDot(x, y, c[0] * 0.05, c[1] * 0.05, c[2] * 0.05); }
+      if (x > 1) x -= 2; else if (x < -1) x += 2; if (y > 1) y -= 2; else if (y < -1) y += 2; px[i] = x; py[i] = y; fxPal(Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i]) * 1.5 + B + t * 0.02, F.cent, 0, c); fxDot(x, y, c[0] * 0.05, c[1] * 0.05, c[2] * 0.05); }
   }
 }
 function fxShow(){ var d = FX.img.data, b = FX.buf, sr = 0, sg = 0, sb = 0; for (var i = 0, o = 0; i < b.length; i += 3, o += 4){ var r = 1 - Math.exp(-b[i] * 1.8), g = 1 - Math.exp(-b[i + 1] * 1.8), bl = 1 - Math.exp(-b[i + 2] * 1.8); d[o] = r * 255; d[o + 1] = g * 255; d[o + 2] = bl * 255; sr += r; sg += g; sb += bl; }
-  FX.ctx.putImageData(FX.img, 0, 0); FX.tex.needsUpdate = true; var n = 8192; FX.avg = [sr / n, sg / n, sb / n]; }
+  FX.ctx.putImageData(FX.img, 0, 0); FX.tex.needsUpdate = true; var n = 16384; FX.avg = [sr / n, sg / n, sb / n]; }
 
 /* the unit: four pots, its own screen, four effect buttons and a freeze button */
 var bzC = mk(BZW * 5, BZD * 5), bzTex = null, bzDispC = mk(512, 64), bzDispT = canvasTex(bzDispC); bzDispT.minFilter = THREE.LinearFilter; bzDispT.magFilter = THREE.LinearFilter;
@@ -146,7 +146,7 @@ paintBZ(); bzTex = smoothTex(bzC);
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:bzTex, emissive:0xffffff, emissiveMap:bzTex, emissiveIntensity:0.55, shininess:14, specular:0x0A140C })); top.rotation.x = -Math.PI / 2; BZG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.006, BZTH, D2 + 0.006), new THREE.MeshPhongMaterial({ color:0x0C0D0F, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -BZTH / 2 - 0.0015; BZG.add(body);
   standFor(BZY, BZG, W2, D2, BZTH, PFH, PFTILT, 0.24, true); devBody(BZY, 'bz'); BLOCKS.push(devBlock(PGPOS, 0.56)); vidBooth(PGPOS);
-  var scr = new THREE.Mesh(new THREE.PlaneGeometry(124 * SC, 62 * SC), fxMat); scr.rotation.x = -Math.PI / 2; scr.position.set(bzx(218), 0.0014, bzz(44)); scr.userData.noShadow = true; scr.userData.dev = 'bz'; BZG.add(scr);      // the built-in screen: the same picture as the roof, always live while you lean over it
+  var scr = new THREE.Mesh(new THREE.PlaneGeometry(64 * SC, 64 * SC), fxMat); scr.rotation.x = -Math.PI / 2; scr.position.set(bzx(218), 0.0014, bzz(43.5)); scr.userData.noShadow = true; scr.userData.dev = 'bz'; BZG.add(scr);      // the built-in screen: the same picture as the roof, always live while you lean over it
   var d = new THREE.Mesh(new THREE.PlaneGeometry(124 * SC, 15.5 * SC), new THREE.MeshBasicMaterial({ map:bzDispT })); d.rotation.x = -Math.PI / 2; d.position.set(bzx(218), 0.0014, bzz(83)); d.userData.noShadow = true; d.userData.dev = 'bz'; BZG.add(d);
 })();
 HOST = BZG; LX = bzx; LZ = bzz; DEV = 'bz';
