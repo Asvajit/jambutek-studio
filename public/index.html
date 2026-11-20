@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.48</span>
+    <span id="verFps">studio v1.49</span>
   </div>
 </div>
 
@@ -6353,7 +6353,7 @@ var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotati
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU', 'CHORD', 'SCRATCH', 'KIT'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF', '#FF6AB0', '#35D8B8', '#F5C518'], MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416, 464], MXMX = 510, MXNC = 10;
 var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, vol:0.75, mute:0, solo:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
-function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch) && s.ch.length <= 9){ s.ch.forEach(function(c, i){ if (!c) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; MX.ch[i].solo = c.solo ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
+function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch)){ s.ch.forEach(function(c, i){ if (!c || !MX.ch[i]) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; MX.ch[i].solo = c.solo ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
 var mxSaveT = null; function mxSaveNow(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master })); } function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(mxSaveNow, saveMs(800)); }
 var mxC = mk(2144, 1312), mxTex = null;
 function paintMX(){
@@ -8078,22 +8078,46 @@ var WALLG = new THREE.Group(); WALLG.position.set(-4.225, 1.42, ROOM.z0 + 0.024)
 HOST = WALLG; LX = function(u){ return u * SC; }; LZ = function(u){ return u * SC; }; DEV = 'wall';
 FACE = { bg:'#D8262E', fg:'#FFFFFF' }; button('wallclear', -58, 14, 100, 62, 'CLEAR\nALL', 'Clear all patterns', 0xFF2A3C).mat.color.setHex(0x8A8A8A);
 FACE = { bg:'#2E9E55', fg:'#FFFFFF' }; button('walldef', 58, 14, 100, 62, 'DEFAULT\nPATTERNS', 'Default patterns', 0x3BFF6A).mat.color.setHex(0x8A8A8A);
-FACE = { bg:'#3A6FD8', fg:'#FFFFFF' }; button('wallexp', -58, 86, 100, 44, 'EXPORT\nPATTERNS', 'Export patterns to a file', 0x7AB8FF).mat.color.setHex(0x8A8A8A);
+FACE = { bg:'#3A6FD8', fg:'#FFFFFF' }; button('wallexp', -58, 86, 100, 44, 'EXPORT\nJAM', 'Save the whole room to a file: patterns, sounds and settings', 0x7AB8FF).mat.color.setHex(0x8A8A8A);
 FACE = { bg:'#8A3FD0', fg:'#FFFFFF' }; button('wallload', 58, 86, 100, 44, 'LOAD\nJAM', 'Load a saved jam', 0xC08AFF).mat.color.setHex(0x8A8A8A);
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 /* everything a pattern is, on every machine, as one small file (the Tape's loop is audio and stays out) */
-function patternDump(){ return { app:'jambutek-studio', kind:'patterns', v:1, made:new Date().toISOString(), bpm:M.bpm, drums:PAT, synth:{ seq:MF.seq, seqLen:MF.seqLen }, bass:{ seqs:BS.seqs }, ambi:{ seq:AM.seq },
-  snakes:SNAKES.map(function(s){ return { root:s.SN.root, scale:s.SN.scale, swing:s.SN.swing, out:s.SN.out, lanes:s.SN.lanes }; }) }; }
+var JAMSKIP = { 'jambutek-studio-video-v1':1, 'jambutek-studio-bz-v1':1, 'jambutek-studio-flow-v1':1 };       // the video synths are not part of a jam
+/* A jam file is the music side of the whole room: every machine's patterns, sounds and settings, the mixer and the effects.
+   It is the same text each machine already saves for itself, gathered under `state`. The older pattern-only fields stay in the
+   file too, so a file still means something to an older copy of the room. The Tape's recorded loop is audio and is left out. */
+function roomState(){
+  var cap = {}, hook = storeHook; storeHook = function(k, v){ cap[k] = v; };                 // ask every machine to save now, and catch what it writes instead of sending it on
+  try { SAVENOW.forEach(function(f){ try { f(); } catch (e) {} }); } finally { storeHook = hook; }
+  var out = {}; Object.keys(cap).forEach(function(k){ if (RESTORE[k] && !JAMSKIP[k] && typeof cap[k] === 'string') out[k] = cap[k]; }); return out;
+}
+RESTORE[SAVE_KEY] = function(){                                // the drum machine, from a jam file
+  var s = JSON.parse(store(SAVE_KEY) || 'null'); if (!s || !Array.isArray(s.PAT) || s.PAT.length !== 16) return;
+  if (!s.PAT.every(function(p){ return p && Array.isArray(p.vars) && p.vars.length === 8 && Array.isArray(p.tones) && p.vars.every(function(v){ return v && v.st && v.st.length === 11 && v.sb && v.acc; }); })) return;
+  PAT = s.PAT; if (typeof s.bpm === 'number') setBpm(clamp(s.bpm, 40, 300)); M.pat = clamp(s.pat | 0, 0, 15); M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0;
+  if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
+  Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number'){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
+  applyMix(); dispDirty = true;
+};
+function roomLoad(st){
+  var keys = Object.keys(st).filter(function(k){ return k.indexOf('jambutek-studio-') === 0 && RESTORE[k] && !JAMSKIP[k] && typeof st[k] === 'string' && st[k].length < 600000; }), n = 0;
+  keys.sort(function(a, b){ return (a === SAVE_KEY ? 0 : 1) - (b === SAVE_KEY ? 0 : 1); });         // the drum machine first: it carries the tempo
+  keys.forEach(function(k){ REMOTE[k] = st[k]; try { RESTORE[k](); n++; } catch (e) {} finally { delete REMOTE[k]; } store(k, st[k]); });      // apply it here, then keep it and pass it to everyone in the room
+  return n;
+}
+function patternDump(){ return { app:'jambutek-studio', kind:'jam', v:2, made:new Date().toISOString(), bpm:M.bpm, drums:PAT, synth:{ seq:MF.seq, seqLen:MF.seqLen }, bass:{ seqs:BS.seqs }, ambi:{ seq:AM.seq },
+  snakes:SNAKES.map(function(s){ return { root:s.SN.root, scale:s.SN.scale, swing:s.SN.swing, out:s.SN.out, lanes:s.SN.lanes }; }), state:roomState() }; }
 function patternExport(){
   try { var a = document.createElement('a'), d = new Date(), p2 = function(n){ return (n < 10 ? '0' : '') + n; };
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(patternDump())], { type:'application/json' })); a.download = 'jambutek-studio-patterns-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.json';
-    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast('Patterns saved to ' + a.download, 3200);
-  } catch (e) { toast('Could not save the patterns file'); }
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(patternDump())], { type:'application/json' })); a.download = 'jambutek-studio-jam-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.json';
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast('Jam saved to ' + a.download + ' · patterns, sounds and settings', 3600);
+  } catch (e) { toast('Could not save the jam file'); }
 }
 /* saved jams */
 var JAMS = (function(){ var J = window.JB_JAMS; if (!J || !Array.isArray(J.jams)) return []; return J.jams.map(function(j){ var o = {}; Object.keys(j).forEach(function(k){ o[k] = j[k]; }); o.drums = j.drums.map(function(i){ return J.pats[i]; }); return o; }); })();
 function loadJam(J, name){                                       // a jam is the same shape as the factory set, so it goes in the same way
   if (!J || typeof J !== 'object' || !Array.isArray(J.drums) || J.drums.length !== 16){ toast('That file is not a Jambutek Studio jam'); return false; }
+  if (J.state && typeof J.state === 'object'){ var got = 0; try { got = roomLoad(J.state); } catch (e) {} if (got){ toast((name || 'Jam') + ' loaded · patterns, sounds and settings', 3200); return true; } }      // a full jam: everything comes back
   var keep = DEF; DEF = J; try { allPatterns(true, name || 'Jam'); } catch (e) { DEF = keep; toast('Could not load that jam'); return false; } DEF = keep; return true;
 }
 var jamEl = null;
@@ -8103,13 +8127,13 @@ function jamOpen(){
   var el = jamEl = document.createElement('div'); el.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(4,6,10,.72);font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;color:#E6E6E2';
   var box = document.createElement('div'); box.style.cssText = 'width:min(420px,92vw);max-height:84vh;overflow:auto;background:#14161B;border:2px solid #C08AFF;border-radius:10px;padding:16px 16px 12px';
   var h = document.createElement('div'); h.textContent = 'LOAD A JAM'; h.style.cssText = 'font-weight:700;letter-spacing:.08em;margin-bottom:4px'; box.appendChild(h);
-  var p = document.createElement('div'); p.textContent = 'Replaces the patterns on every machine' + (typeof MPON !== 'undefined' && MPON ? ', for everyone in the room.' : '.'); p.style.cssText = 'color:#9A9CA4;font-size:12px;margin-bottom:10px'; box.appendChild(p);
+  var p = document.createElement('div'); p.textContent = 'Replaces what is on every machine (a jam saved from v1.49 on brings its sounds and settings too; older ones only patterns)' + (typeof MPON !== 'undefined' && MPON ? ', for everyone in the room.' : '.'); p.style.cssText = 'color:#9A9CA4;font-size:12px;margin-bottom:10px'; box.appendChild(p);
   function row(label, sub, fn, col){ var b = document.createElement('button'); b.type = 'button'; b.style.cssText = 'display:flex;justify-content:space-between;gap:12px;width:100%;margin:5px 0;padding:10px 12px;background:' + (col || '#23262C') + ';color:#F0F0EC;border:1px solid #3A3D46;border-radius:7px;font:inherit;cursor:pointer;text-align:left';
     var a = document.createElement('span'); a.textContent = label; a.style.fontWeight = '700'; var c = document.createElement('span'); c.textContent = sub; c.style.color = '#9A9CA4'; b.appendChild(a); b.appendChild(c); b.addEventListener('click', fn); box.appendChild(b); return b; }
   JAMS.forEach(function(j){ row(j.name, j.when + ' · ' + j.bpm + ' BPM', function(){ if (loadJam(j, j.name)) jamClose(); }); });
   var inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json'; inp.style.display = 'none'; box.appendChild(inp);
   inp.addEventListener('change', function(){ var f = inp.files && inp.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(){ var J = null; try { J = JSON.parse(r.result); } catch (e) {} if (J && J.app === 'jambutek-studio' && loadJam(J, f.name.replace(/\.json$/i, ''))) jamClose(); else if (!J || J.app !== 'jambutek-studio') toast('That file is not a Jambutek Studio jam'); }; r.readAsText(f); });
-  row('From a file…', 'an exported .json', function(){ inp.click(); }, '#2A2140');
+  row('From a file…', 'an exported jam', function(){ inp.click(); }, '#2A2140');
   row('Cancel', 'Esc', jamClose, '#1B1D22');
   el.appendChild(box); el.addEventListener('click', function(e){ if (e.target === el) jamClose(); }); document.body.appendChild(el);
 }
@@ -9140,7 +9164,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.48 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.49 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
