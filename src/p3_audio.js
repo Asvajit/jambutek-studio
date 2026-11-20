@@ -5,6 +5,9 @@ var AU = { ready:false, chans:[], openHat:null };
 var TONES = ['808', '909', '606', 'JAMBU'];
 var SENDS = [[0, 0], [.22, .08], [.18, .12], [.18, .12], [.18, .12], [.3, .35], [.42, .25], [.04, .08], [.08, .12], [.28, .1], [.14, .1]];   // reverb, delay per voice
 var DIVS = [[0.125, '1/32'], [1 / 6, '1/16T'], [0.25, '1/16'], [1 / 3, '1/8T'], [0.375, '1/16.'], [0.5, '1/8'], [0.75, '1/8.'], [1, '1/4'], [1.5, '1/4.'], [2, '1/2']];
+// if the browser pauses the sound (the tab was hidden, a phone call, a sleeping laptop), start it again as soon as the page is back
+function audioWake(){ if (ac && ac.state !== 'running' && ac.state !== 'closed'){ try { ac.resume(); } catch (e) {} } }
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) audioWake(); }); window.addEventListener('focus', audioWake); window.addEventListener('pointerdown', audioWake, true); window.addEventListener('keydown', audioWake, true);
 function unlock(){
   if (ac){ if (ac.state === 'suspended') ac.resume(); return; }
   try {

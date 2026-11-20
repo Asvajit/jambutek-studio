@@ -48,7 +48,8 @@ var SKA = null;
 /* a Snake can play it: every step is one scratch stroke. The note sets how fast the record is pushed, strokes alternate forwards and
    backwards like a baby scratch, and the gate is how long the stroke lasts. Between strokes the platter does whatever it was doing. */
 var SKQ = [];
-function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; SKQ.push([t, Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), Math.max(0.03, dur)]); if (SKQ.length > 64) SKQ.shift(); }
+function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; var e = [t, Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), Math.max(0.03, dur)]; if (SKA.wk){ SKA.wk.port.postMessage({ ev:e }); return; } SKQ.push(e); if (SKQ.length > 64) SKQ.shift(); }
+function skSeek(v){ SK.pos = v; SK.seekAt = performance.now(); if (SKA && SKA.wk) SKA.wk.port.postMessage({ pos:v }); }
 function skMake(kind, sr){
   var n = Math.floor(sr * (kind === 2 ? 1.1 : 1.5)), d = new Float32Array(n), i, t, ph = 0, ph2 = 0, s1 = 0, s2 = 0, s3 = 0;
   function reson(x, f, q, st){ var w = 2 * Math.PI * f / sr, r = 1 - w / (2 * q); st.a = 2 * r * Math.cos(w) * st.a - r * r * st.b + x * (1 - r); var y = st.a; var tmp = st.b; st.b = st._p || 0; st._p = y; return y; }
@@ -76,12 +77,36 @@ function skAudio(){
   if (SKA) return true; if (!ac || !AU.ready) return false;
   var A = SKA = {}; SK.bufs = [0, 1, 2, 3].map(function(k){ return skMake(k, ac.sampleRate); });
   A.out = ac.createGain(); A.out.gain.value = 0.6; A.out.connect(AU.ch[8].inp);
+  // The record is read by code, not by a built-in node, because it has to run at any speed, backwards too. That code runs on the
+  // audio thread (an AudioWorklet), so nothing the page is busy with (drawing the room, the video synths) can make it crackle or
+  // drop out. Only if the browser has no worklets does it fall back to the old way, on the page's own thread.
+  var fallback = function(){ if (A.wk || A.node) return; skOnPage(A); A.node.connect(A.out); };
+  if (ac.audioWorklet && window.AudioWorkletNode){
+    try {
+      var url = URL.createObjectURL(new Blob([SKWORK], { type:'application/javascript' }));
+      ac.audioWorklet.addModule(url).then(function(){
+        var w = new AudioWorkletNode(ac, 'jb-scratch', { numberOfInputs:0, numberOfOutputs:1, outputChannelCount:[1] });
+        w.port.postMessage({ b:SK.bufs, pos:SK.pos }); w.port.onmessage = function(e){ if (performance.now() - (SK.seekAt || 0) > 90) SK.pos = e.data[0]; SK.rate = e.data[1]; };
+        w.onprocessorerror = function(){ try { w.disconnect(); } catch (x) {} A.wk = null; fallback(); };
+        w.connect(A.out); A.wk = w;
+      }).catch(fallback);
+    } catch (e) { fallback(); }
+  } else fallback();
+  return true;
+}
+var SKWORK = "class SkP extends AudioWorkletProcessor{constructor(){super();this.b=[];this.s=0;this.p=0;this.r=0;this.g=0;this.rt=0;this.gt=1;this.go=1;this.k=0.0025;this.touch=0;this.motor=0;this.q=[];this.dir=-1;this.sqEnd=0;this.sqRate=0;this.c=0;" +
+  "this.port.onmessage=e=>{const m=e.data;if(m.b)this.b=m.b;if(m.st){const s=m.st;this.s=s[0];this.rt=s[1];this.gt=s[2];this.k=s[3];this.touch=s[4];this.motor=s[5];this.go=s[6];}if(m.pos!=null)this.p=m.pos;if(m.ev){this.q.push(m.ev);if(this.q.length>64)this.q.shift();}};}" +
+  "process(i,o){const out=o[0][0],b=this.b[this.s];if(!b)return true;const n=b.length;let p=this.p,r=this.r,g=this.g,rt=this.rt,gt=this.gt,k=this.k;if(!(p>=0&&p<n))p=0;const tb=currentTime+0.004;" +
+  "while(this.q.length&&this.q[0][0]<=tb){const q=this.q.shift();this.dir=-this.dir;this.sqRate=q[1]*this.dir;this.sqEnd=q[0]+q[2];}" +
+  "if(this.sqEnd&&!this.touch){if(tb<this.sqEnd){rt=this.sqRate;k=0.02;gt=this.go;}else if(tb<this.sqEnd+0.25&&!this.motor){rt=0;k=0.02;}}" +
+  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;g+=(gt-g)*0.02;p+=r;if(p>=n)p-=n;else if(p<0)p+=n;const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;out[j]=(b[i0]+(b[i1]-b[i0])*f)*g;}" +
+  "if(!(r>-64&&r<64))r=0;this.p=p;this.r=r;this.g=g;if(++this.c>=6){this.c=0;this.port.postMessage([p,r]);}return true;}}registerProcessor('jb-scratch',SkP);";
+function skOnPage(A){
   A.node = ac.createScriptProcessor(512, 1, 1);
   A.node.onaudioprocess = function(ev){
     var o = ev.outputBuffer.getChannelData(0), b = SK.bufs[SK.sample], n = b.length, p = SK.pos, r = SK.rate, rt = SK.rateT, g = SK.g, gt = SK.cut ? 0 : Math.min(1, SK.xf * 5), k = SK.touch || SK.push ? 0.012 : 0.0025;
     var tb = (ev.playbackTime || ac.currentTime) + 0.012; while (SKQ.length && SKQ[0][0] <= tb){ var q = SKQ.shift(); SK.sqDir = SK.sqDir === 1 ? -1 : 1; SK.sqRate = q[1] * SK.sqDir; SK.sqEnd = q[0] + q[2]; }
     if (SK.sqEnd && tb < SK.sqEnd && !SK.touch){ rt = SK.sqRate; k = 0.02; gt = Math.min(1, SK.xf * 5); } else if (SK.sqEnd && tb < SK.sqEnd + 0.25 && !SK.touch && !SK.motor){ rt = 0; k = 0.02; }
-    if (Math.abs(rt) < 0.002 && Math.abs(r) < 0.002 && SK.quiet > 2){ for (var z = 0; z < o.length; z++) o[z] = 0; return; }
     for (var i = 0; i < o.length; i++){
       r += (rt - r) * k; g += (gt - g) * 0.02; p += r; if (p >= n) p -= n; else if (p < 0) p += n;
       var i0 = p | 0, i1 = i0 + 1 < n ? i0 + 1 : 0, f = p - i0; o[i] = (b[i0] + (b[i1] - b[i0]) * f) * g;
@@ -89,8 +114,8 @@ function skAudio(){
     SK.pos = p; SK.rate = r; SK.g = g; SK.quiet = Math.abs(r) < 0.002 ? SK.quiet + 1 : 0;
   };
   var sil = ac.createGain(); sil.gain.value = 0; var cs = ac.createConstantSource ? ac.createConstantSource() : null; if (cs){ cs.connect(sil); sil.connect(A.node); cs.start(); }
-  A.node.connect(A.out); return true;
 }
+
 function skLabel(c){
   if (c.id === 'skplat') return 'Platter · hold and drag up or down to scratch, or scroll · X cuts';
   if (c.xf) return 'Crossfader ' + Math.round(SK.xf * 100) + ' · scroll or drag';
@@ -101,16 +126,16 @@ function skLabel(c){
 function skPress(c){
   unlock(); skAudio(); c.down = 1; setTimeout(function(){ c.down = 0; }, 130);
   if (c.id === 'skplay') SK.motor = SK.motor ? 0 : 1;
-  else if (c.id === 'skcue'){ SK.pos = 0; return; }
-  else { SK.sample = (SK.sample + (c.id === 'sknext' ? 1 : 3)) % 4; SK.pos = 0; toast('Sample ' + (SK.sample + 1) + ' · ' + SCN[SK.sample]); }
+  else if (c.id === 'skcue'){ skSeek(0); return; }
+  else { SK.sample = (SK.sample + (c.id === 'sknext' ? 1 : 3)) % 4; skSeek(0); toast('Sample ' + (SK.sample + 1) + ' · ' + SCN[SK.sample]); }
   skSaveSoon();
 }
 function skCtl(c){ if (!c.xf) return; SK.xf = c.v; skSaveSoon(); }
 DEVH.sc = { label:skLabel, press:skPress, release:NOP, ctl:skCtl, turn:NOP };
-function skKbDown(k){ if (k === 'x'){ SK.cut = true; return true; } if (k === 'c'){ SK.pos = 0; return true; } return false; }
+function skKbDown(k){ if (k === 'x'){ SK.cut = true; return true; } if (k === 'c'){ skSeek(0); return true; } return false; }
 function skKbUp(k){ if (k === 'x') SK.cut = false; }
-RESTORE['jambutek-studio-scratch-v1'] = function(){ var was = SK.sample; skRestore(); if (was !== SK.sample) SK.pos = 0; CT.skxf.v = SK.xf; CT.skxf.show(); }; SAVENOW.push(skSaveNow);
-function skRemote(a){ if (SK.touch || !Array.isArray(a)) return; unlock(); if (!skAudio()) return; SK.rmtUntil = performance.now() + 260; SK.rateT = clamp(+a[0] || 0, -8, 8); var n = SK.bufs[SK.sample].length, p = clamp(+a[1] || 0, 0, 1) * n, dd = Math.abs(p - SK.pos); if (Math.min(dd, n - dd) > n * 0.06) SK.pos = p; SK.cut = !!a[2]; }
+RESTORE['jambutek-studio-scratch-v1'] = function(){ var was = SK.sample; skRestore(); if (was !== SK.sample) skSeek(0); CT.skxf.v = SK.xf; CT.skxf.show(); }; SAVENOW.push(skSaveNow);
+function skRemote(a){ if (SK.touch || !Array.isArray(a)) return; unlock(); if (!skAudio()) return; SK.rmtUntil = performance.now() + 260; SK.rateT = clamp(+a[0] || 0, -8, 8); var n = SK.bufs[SK.sample].length, p = clamp(+a[1] || 0, 0, 1) * n, dd = Math.abs(p - SK.pos); if (Math.min(dd, n - dd) > n * 0.06) skSeek(p); SK.cut = !!a[2]; }
 function skUpdate(now, dt){
   if (now > SK.rmtUntil){
     if (SK.touch){ SK.rateT = clamp(SK.acc / Math.max(dt, 0.008) / 170, -8, 8); SK.acc = 0; }
@@ -121,4 +146,5 @@ function skUpdate(now, dt){
   SK.ang += (SKA ? SK.rate : SK.rateT * 0) * dt * 3.49; skPlat.show();                       // 33 1/3 turns a minute at normal speed
   for (var i = 0; i < 4; i++) ledOn(SKLED['s' + i], i === SK.sample ? 1 : 0.07);
   ['skprev', 'sknext', 'skplay', 'skcue'].forEach(function(id){ var c = CT[id], L = id === 'skplay' ? (SK.motor ? 0.85 : 0.05) : (c.down ? 1 : 0.12); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  if (SKA && SKA.wk) SKA.wk.port.postMessage({ st:[SK.sample, SK.rateT, SK.cut ? 0 : Math.min(1, SK.xf * 5), SK.touch || SK.push ? 0.012 : 0.0025, SK.touch ? 1 : 0, SK.motor ? 1 : 0, Math.min(1, SK.xf * 5)] });
 }
