@@ -34,7 +34,7 @@ function roomState(){
 RESTORE[SAVE_KEY] = function(){                                // the drum machine, from a jam file
   var s = JSON.parse(store(SAVE_KEY) || 'null'); if (!s || !Array.isArray(s.PAT) || s.PAT.length !== 16) return;
   if (!s.PAT.every(function(p){ return p && Array.isArray(p.vars) && p.vars.length === 8 && Array.isArray(p.tones) && p.vars.every(function(v){ return v && v.st && v.st.length === 11 && v.sb && v.acc; }); })) return;
-  PAT = s.PAT; if (typeof s.bpm === 'number') setBpm(clamp(s.bpm, 40, 300)); M.pat = clamp(s.pat | 0, 0, 15); M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0;
+  PAT = s.PAT; if (typeof s.bpm === 'number') setBpm(clamp(s.bpm, 40, 300)); M.pat = clamp(s.pat | 0, 0, 15); M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; trVars(s);
   if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
   Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number'){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
   applyMix(); dispDirty = true;

@@ -56,9 +56,12 @@ var SEQ = { step:0, nextT:0, bar:0, timer:null, vis:[], visStep:-1, fill:false, 
 
 /* ---- saving: the unit keeps itself in this browser, like the arcade keeps its progress ---- */
 var SAVE_KEY = 'jambutek-studio-tr-v1', saveT = null;
+/* which variations (A to H) are chained to play, and which one is being edited: saved with the rest, so a jam comes back playing A B and not just A */
+function trVars(s){ var a = s && Array.isArray(s.vars) ? s.vars.filter(function(x, i, l){ return x === (x | 0) && x >= 0 && x < 8 && l.indexOf(x) === i; }).sort() : [];
+  if (!a.length) return false; if (a.join() !== M.varSel.join()){ M.varSel = a; M.varIx = 0; } M.editVar = typeof s.ev === 'number' ? clamp(s.ev | 0, 0, 7) : a[0]; return true; }
 function save(){
   var kn = {}; CTLIST.forEach(function(c){ if (!c.dev && ((c.kind === 'knob' && !c.endless) || c.kind === 'fader')) kn[c.id] = +c.v.toFixed(3); });
-  store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, PAT:PAT, kn:kn }));
+  store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, vars:M.varSel, ev:M.editVar, PAT:PAT, kn:kn }));
 }
 function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(save, saveMs(1200)); }
 SAVENOW.push(save);
@@ -67,7 +70,7 @@ SAVENOW.push(save);
     var s = JSON.parse(store(SAVE_KEY) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.PAT) || s.PAT.length !== 16) return;
     var ok = s.PAT.every(function(p){ return p && Array.isArray(p.vars) && p.vars.length === 8 && Array.isArray(p.tones) && p.vars.every(function(v){ return v && v.st && v.st.length === 11 && v.sb && v.acc; }); });
     if (!ok) return;
-    PAT = s.PAT; M.bpm = clamp(+s.bpm || 124, 40, 300); M.pat = clamp(s.pat | 0, 0, 15); if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
+    PAT = s.PAT; M.bpm = clamp(+s.bpm || 124, 40, 300); M.pat = clamp(s.pat | 0, 0, 15); if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn; trVars(s);
     Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id]; if (c && typeof s.kn[id] === 'number'){ c.v = clamp(s.kn[id], 0, 1); c.show(); } });
   } catch (e) {}
 })();
@@ -224,7 +227,7 @@ function press(c){
     if (M.copyArm){ if (k !== M.editVar){ pat().vars[k] = JSON.parse(JSON.stringify(editV())); say('COPIED  ' + L[M.editVar] + ' > ' + L[k]); saveSoon(); } M.copyArm = false; return; }
     if (M.shift){ var ix = M.varSel.indexOf(k); if (ix >= 0){ if (M.varSel.length > 1) M.varSel.splice(ix, 1); } else { M.varSel.push(k); M.varSel.sort(); } say('CHAIN  ' + M.varSel.map(function(x){ return L[x]; }).join(' ')); }
     else { M.varSel = [k]; M.varIx = 0; }
-    M.editVar = k; return;
+    M.editVar = k; saveSoon(); return;
   }
   if (c.inst != null && id.indexOf('sel') === 0){
     var i = c.inst;

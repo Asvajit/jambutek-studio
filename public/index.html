@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.50</span>
+    <span id="verFps">studio v1.51</span>
   </div>
 </div>
 
@@ -4910,9 +4910,12 @@ var SEQ = { step:0, nextT:0, bar:0, timer:null, vis:[], visStep:-1, fill:false, 
 
 /* ---- saving: the unit keeps itself in this browser, like the arcade keeps its progress ---- */
 var SAVE_KEY = 'jambutek-studio-tr-v1', saveT = null;
+/* which variations (A to H) are chained to play, and which one is being edited: saved with the rest, so a jam comes back playing A B and not just A */
+function trVars(s){ var a = s && Array.isArray(s.vars) ? s.vars.filter(function(x, i, l){ return x === (x | 0) && x >= 0 && x < 8 && l.indexOf(x) === i; }).sort() : [];
+  if (!a.length) return false; if (a.join() !== M.varSel.join()){ M.varSel = a; M.varIx = 0; } M.editVar = typeof s.ev === 'number' ? clamp(s.ev | 0, 0, 7) : a[0]; return true; }
 function save(){
   var kn = {}; CTLIST.forEach(function(c){ if (!c.dev && ((c.kind === 'knob' && !c.endless) || c.kind === 'fader')) kn[c.id] = +c.v.toFixed(3); });
-  store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, PAT:PAT, kn:kn }));
+  store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, vars:M.varSel, ev:M.editVar, PAT:PAT, kn:kn }));
 }
 function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(save, saveMs(1200)); }
 SAVENOW.push(save);
@@ -4921,7 +4924,7 @@ SAVENOW.push(save);
     var s = JSON.parse(store(SAVE_KEY) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.PAT) || s.PAT.length !== 16) return;
     var ok = s.PAT.every(function(p){ return p && Array.isArray(p.vars) && p.vars.length === 8 && Array.isArray(p.tones) && p.vars.every(function(v){ return v && v.st && v.st.length === 11 && v.sb && v.acc; }); });
     if (!ok) return;
-    PAT = s.PAT; M.bpm = clamp(+s.bpm || 124, 40, 300); M.pat = clamp(s.pat | 0, 0, 15); if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
+    PAT = s.PAT; M.bpm = clamp(+s.bpm || 124, 40, 300); M.pat = clamp(s.pat | 0, 0, 15); if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn; trVars(s);
     Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id]; if (c && typeof s.kn[id] === 'number'){ c.v = clamp(s.kn[id], 0, 1); c.show(); } });
   } catch (e) {}
 })();
@@ -5078,7 +5081,7 @@ function press(c){
     if (M.copyArm){ if (k !== M.editVar){ pat().vars[k] = JSON.parse(JSON.stringify(editV())); say('COPIED  ' + L[M.editVar] + ' > ' + L[k]); saveSoon(); } M.copyArm = false; return; }
     if (M.shift){ var ix = M.varSel.indexOf(k); if (ix >= 0){ if (M.varSel.length > 1) M.varSel.splice(ix, 1); } else { M.varSel.push(k); M.varSel.sort(); } say('CHAIN  ' + M.varSel.map(function(x){ return L[x]; }).join(' ')); }
     else { M.varSel = [k]; M.varIx = 0; }
-    M.editVar = k; return;
+    M.editVar = k; saveSoon(); return;
   }
   if (c.inst != null && id.indexOf('sel') === 0){
     var i = c.inst;
@@ -8098,7 +8101,7 @@ function roomState(){
 RESTORE[SAVE_KEY] = function(){                                // the drum machine, from a jam file
   var s = JSON.parse(store(SAVE_KEY) || 'null'); if (!s || !Array.isArray(s.PAT) || s.PAT.length !== 16) return;
   if (!s.PAT.every(function(p){ return p && Array.isArray(p.vars) && p.vars.length === 8 && Array.isArray(p.tones) && p.vars.every(function(v){ return v && v.st && v.st.length === 11 && v.sb && v.acc; }); })) return;
-  PAT = s.PAT; if (typeof s.bpm === 'number') setBpm(clamp(s.bpm, 40, 300)); M.pat = clamp(s.pat | 0, 0, 15); M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0;
+  PAT = s.PAT; if (typeof s.bpm === 'number') setBpm(clamp(s.bpm, 40, 300)); M.pat = clamp(s.pat | 0, 0, 15); M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; trVars(s);
   if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
   Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number'){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
   applyMix(); dispDirty = true;
@@ -8698,7 +8701,7 @@ var MP = (function(){
   };
   function trMeta(s){
     if (!s) return; if (typeof s.bpm === 'number' && Math.abs(s.bpm - M.bpm) > 0.01) setBpm(s.bpm, true);
-    var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; }
+    var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; } var ev = M.editVar; if (trVars(s)) M.editVar = ev;      /* the chain is shared; which variation each player is editing is their own */
     if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
     Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number' && Math.abs(c.v - v) > 0.0005){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
     applyMix(); dispDirty = true;
@@ -9168,7 +9171,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.50 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.51 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
