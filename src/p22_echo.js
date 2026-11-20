@@ -82,4 +82,4 @@ function ecUpdate(now, dt){
   EC.lv = Math.max(pk, EC.lv - dt * 2.5); ledOn(ECLED.pk, clamp(EC.lv * 3, 0.06, 1));
   ['ecsync', 'econ'].forEach(function(id){ var c = CT[id], L = EC.p[c.pk] ? 1 : 0.12; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }
-RESTORE['jambutek-studio-echo-v1'] = function(){ ecRestore(); CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob'){ c.v = EC.p[c.pk]; c.show(); } }); ecApply(); }; SAVENOW.push(ecSaveNow);
+RESTORE['jambutek-studio-echo-v1'] = function(){ ecRestore(); CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob' && !c.rv){ c.v = EC.p[c.pk]; c.show(); } }); ecApply(); }; SAVENOW.push(ecSaveNow);

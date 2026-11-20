@@ -48,7 +48,7 @@ var MXMET = [];
 HOST = MXG; LX = qx; LZ = qz; DEV = 'mx';
 MXX.forEach(function(x, i){
   knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
-  knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
+  knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B (reverb)', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
   button('mxmute' + i, x - 9.6, 210, 17.5, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 210, 17.5, 9, 'SOLO', MXN[i] + ' solo', 0xFFE15A); so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
 });
@@ -77,7 +77,7 @@ function mxLabel(c){
   if (c.clr) return c.name + ' · click';
   if (c.solo) return c.name + (MX.ch[c.ch].solo ? ' · on' : '') + ' · click';
   if (c.kind === 'btn') return c.name + (MX.ch[c.ch].mute ? ' · muted' : '') + ' · key ' + (c.ch + 1);
-  var id = c.id; if (id.indexOf('mxsb') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · nothing plugged in yet'; if (id === 'mxmaster' || id.indexOf('mxvol') === 0 || id.indexOf('mxsa') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
+  var id = c.id; if (id === 'mxmaster' || id.indexOf('mxvol') === 0 || id.indexOf('mxsa') === 0 || id.indexOf('mxsb') === 0) return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
   return c.name + ' ' + mxDb(c.v) + ' · scroll or drag';
 }
 function mxPress(c){
