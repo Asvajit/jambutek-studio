@@ -45,6 +45,10 @@ for (var ski = 0; ski < 4; ski++) ledAt(SKLED, 's' + ski, 124 + ski * 7, 14, 0.0
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 
 var SKA = null;
+/* a Snake can play it: every step is one scratch stroke. The note sets how fast the record is pushed, strokes alternate forwards and
+   backwards like a baby scratch, and the gate is how long the stroke lasts. Between strokes the platter does whatever it was doing. */
+var SKQ = [];
+function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; SKQ.push([t, Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), Math.max(0.03, dur)]); if (SKQ.length > 64) SKQ.shift(); }
 function skMake(kind, sr){
   var n = Math.floor(sr * (kind === 2 ? 1.1 : 1.5)), d = new Float32Array(n), i, t, ph = 0, ph2 = 0, s1 = 0, s2 = 0, s3 = 0;
   function reson(x, f, q, st){ var w = 2 * Math.PI * f / sr, r = 1 - w / (2 * q); st.a = 2 * r * Math.cos(w) * st.a - r * r * st.b + x * (1 - r); var y = st.a; var tmp = st.b; st.b = st._p || 0; st._p = y; return y; }
@@ -74,6 +78,8 @@ function skAudio(){
   A.node = ac.createScriptProcessor(512, 1, 1);
   A.node.onaudioprocess = function(ev){
     var o = ev.outputBuffer.getChannelData(0), b = SK.bufs[SK.sample], n = b.length, p = SK.pos, r = SK.rate, rt = SK.rateT, g = SK.g, gt = SK.cut ? 0 : Math.min(1, SK.xf * 5), k = SK.touch || SK.push ? 0.012 : 0.0025;
+    var tb = (ev.playbackTime || ac.currentTime) + 0.012; while (SKQ.length && SKQ[0][0] <= tb){ var q = SKQ.shift(); SK.sqDir = SK.sqDir === 1 ? -1 : 1; SK.sqRate = q[1] * SK.sqDir; SK.sqEnd = q[0] + q[2]; }
+    if (SK.sqEnd && tb < SK.sqEnd && !SK.touch){ rt = SK.sqRate; k = 0.02; gt = Math.min(1, SK.xf * 5); } else if (SK.sqEnd && tb < SK.sqEnd + 0.25 && !SK.touch && !SK.motor){ rt = 0; k = 0.02; }
     if (Math.abs(rt) < 0.002 && Math.abs(r) < 0.002 && SK.quiet > 2){ for (var z = 0; z < o.length; z++) o[z] = 0; return; }
     for (var i = 0; i < o.length; i++){
       r += (rt - r) * k; g += (gt - g) * 0.02; p += r; if (p >= n) p -= n; else if (p < 0) p += n;

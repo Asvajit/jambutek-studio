@@ -13,7 +13,7 @@ var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
 var SNHOLD = 1100;                 // ms to hold CUSTOM to forget what it learned
-var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc', 'zk'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord'];
+var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc', 'zk', 'sc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord', 'Kit', 'Scratch'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
   var notes = [0, 2, 3, 5, 7, 8, 12, 12, 15, 15, 17, 19, 20, 22, 24, 27].map(function(n){ return n + 12; });
@@ -29,7 +29,7 @@ function paintSN(){
   function box(x0, y0, x1, y1){ g.fillStyle = '#22252B'; g.fillRect(x0, y0, x1 - x0, y1 - y0); }
   box(4, 14, 78, 186); box(82, 14, 154, 186); box(158, 14, 296, 186);
   T('SNAKE', 5, 7, 7.5, '#90F0A8', true, 'left'); T('after MDD SnAkE by Maxime Dangles', 296, 7.5, 4, '#9A9CA0', false, 'right');
-  T('FUNDAMENTAL', 22, 131, 3.6); T('SCALE', 59, 131, 3.6); T('OUT', 12, 172, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT'].forEach(function(s, k){ T(s, 24.5 + k * 6.0, 181.5, 2.3, '#B8B8B4'); });
+  T('FUNDAMENTAL', 22, 131, 3.6); T('SCALE', 59, 131, 3.6); T('OUT', 12, 172, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT', 'SCR'].forEach(function(s, k){ T(s, 24.5 + k * 5.33, 181.5, 2.1, '#B8B8B4'); });
   T('STEPS', 100, 113, 3.6); T('SHIFT', 136, 113, 3.6); T('SWING', 100, 149, 3.6); T('SNAKE SHAPE', 136, 149, 3.6);
   SNGY.forEach(function(y, r){ SNGX.forEach(function(x, c){ g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.4; g.beginPath(); g.arc(x, y - 5, 9.4, Math.PI * 0.75, Math.PI * 0.25); g.stroke(); T(String(r * 4 + c + 1), x - 13.2, y + 12, 3.2, '#7C7E84'); }); });
   g.setTransform(1, 0, 0, 1, 0, 0); if (snTex) snTex.needsUpdate = true;
@@ -53,7 +53,7 @@ var SN = snDef(); SN.out = DEFOUT; SN.cc = null; SN.learn = false; SN.cell = [0,
 var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.lanes, cc:SN.cc || null })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
 function snRestore(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-' + K)) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.lanes) || (s.lanes.length !== 4 && s.lanes.length !== 5) || !s.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })) return;
   if (s.lanes.length < 5) s.lanes.push(snDefaults().lanes[4]); SN.cc = s.cc && typeof s.cc === 'object' && typeof s.cc.dev === 'string' ? s.cc : null;
-  SN.lanes = s.lanes; SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 8); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
+  SN.lanes = s.lanes; SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 9); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
 var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.minFilter = THREE.LinearFilter; snDispT.magFilter = THREE.LinearFilter;
 (function(){
   var W2 = SNW * SC, D2 = SND * SC, TH = 0.04;
@@ -70,7 +70,7 @@ HOST = SNG; LX = sx; LZ = sz; DEV = DK; FACE = { bg:'#30343B', fg:'#F0F0EC' };
 SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 26 + [0, 0, 1, 2, 3][i] * 21, 66, 15, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
 knob((PX + 'root'), 22, 116, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 116, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
 button((PX + 'resetall'), 22, 150, 30, 12, 'RESET\nALL', 'Reset all lanes', 0xFFFFFF); button((PX + 'randall'), 59, 150, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
-slide((PX + 'out'), 48.5, 172, 9, false, 'Out', 0.096);
+slide((PX + 'out'), 48.5, 172, 10, false, 'Out', 0.096);
 button((PX + 'dir'), 118, 58, 64, 13, 'DIRECTION', 'Direction', 0xFFFFFF); button((PX + 'speed'), 118, 76, 64, 13, 'SPEED', 'Speed', 0xFFFFFF);
 knob((PX + 'steps'), 100, 98, 6.5, 'Steps', 1, { h:8 }).detents = 15; knob((PX + 'shift'), 136, 98, 6.5, 'Shift', 0, { h:8 }).detents = 15;
 knob((PX + 'swing'), 100, 134, 6.5, 'Swing', 0, { h:8 }); knob((PX + 'shape'), 136, 134, 7, 'Snake shape', 0, { h:8, endless:true, sides:14 });
@@ -161,7 +161,7 @@ function snPress(c){
   if (c.pg != null){
     if (c.pg === 4){ if (SN.cc && !SN.learn){ SN.hold = { c:c, t0:performance.now(), done:false }; return; } snCustomClick(); return; }       // with something learned, wait: a short click acts on release, a long hold clears it   // the custom lane: first click with nothing learned, or a second click, listens for a knob
     snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
-  if (c.sw){ SN.out = (c.pos + 1) % 9; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
+  if (c.sw){ SN.out = (c.pos + 1) % 10; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
   switch (id){
     case (PX + 'dir'): L.dir = (L.dir + 1) % 5; snSay(SNLN[SN.page] + ' direction', SNDIR[L.dir]); break;
     case (PX + 'speed'): L.speed = (L.speed + 1) % 5; snSay(SNLN[SN.page] + ' speed', SNSPD[L.speed][1]); break;
@@ -181,7 +181,7 @@ function clock(t, N, sd, sw){                       // one call per 16th from th
     var li = e[2], L = SN.lanes[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell }); if (li === 4 && SN.cc) SN.vis.push({ t:e[0], cc:L.vals[cell] / 127 });
     if (li !== 0 || !SN.out || !SN.lanes[1].vals[cell] || snDice(N * 31 + e[3] * 7 + K * 131) * 127 >= SN.lanes[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
     var n = snNote(L.vals[cell]), vel = clamp(SN.lanes[2].vals[SN.cell[2]] / 127, 0.05, 1), dur = sd * e[4] * 0.6;
-    var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else if (o === 6) shNoteAt(n + 12, vel, e[0], dur); else if (o === 8) zkNoteAt(n + 12, vel, e[0], dur); else mcSeqAt(n, vel, e[0], dur);
+    var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else if (o === 6) shNoteAt(n + 12, vel, e[0], dur); else if (o === 8) zkNoteAt(n + 12, vel, e[0], dur); else if (o === 9) skSeqAt(n, vel, e[0], dur); else mcSeqAt(n, vel, e[0], dur);
   });
 }
 function onStop(){ SN.vis = []; SN.cv = 0; }
@@ -211,13 +211,13 @@ function update(now, dt){
 }
 DEVH[DK] = { label:snLabel, press:snPress, release:snRelease, ctl:snCtl, turn:snTurn };
 function patterns(def, jam){ var d0 = snDef(); SN.lanes = d0.lanes; if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; }
-  var jx = jam && DEF && DEF.snakes && DEF.snakes[K]; if (jx && typeof jx.out === 'number'){ SN.out = clamp(jx.out | 0, 0, 8); SN.cv = 0; }      // a saved jam also says which synth each Snake plays
+  var jx = jam && DEF && DEF.snakes && DEF.snakes[K]; if (jx && typeof jx.out === 'number'){ SN.out = clamp(jx.out | 0, 0, 9); SN.cv = 0; }      // a saved jam also says which synth each Snake plays
   if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
 return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
-var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8], [MCPOS, 7]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
+var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8], [MCPOS, 7], [SCPOS, 9]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
 function snClock(t, N, sd, sw){ SNAKES.forEach(function(s){ s.clock(t, N, sd, sw); }); }
 function snOnStop(){ SNAKES.forEach(function(s){ s.onStop(); }); }
 function snUpdate(now, dt){ SNAKES.forEach(function(s){ s.update(now, dt); }); }
