@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.47</span>
+    <span id="verFps">studio v1.48</span>
   </div>
 </div>
 
@@ -7417,6 +7417,7 @@ function skMake(kind, sr){
     }
     d[i] = x;
   }
+  var mean = 0, hp = 0, xp = 0; for (i = 0; i < n; i++){ var y0 = d[i] - xp + 0.997 * hp; xp = d[i]; hp = y0; d[i] = y0; }                 // take out everything below about 25 Hz: the voice samples sat off-centre, and a record stopped on one of them held the whole mix off-centre with it
   var pk = 0; for (i = 0; i < n; i++){ var ab = Math.abs(d[i]); if (ab > pk) pk = ab; } if (pk > 0){ var nm = 0.85 / pk; for (i = 0; i < n; i++) d[i] *= nm; }      // bring it to a safe level. It used to be chopped off at full scale, and the two voice samples were far over it, which is the distortion people heard
   for (i = 0; i < 300; i++){ var fd = i / 300; d[n - 1 - i] *= fd; }
   return d;
@@ -7424,7 +7425,7 @@ function skMake(kind, sr){
 function skAudio(){
   if (SKA) return true; if (!ac || !AU.ready) return false;
   var A = SKA = {}; SK.bufs = [0, 1, 2, 3].map(function(k){ return skMake(k, ac.sampleRate); });
-  A.out = ac.createGain(); A.out.gain.value = 0.6; A.out.connect(AU.ch[8].inp);
+  A.out = ac.createGain(); A.out.gain.value = 0.6; A.dc = ac.createBiquadFilter(); A.dc.type = 'highpass'; A.dc.frequency.value = 28; A.dc.Q.value = 0.5; A.out.connect(A.dc); A.dc.connect(AU.ch[8].inp);
   // The record is read by code, not by a built-in node, because it has to run at any speed, backwards too. That code runs on the
   // audio thread (an AudioWorklet), so nothing the page is busy with (drawing the room, the video synths) can make it crackle or
   // drop out. Only if the browser has no worklets does it fall back to the old way, on the page's own thread.
@@ -7447,7 +7448,8 @@ var SKWORK = "class SkP extends AudioWorkletProcessor{constructor(){super();this
   "process(i,o){const out=o[0][0],b=this.b[this.s];if(!b)return true;const n=b.length;let p=this.p,r=this.r,g=this.g,rt=this.rt,gt=this.gt,k=this.k;if(!(p>=0&&p<n))p=0;const tb=currentTime+0.004;" +
   "while(this.q.length&&this.q[0][0]<=tb){const q=this.q.shift();this.dir=-this.dir;this.sqRate=q[1]*this.dir;this.sqEnd=q[0]+q[2];}" +
   "if(this.sqEnd&&!this.touch){if(tb<this.sqEnd){rt=this.sqRate;k=0.02;gt=this.go;}else if(tb<this.sqEnd+0.25&&!this.motor){rt=0;k=0.02;}}" +
-  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;g+=(gt-g)*0.02;p+=r;if(p>=n)p-=n;else if(p<0)p+=n;const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;out[j]=(b[i0]+(b[i1]-b[i0])*f)*g;}" +
+  "if(!(rt>-64&&rt<64))rt=0;if(!(gt>=0&&gt<=1))gt=0;if(!(k>0&&k<1))k=0.0025;if(!(r>-64&&r<64))r=0;if(!(g>=0&&g<=1))g=0;" +
+  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;const ar=r<0?-r:r,mv=ar>0.04?1:ar*25;g+=(gt*mv-g)*0.02;p+=r;if(p>=n)p-=n*Math.floor(p/n);else if(p<0)p+=n*Math.ceil(-p/n);if(!(p>=0&&p<n))p=0;const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;let v=(b[i0]+(b[i1]-b[i0])*f)*g;out[j]=v>-1.5&&v<1.5?v:0;}" +
   "if(!(r>-64&&r<64))r=0;this.p=p;this.r=r;this.g=g;if(++this.c>=6){this.c=0;this.port.postMessage([p,r]);}return true;}}registerProcessor('jb-scratch',SkP);";
 function skOnPage(A){
   A.node = ac.createScriptProcessor(512, 1, 1);
@@ -7456,10 +7458,10 @@ function skOnPage(A){
     var tb = (ev.playbackTime || ac.currentTime) + 0.012; while (SKQ.length && SKQ[0][0] <= tb){ var q = SKQ.shift(); SK.sqDir = SK.sqDir === 1 ? -1 : 1; SK.sqRate = q[1] * SK.sqDir; SK.sqEnd = q[0] + q[2]; }
     if (SK.sqEnd && tb < SK.sqEnd && !SK.touch){ rt = SK.sqRate; k = 0.02; gt = Math.min(1, SK.xf * 5); } else if (SK.sqEnd && tb < SK.sqEnd + 0.25 && !SK.touch && !SK.motor){ rt = 0; k = 0.02; }
     for (var i = 0; i < o.length; i++){
-      r += (rt - r) * k; g += (gt - g) * 0.02; p += r; if (p >= n) p -= n; else if (p < 0) p += n;
-      var i0 = p | 0, i1 = i0 + 1 < n ? i0 + 1 : 0, f = p - i0; o[i] = (b[i0] + (b[i1] - b[i0]) * f) * g;
+      r += (rt - r) * k; var ar = r < 0 ? -r : r; g += (gt * (ar > 0.04 ? 1 : ar * 25) - g) * 0.02; p += r; if (p >= n) p -= n * Math.floor(p / n); else if (p < 0) p += n * Math.ceil(-p / n); if (!(p >= 0 && p < n)) p = 0;
+      var i0 = p | 0, i1 = i0 + 1 < n ? i0 + 1 : 0, f = p - i0, v = (b[i0] + (b[i1] - b[i0]) * f) * g; o[i] = v > -1.5 && v < 1.5 ? v : 0;
     }
-    SK.pos = p; SK.rate = r; SK.g = g; SK.quiet = Math.abs(r) < 0.002 ? SK.quiet + 1 : 0;
+    if (!(r > -64 && r < 64)) r = 0; if (!(g >= 0 && g <= 1)) g = 0; SK.pos = p; SK.rate = r; SK.g = g; SK.quiet = Math.abs(r) < 0.002 ? SK.quiet + 1 : 0;
   };
   var sil = ac.createGain(); sil.gain.value = 0; var cs = ac.createConstantSource ? ac.createConstantSource() : null; if (cs){ cs.connect(sil); sil.connect(A.node); cs.start(); }
 }
@@ -9138,7 +9140,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.47 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.48 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
