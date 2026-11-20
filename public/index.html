@@ -131,7 +131,7 @@ body{
     <span class="desk"><b>E</b> lean over an instrument</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.39</span>
+    <span id="verFps">studio v1.40</span>
   </div>
 </div>
 
@@ -8380,6 +8380,9 @@ RESTORE['jambutek-studio-video-v1'] = function(){ try { var s = JSON.parse(store
 try { localStorage.setItem('jambutek-studio-video-v1', JSON.stringify({ v:1, src:0 })); } catch (e) {}       // the roof is always dark when the room loads
 vidApply();
 
+// the owner's own browser: open the page once with ?owner=1 and your own joins stop sending the Discord notification (?owner=0 undoes it)
+var MPME = (function(){ try { var q = /[?&]owner=([01])/.exec(location.search); if (q) localStorage.setItem('jambutek-studio-owner', q[1]); return localStorage.getItem('jambutek-studio-owner') === '1'; } catch (e) { return false; } })();
+
 /* ================= online rooms: the arcade's lobby and characters, with every machine shared =================
    What travels between players:
    - where each player is (their avatar), and chat;
@@ -8579,7 +8582,7 @@ var MP = (function(){
   // ---- connection ----
   function connect(){
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0));
+    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : ''));
     Q.ws = ws; Q.closedByUs = false;
     ws.onmessage = function(ev){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
@@ -8985,7 +8988,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.39 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.40 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

@@ -8,7 +8,8 @@ const COLORS = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'
 
 export class Room {
   constructor(ctx, env) {
-    this.ctx = ctx;
+    this.ctx = ctx; this.env = env;
+    this.told = {};         // name -> when Discord was last told about them, so reconnects don't spam
     this.world = {};        // shared room state, key -> value (one machine or one drum pattern per key)
     ctx.blockConcurrencyWhile(async () => {
       const all = await ctx.storage.list({ prefix: 'w:' });
@@ -56,7 +57,19 @@ export class Room {
       world: this.world,
     }));
     this.broadcast({ t: 'join', id, name, color, skin }, server);
+    if (url.searchParams.get('me') !== '1') this.tell(name, url, others.length + 1);
     return new Response(null, { status: 101, webSocket: client });
+  }
+  tell(name, url, n) {                              // a Discord message when someone comes in. Does nothing unless the DISCORD_WEBHOOK secret is set
+    const hook = this.env && this.env.DISCORD_WEBHOOK;
+    if (!hook || !/^https?:\/\//.test(hook)) return;
+    const now = Date.now(), key = name.toLowerCase();
+    if (this.told[key] && now - this.told[key] < 5 * 60 * 1000) return;
+    this.told[key] = now;
+    const code = url.pathname.slice(4).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    const clean = name.replace(/[@`*_~|\\]/g, '');
+    const content = '\uD83C\uDFB9 **' + clean + '** joined Jambutek Studio room **' + code + '** (' + n + (n === 1 ? ' player' : ' players') + ' now)\n' + url.protocol.replace('ws', 'http') + '//' + url.host + '/';
+    this.ctx.waitUntil(fetch(hook, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, allowed_mentions: { parse: [] } }) }).catch(() => {}));
   }
   async webSocketMessage(ws, raw) {
     if (typeof raw !== 'string' || raw.length > 200000) return;

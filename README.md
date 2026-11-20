@@ -34,3 +34,10 @@ The LED pattern synth at the back of the room plays patterns from [Patternflow](
 The pink chord box at the back follows the idea and control layout of the [minichord](https://github.com/BenjaminPoilve/minichord) by Benjamin Poilvé; its sound engine and model here are original and none of the minichord's files are included.
 
 The scratch box at the back follows the idea and arrangement of the [SC1000](https://github.com/rasteri/SC1000) by rasteri; its model, samples and sound engine here are original and none of the SC1000's files are included.
+
+## Join notifications (optional)
+
+The room server can post to Discord when someone joins an online room. Add a secret named `DISCORD_WEBHOOK` to the
+`jambutek-studio` Worker (Cloudflare dashboard, Settings, Variables and Secrets, type Secret) holding a Discord webhook URL.
+Without the secret nothing is sent. Open the site once with `?owner=1` in your own browser so your own joins are not announced
+(`?owner=0` undoes it). The same person is announced at most once every five minutes.

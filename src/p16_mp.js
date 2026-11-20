@@ -1,4 +1,7 @@
 
+// the owner's own browser: open the page once with ?owner=1 and your own joins stop sending the Discord notification (?owner=0 undoes it)
+var MPME = (function(){ try { var q = /[?&]owner=([01])/.exec(location.search); if (q) localStorage.setItem('jambutek-studio-owner', q[1]); return localStorage.getItem('jambutek-studio-owner') === '1'; } catch (e) { return false; } })();
+
 /* ================= online rooms: the arcade's lobby and characters, with every machine shared =================
    What travels between players:
    - where each player is (their avatar), and chat;
@@ -198,7 +201,7 @@ var MP = (function(){
   // ---- connection ----
   function connect(){
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0));
+    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : ''));
     Q.ws = ws; Q.closedByUs = false;
     ws.onmessage = function(ev){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
