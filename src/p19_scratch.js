@@ -66,8 +66,9 @@ function skMake(kind, sr){
     } else {                                                           // a falling zap
       var fz = 2400 * Math.exp(-t * 5) + 90; ph2 += fz / sr; env = Math.min(1, t / 0.003) * Math.exp(-t * 2.4); x = Math.sin(ph2 * 2 * Math.PI) * 0.6 * env + (Math.random() * 2 - 1) * 0.1 * Math.exp(-t * 14);
     }
-    d[i] = Math.max(-1, Math.min(1, x));
+    d[i] = x;
   }
+  var pk = 0; for (i = 0; i < n; i++){ var ab = Math.abs(d[i]); if (ab > pk) pk = ab; } if (pk > 0){ var nm = 0.85 / pk; for (i = 0; i < n; i++) d[i] *= nm; }      // bring it to a safe level. It used to be chopped off at full scale, and the two voice samples were far over it, which is the distortion people heard
   for (i = 0; i < 300; i++){ var fd = i / 300; d[n - 1 - i] *= fd; }
   return d;
 }

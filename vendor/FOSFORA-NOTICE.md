@@ -1,7 +1,8 @@
 # Fosfora
 
-Video synth B (`src/p23_video.js`) ports four effects and two helpers from Fosfora
-(https://github.com/kevinraymond/fosfora): `aurora.wgsl`, `drift.wgsl`, `pulse.wgsl`, `prism.wgsl`,
+Video synth B (`src/p23_video.js`) ports eight effects and two helpers from Fosfora
+(https://github.com/kevinraymond/fosfora): `aurora.wgsl`, `drift.wgsl`, `pulse.wgsl`, `prism.wgsl`, `shards.wgsl`,
+`storm.wgsl`, `tunnel.wgsl`, `cymatics_bg.wgsl`,
 and the noise and audio-palette functions from `assets/shaders/lib`.
 
 Fosfora is Copyright (c) 2025-2026 Kevin Raymond and is licensed MIT OR Apache-2.0; it is used here under the MIT License:
