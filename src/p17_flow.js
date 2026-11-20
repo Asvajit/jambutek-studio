@@ -10,7 +10,7 @@ function vidBooth(P){                                 // a counter across the co
   var fx0 = P.x - Math.sin(P.r) * 0.5, fz0 = P.z - Math.cos(P.r) * 0.5, blk = new THREE.MeshLambertMaterial({ color:0x2A2D35 });
   pendant(P.x - Math.sin(P.r) * 0.9, P.z - Math.cos(P.r) * 0.9, 0.75, 0xFFE7C8, 2.8, P.x, 0.9, P.z, 0.8, false, true);
   var c = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.92, 0.07), blk); c.position.set(fx0, 0.46, fz0); c.rotation.y = P.r; scene.add(c);
-  var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), tableMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = P.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth');
+  var t = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.035, 0.2), tableMat); t.position.set(fx0, 0.935, fz0); t.rotation.y = P.r; scene.add(t); solid(c, 'booth'); solid(t, 'booth'); wallPanel(P);
   for (var i = -2; i <= 2; i++){ var bx = fx0 + Math.cos(P.r) * i * 0.32, bz = fz0 - Math.sin(P.r) * i * 0.32; BLOCKS.push([bx - 0.17, bx + 0.17, bz - 0.17, bz + 0.17]); }
 }
 function vidSwitch(G, x0, z0){                        // the switcher: a little box beside a video synth. Call with HOST / DEV set to that synth

@@ -7,14 +7,14 @@ var live = document.getElementById('live');
 /* Online rooms hang off this one function: every machine saves and loads through it. REMOTE lets a machine "load" a state that
    came from the room instead of this browser; storeHook sees every save so it can be sent on; only the room's first player keeps
    writing the room's state into their own browser. */
-/* the factory patterns: a set made in the room and exported from the wall panel (vendor/defaults.json) */
+/* the starter jam: the first file in vendor/jams/, made in the room and exported from a jam panel */
 var DEF = window.JB_DEFAULTS || null;
 function defCopy(x){ return JSON.parse(JSON.stringify(x)); }
 var MPQUIET = false;            // set while a Snake's custom lane is turning a knob, so it is not sent to the room as if a hand did it
 var SNLEARN = null;             // the Snake waiting to learn which knob its custom lane should turn
 var MPON = false, MPHOST = true, REMOTE = {}, storeHook = null, RESTORE = {}, SAVENOW = [];
 function saveMs(d){ return MPON ? 250 : d; }
-function store(k, v){ try { if (v === undefined) return (k in REMOTE) ? REMOTE[k] : localStorage.getItem(k); if (storeHook) storeHook(k, v); if (!MPON || MPHOST || k.indexOf('jambutek-studio-') !== 0) localStorage.setItem(k, v); } catch (e) {} return null; }
+function store(k, v){ try { if (v === undefined) { if (k in REMOTE) return REMOTE[k]; var got = localStorage.getItem(k); return got === null && DEF && DEF.state && typeof DEF.state[k] === 'string' ? DEF.state[k] : got; }      /* nothing saved here yet: the starter jam's own sounds and settings */ if (storeHook) storeHook(k, v); if (!MPON || MPHOST || k.indexOf('jambutek-studio-') !== 0) localStorage.setItem(k, v); } catch (e) {} return null; }
 
 /* ================= renderer: draw small, then blow it up with dither (same pipeline as the arcade) ================= */
 var canvas = document.getElementById('view');
