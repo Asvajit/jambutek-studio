@@ -17,14 +17,14 @@ function vidSwitch(G, x0, z0){                        // the switcher: a little 
   var box = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.25), new THREE.MeshPhongMaterial({ color:0x15171C, shininess:30, specular:0x222222, flatShading:true })); box.position.set(x0, -0.026, z0); G.add(box);
   var shelf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.024, 0.3), tableMat); shelf.position.set(x0, -0.07 - 0.014, z0); G.add(shelf);
   var c = mk(320, 500), g = c.getContext('2d'); g.fillStyle = '#1A1B1F'; g.fillRect(0, 0, 320, 500); g.fillStyle = '#D8D8D8'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 30px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText('ROOF VIDEO', 160, 32);
-  g.font = 'bold 20px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = '#8A8C92'; g.fillText('PATTERN', 160, 172); g.fillText('BZZZBZ', 160, 318); g.fillText('SCREENS OFF', 160, 464);
+  g.font = 'bold 20px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = '#8A8C92'; g.fillText('PATTERN', 160, 172); g.fillText('FOSFORA', 160, 318); g.fillText('SCREENS OFF', 160, 464);
   var top = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.25), new THREE.MeshPhongMaterial({ color:0x707070, map:smoothTex(c), emissive:0xffffff, emissiveMap:smoothTex(c), emissiveIntensity:0.9, shininess:6, specular:0x050505 })); top.rotation.x = -Math.PI / 2; top.position.set(x0, 0.0005, z0); G.add(top);
   var oLX = LX, oLZ = LZ; LX = function(u){ return x0 + (u - 40) * SC; }; LZ = function(u){ return z0 + (u - 62.5) * SC; };
-  var out = [button(DEV + 'vsA', 40, 28, 44, 20, 'A', 'Roof video: synth A (patterns)', 0x56C6FF), button(DEV + 'vsB', 40, 64.5, 44, 20, 'B', 'Roof video: synth B (bzzzbz)', 0xFF4FD8), button(DEV + 'vsO', 40, 101, 44, 20, 'OFF', 'Roof video off', 0xFFFFFF)];
+  var out = [button(DEV + 'vsA', 40, 28, 44, 20, 'A', 'Roof video: synth A (patterns)', 0x56C6FF), button(DEV + 'vsB', 40, 64.5, 44, 20, 'B', 'Roof video: synth B (Fosfora)', 0xFF4FD8), button(DEV + 'vsO', 40, 101, 44, 20, 'OFF', 'Roof video off', 0xFFFFFF)];
   out[0].vs = 1; out[1].vs = 2; out[2].vs = 0; LX = oLX; LZ = oLZ; return out;
 }
 var VIDSW = [];
-function vidSet(n, quiet){ n = n === 1 || n === 2 ? n : 0; if (n === VID.src) return; VID.src = n; vidApply(); if (!quiet){ store('jambutek-studio-video-v1', JSON.stringify({ v:1, src:n })); toast(n === 1 ? 'Roof: synth A, patterns' : n === 2 ? 'Roof: synth B, bzzzbz' : 'Roof video off'); } }
+function vidSet(n, quiet){ n = n === 1 || n === 2 ? n : 0; if (n === VID.src) return; VID.src = n; vidApply(); if (!quiet){ store('jambutek-studio-video-v1', JSON.stringify({ v:1, src:n })); toast(n === 1 ? 'Roof: synth A, patterns' : n === 2 ? 'Roof: synth B, Fosfora' : 'Roof video off'); } }
 function vidApply(){ VID.scr.forEach(function(m){ m.material = VID.mats[VID.src] || VID.mats[0]; }); }
 function vidSwitchTick(){ VIDSW.forEach(function(c){ var L = VID.src === c.vs ? 1 : 0.08; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; }); }
 var PFW = 340, PFD = 236, PFH = 1.1, PFTILT = 0.56, PFLW = 128, PFLH = 64;
