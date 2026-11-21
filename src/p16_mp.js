@@ -185,10 +185,104 @@ var MP = (function(){
   var setCtl0 = setCtl;
   function paged(c){ return /^(shpot|amp\d|tpe)/.test(c.id) || (c.dev && c.dev.indexOf('sn') === 0); }    // these knobs mean different things per page: their machine's state carries them instead
   setCtl = function(c, v){ var was = c.v; setCtl0(c, v); if (Q.ws && !Q.applying && !MPQUIET && c.v !== was && !paged(c)) Q.cq[c.id] = +c.v.toFixed(4); };
+  var press0 = press; press = function(c){ press0(c); if (Q.ws && !Q.applying && c && c.id) send({ t:'ev', e:['b', c.id] }); };     // a pressed button or pad: others only see it light up, its effect travels with the machine's state
+
+  /* ---- who is doing what: a control another player touches glows in their colour for a moment ---- */
+  var GLOW = [], RINGT = null, V3 = new THREE.Vector3();
+  function ringTex(){ if (RINGT) return RINGT; var c = mk(64, 64), g2 = c.getContext('2d'), gr = g2.createRadialGradient(32, 32, 8, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,0.22)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.4)'); gr.addColorStop(0.62, 'rgba(255,255,255,1)'); gr.addColorStop(0.78, 'rgba(255,255,255,1)'); gr.addColorStop(0.9, 'rgba(255,255,255,0.4)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g2.fillStyle = gr; g2.fillRect(0, 0, 64, 64); RINGT = canvasTex(c); RINGT.minFilter = RINGT.magFilter = THREE.LinearFilter; return RINGT; }
+  function ringSprite(){ var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex(), transparent:true, depthTest:false, depthWrite:false, blending:THREE.AdditiveBlending })); sp.renderOrder = 50; sp.visible = false; sp.userData.noShadow = true; scene.add(sp); return sp; }
+  function ctlMesh(c){ if (c._hm === undefined){ c._hm = null; for (var i = 0; i < solids.length; i++) if (solids[i].userData.ctl === c){ c._hm = solids[i]; break; } } return c._hm; }
+  function glow(c, color){
+    var m = ctlMesh(c); if (!m || !color) return; var now = performance.now(), G = null, i;
+    for (i = 0; i < GLOW.length; i++) if (GLOW[i].c === c){ G = GLOW[i]; break; }
+    if (!G) for (i = 0; i < GLOW.length; i++) if (now > GLOW[i].until){ G = GLOW[i]; break; }
+    if (!G){ if (GLOW.length >= 40) return; G = { sp:ringSprite(), c:null, until:0 }; GLOW.push(G); }
+    if (G.c !== c){ G.c = c; m.updateWorldMatrix(true, false); m.getWorldPosition(V3); if (!m.geometry.boundingSphere) m.geometry.computeBoundingSphere();
+      var r = clamp(m.geometry.boundingSphere.radius * 3.4, 0.045, 0.18); G.sp.position.copy(V3); G.sp.scale.set(r, r, 1); }
+    G.sp.material.color.set(color); G.until = now + 900; G.sp.visible = true;
+  }
+  function glowTick(now){ for (var i = 0; i < GLOW.length; i++){ var G = GLOW[i]; if (!G.sp.visible) continue; var left = G.until - now; if (left <= 0){ G.sp.visible = false; G.c = null; continue; } G.sp.material.opacity = Math.min(1, left / 400) * (0.8 + 0.2 * Math.sin(now / 60)); } }
+
+  /* ---- emotes: hold 1 to 6 while walking. Everyone sees the move; your own view steps back to third person while it plays ---- */
+  var EMN = ['', 'Wave', 'Point', 'Hands in the air', 'Split', 'Headbang', 'Dance'], EM = { id:0, face:0, pitch:0, k:0, me:null, et:0, show:1, was:0 };
+  function emote(P, id, t, k, now){
+    var bt = now / 1000 * (M.bpm / 60) * Math.PI * 2, o = { tx:0, ty:0, tz:0, hx:0, hz:0, aLx:0, aLz:0, aRx:0, aRz:0, lLx:0, lLz:0, lRx:0, lRz:0, kL:0, kR:0, y:0, gy:0 }, s1, hb, d;
+    if (id === 1){ o.aRz = 2.55 + Math.sin(t * 10) * 0.38; o.aRx = -0.12; o.tz = Math.sin(t * 5) * 0.04; o.hz = 0.1; }
+    else if (id === 2){ o.aRx = -Math.PI / 2 - (P.pitch || 0) + Math.sin(t * 3) * 0.03; o.ty = 0.22; o.aLz = -0.3; o.aLx = 0.15; }
+    else if (id === 3){ s1 = Math.sin(bt / 2) * 0.3; o.aLz = -2.75 + s1; o.aRz = 2.75 + s1; o.tz = s1 * 0.18; o.y = -0.05 * (0.5 - 0.5 * Math.cos(bt)); o.kL = o.kR = 0.25 * (0.5 - 0.5 * Math.cos(bt)); o.lLx = o.lRx = -0.12 * (0.5 - 0.5 * Math.cos(bt)); }
+    else if (id === 4){ d = smooth(Math.min(1, t / 0.7)); o.lLz = -1.5 * d; o.lRz = 1.5 * d; o.y = -0.78 * (1 - Math.cos(1.5 * d)) + 0.03 * d + Math.sin(t * 6) * 0.008 * d; o.aLz = -2.35 * d; o.aRz = 2.35 * d; o.hx = -0.15 * d; }
+    else if (id === 5){ hb = Math.pow(0.5 - 0.5 * Math.cos(bt), 2); o.hx = 0.1 + hb * 0.8; o.tx = 0.1 + hb * 0.32; o.aLx = -0.95; o.aLz = -0.3; o.aRx = -0.4 + Math.sin(bt * 2) * 0.28; o.aRz = 0.12; o.kL = o.kR = hb * 0.4; o.lLx = o.lRx = -hb * 0.2; o.y = -hb * 0.05; }
+    else if (id === 6){ s1 = Math.sin(bt / 2); o.tz = s1 * 0.14; o.ty = s1 * 0.3; o.y = -0.05 * (0.5 - 0.5 * Math.cos(bt)); o.aLx = -1.1 + s1 * 0.7; o.aRx = -1.1 - s1 * 0.7; o.aLz = -0.35; o.aRz = 0.35;
+      o.lLx = -Math.max(0, s1) * 0.5; o.kL = Math.max(0, s1) * 0.8; o.lRx = -Math.max(0, -s1) * 0.5; o.kR = Math.max(0, -s1) * 0.8; o.hz = -s1 * 0.1; o.gy = Math.sin(bt / 4) * 0.5; }
+    P.torso.rotation.x += o.tx * k; P.torso.rotation.y = o.ty * k; P.torso.rotation.z = o.tz * k; P.head.rotation.x += o.hx * k; P.head.rotation.z = o.hz * k;
+    P.armL.rotation.x += o.aLx * k; P.armL.rotation.z = o.aLz * k; P.armR.rotation.x += o.aRx * k; P.armR.rotation.z = o.aRz * k;
+    P.legL.rotation.x += o.lLx * k; P.legL.rotation.z = o.lLz * k; P.legR.rotation.x += o.lRx * k; P.legR.rotation.z = o.lRz * k;
+    P.legL.userData.knee.rotation.x += o.kL * k; P.legR.userData.knee.rotation.x += o.kR * k; P.g.position.y += o.y * k; P.g.rotation.y += o.gy * k;
+  }
+  function emoteSet(id){
+    if (id && (mode !== 'walk' || Q.chatOpen || Q.lobbyOpen)) return; if (id === EM.id) return;
+    if (id){ if (!EM.id){ EM.face = cam.yaw; EM.pitch = cam.pitch; } EM.show = id; EM.et = 0; cam.walkTo = null; cam.homing = false; }
+    EM.id = id;
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+    var i = '123456'.indexOf(e.key); if (i >= 0) emoteSet(i + 1);
+  }, true);
+  document.addEventListener('keyup', function(e){ var i = '123456'.indexOf(e.key); if (i >= 0 && EM.id === i + 1) emoteSet(0); }, true);
+  window.addEventListener('blur', function(){ emoteSet(0); });
+  Q.emoting = function(){ return EM.id > 0; };
+  Q.view3 = function(dt){                                    // how far the view has stepped back, 0 to 1; also poses your own figure
+    if (EM.id && mode !== 'walk') EM.id = 0;
+    EM.k = lerp(EM.k, EM.id ? 1 : 0, 1 - Math.exp(-dt * 7)); if (EM.k < 0.004 && !EM.id){ EM.k = 0; if (EM.me) EM.me.g.visible = false; return 0; }
+    var skin = Q.skin | 0; if (EM.me && EM.me.skin !== skin){ scene.remove(EM.me.g); EM.me = null; }
+    if (!EM.me){ EM.me = avatar(Q.color || '#ffffff', Q.name || '', skin); EM.me.tag.visible = false; }
+    var P = EM.me, now = performance.now(); EM.et += dt; P.pitch = EM.pitch; P.g.visible = EM.k > 0.12;
+    P.g.position.set(cam.x, JUMP.y, cam.z); P.g.rotation.set(0, EM.face + Math.PI, 0); P.torso.position.y = 0.78 - crouch.k * 0.45; P.torso.rotation.set(crouch.k * 0.25, 0, 0); P.head.rotation.set(clamp(-EM.pitch, -0.8, 0.8), 0, 0);
+    [P.armL, P.armR, P.legL, P.legR, P.legL.userData.knee, P.legR.userData.knee].forEach(function(j){ j.rotation.set(0, 0, 0); });
+    emote(P, EM.show, EM.et, Math.min(1, EM.k * 1.15), now); return EM.k;
+  };
+  Q.face = function(){ return EM.face; };
+
+  /* ---- ping: middle mouse on something says what you mean, to everyone, and marks the spot ---- */
+  var PINGS = [], pingAt = 0;
+  function pingWords(kind, key, who){
+    if (kind === 'p') return null;
+    var D = kind === 'd' ? DEVS[key] : null; if (!D) return 'Over here';
+    if (String(key).indexOf('sn') === 0) return "Let's add a sequence"; if (/^Video synth/.test(D.name)) return "Let's add some visuals";
+    return "Let's use the " + D.name;
+  }
+  function pingMark(x, y, z, color){
+    var now = performance.now(), G = null; for (var i = 0; i < PINGS.length; i++) if (now > PINGS[i].until){ G = PINGS[i]; break; }
+    if (!G){ if (PINGS.length >= 12) G = PINGS[0]; else { G = { sp:ringSprite(), t0:0, until:0 }; PINGS.push(G); } }
+    G.sp.position.set(x, y, z); G.sp.material.color.set(color || '#ffffff'); G.t0 = now; G.until = now + 4200; G.sp.visible = true;
+    if (ac && AU.ready && !muted){ try { var o = ac.createOscillator(), g2 = ac.createGain(), t = ac.currentTime; o.type = 'sine'; o.frequency.setValueAtTime(1320, t); o.frequency.exponentialRampToValueAtTime(880, t + 0.12); g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.07, t + 0.01); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.3); o.connect(g2); g2.connect(ac.destination); o.start(t); o.stop(t + 0.32); } catch (e) {} }
+  }
+  function pingTick(now){ for (var i = 0; i < PINGS.length; i++){ var G = PINGS[i]; if (!G.sp.visible) continue; if (now > G.until){ G.sp.visible = false; continue; } var a = (now - G.t0) / 1000, ph = (a * 1.3) % 1, r = 0.14 + ph * 0.5; G.sp.scale.set(r, r, 1); G.sp.material.opacity = (1 - ph) * Math.min(1, (G.until - now) / 500); } }
+  function pingShow(id, kind, key, x, y, z){                 // id: who pinged (null = this player)
+    var me = id == null, P = me ? null : Q.peers[id]; if (!me && !P) return; var who = me ? (Q.name || 'You') : P.name, col = me ? (Q.color || '#ffffff') : P.color, txt;
+    if (kind === 'p'){ var T = key === Q.id ? null : Q.peers[key], tn = key === Q.id ? (Q.name || 'you') : T ? T.name : null; if (!tn) return;
+      txt = who + ' pinged ' + tn; if (Q.ws) line('<b style="color:' + esc(col) + '">' + esc(who) + '</b> pinged <b style="color:' + esc(key === Q.id ? (Q.color || '#fff') : T.color) + '">' + esc(tn) + '</b>'); if (key === Q.id) toast(who + ' pinged you'); else if (me && !Q.ws) toast(txt); }
+    else { txt = pingWords(kind, key); if (Q.ws) line('<b style="color:' + esc(col) + '">' + esc(who) + ':</b> ' + esc(txt)); else toast(txt); if (P){ P.say = txt; P.sayUntil = performance.now() + 5000; paintTag(P); } }
+    if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number' && isFinite(x + y + z)) pingMark(clamp(x, ROOM.x0, ROOM.x1), clamp(y, 0, ROOM.h), clamp(z, ROOM.z0, ROOM.z1), col);
+  }
+  Q.ping = function(){
+    var now = performance.now(); if (now - pingAt < 450 || Q.chatOpen || Q.lobbyOpen) return; pingAt = now;
+    var h = curAim(), best = h ? h.distance : 1e9, who = null, pt = h ? h.point : null;      // curAim leaves the ray pointing where the player is looking
+    Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; if (!P.g.visible) return; var hs = ray.intersectObject(P.g, true); if (hs.length && hs[0].distance < best){ best = hs[0].distance; who = id; pt = hs[0].point; } });
+    if (!pt) return; var kind = 'w', key = 0, x = pt.x, y = pt.y, z = pt.z;
+    if (who){ kind = 'p'; key = who; var T = Q.peers[who]; x = T.x; y = 2.1 - T.c * 0.45; z = T.z; }
+    else { var ia = iaOf(h); if (ia === 'ctl' || ia === 'trbody'){ var D = devOf(h); if (D && D.key && DEVS[D.key] === D){ kind = 'd'; key = D.key; } } }
+    x = +x.toFixed(2); y = +y.toFixed(2); z = +z.toFixed(2); pingShow(null, kind, key, x, y, z); if (Q.ws) send({ t:'ev', e:['p', kind, key, x, y, z] });
+  };
+
   function onEv(id, e){
     if (!Array.isArray(e)) return; var P = Q.peers[id]; Q.applying = true;
     try {
-      if (e[0] === 'c' && Array.isArray(e[1])) e[1].forEach(function(a){ var c = CT[a[0]]; if (c && (c.kind === 'knob' || c.kind === 'fader') && !c.endless && typeof a[1] === 'number'){ setCtl0(c, a[1]); if (c.show) c.show(); } });
+      if (e[0] === 'c' && Array.isArray(e[1])) e[1].forEach(function(a){ var c = CT[a[0]]; if (c && (c.kind === 'knob' || c.kind === 'fader') && !c.endless && typeof a[1] === 'number'){ setCtl0(c, a[1]); if (c.show) c.show(); if (P) glow(c, P.color); } });
+      else if (e[0] === 'b'){ if (P && typeof e[1] === 'string' && CT[e[1]]) glow(CT[e[1]], P.color); }
+      else if (e[0] === 'p'){ if (e[1] === 'p' || e[1] === 'd' || e[1] === 'w') pingShow(id, e[1], e[2], e[3], e[4], e[5]); }
       else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } NOTE[e[1]][e[3] ? 0 : 1](e[2], e[4] == null ? undefined : e[4]); }
       else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) mcChord0(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
       else if (e[0] === 'q') skRemote(e[1]);
@@ -270,12 +364,14 @@ var MP = (function(){
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
         Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
-        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : cam.yaw).toFixed(3), +(lean ? -0.45 : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 : 0] });
+        var em = !lean && EM.id ? EM.id : 0;
+        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 : 0, em] });
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
       if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)){ Q.pingAt = now; send({ t:'ping', at:performance.now() }); }
       if (Q.pendT && ac && AU.ready) transport(Q.pendT);
     }
+    glowTick(now); pingTick(now);
     var k = 1 - Math.exp(-dt * 12);
     Object.keys(Q.peers).forEach(function(id){
       var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = true;
@@ -289,6 +385,8 @@ var MP = (function(){
       P.armL.rotation.x = -sw * 0.8 * (1 - P.lean) - reach; P.armR.rotation.x = sw * 0.8 * (1 - P.lean) - reach * (1 + Math.sin(now / 130) * 0.06);
       P.torso.position.y = 0.78 - P.c * 0.45; P.torso.rotation.x = P.c * 0.25 + P.lean * 0.18; P.head.rotation.x = clamp(-P.pitch, -0.8, 0.8) - P.lean * 0.18;
       P.tag.position.y = 1.95 - P.c * 0.45; if (P.say && now > P.sayUntil){ P.say = ''; paintTag(P); }
+      var em = s[6] ? 0 : clamp(s[7] | 0, 0, 6); if (em !== (P.eid | 0)){ if (em){ P.eshow = em; P.et = 0; } P.eid = em; } P.ek = lerp(P.ek || 0, em ? 1 : 0, 1 - Math.exp(-dt * 7)); P.et = (P.et || 0) + dt;
+      emote(P, P.eshow || 1, P.et, P.ek < 0.004 ? 0 : P.ek, now);
     });
   };
   // ---- is this copy being served by the room server? only then offer online play ----

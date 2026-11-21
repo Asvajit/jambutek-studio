@@ -186,8 +186,10 @@ function act(hit, byTouch){
 }
 
 var look = null;
+canvas.addEventListener('mousedown', function(e){ if (e.button === 1) e.preventDefault(); });      // the middle button pings; it must not start the browser's scroll
 canvas.addEventListener('pointerdown', function(e){
   unlock(); dimHint();
+  if (e.button === 1){ e.preventDefault(); MP.ping(); return; }
   var isMouse = e.pointerType === 'mouse'; pointer.mouse = isMouse;
   var h = centred() ? aim() : aim(ndcOf(e)), c = e.button === 0 ? ctlOf(h) : null;
   if (c && (isMouse || mode === 'tr')){ startCtl(c, e, h); return; }
@@ -298,11 +300,11 @@ paintMute();
 
 /* ================= frame loop ================= */
 var last = performance.now(), verFps = document.getElementById('verFps'), fpsN = 0, fpsAt = 0;
-var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3();
+var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.getElementById('xh');
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.52 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.53 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -312,6 +314,7 @@ function frame(now){
     if (keys.d) st += 1; if (keys.a) st -= 1;
     if (keys.arrowleft) turn += 1; if (keys.arrowright) turn -= 1;
     cam.ty += turn * 1.8 * dt;
+    if (MP.emoting()){ mv = 0; st = 0; cam.walkTo = null; }                 // an emote plays on the spot
     if (mv || st){
       var sp = (crouch.on ? 1.0 : running ? 3.3 : 2.1) * dt, fy = cam.yaw;
       cam.x += (-Math.sin(fy) * mv + Math.cos(fy) * st) * sp;
@@ -346,6 +349,14 @@ function frame(now){
     trPose(eyeV, lookV); var tk = smooth(trBlend);
     ex = lerp(ex, eyeV.x, tk); ey = lerp(ey, eyeV.y, tk); ez = lerp(ez, eyeV.z, tk);
     lx2 = lerp(lx2, lookV.x, tk); ly2 = lerp(ly2, lookV.y, tk); lz2 = lerp(lz2, lookV.z, tk);
+  }
+  var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
+  var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back
+  if (k3 > 0){
+    var p3 = clamp(cam.pitch - 0.22, -1.2, 0.45), tx3 = cam.x, ty3 = 1.15 - crouch.k * 0.4 + JUMP.y, tz3 = cam.z, bx = Math.sin(cam.yaw) * Math.cos(p3), by = -Math.sin(p3), bz = Math.cos(cam.yaw) * Math.cos(p3), d3 = 2.7;
+    eyeV.set(tx3, ty3, tz3); lookV.set(bx, by, bz).normalize(); ray.set(eyeV, lookV); ray.far = d3 + 0.25; var h3 = ray.intersectObjects(solids, false); if (h3.length) d3 = clamp(h3[0].distance - 0.25, 0.7, d3);
+    var cx3 = clamp(tx3 + bx * d3, ROOM.x0 + 0.25, ROOM.x1 - 0.25), cy3 = clamp(ty3 + by * d3, 0.35, ROOM.h - 0.3), cz3 = clamp(tz3 + bz * d3, ROOM.z0 + 0.25, ROOM.z1 - 0.25), s3 = smooth(k3);
+    ex = lerp(ex, cx3, s3); ey = lerp(ey, cy3, s3); ez = lerp(ez, cz3, s3); lx2 = lerp(lx2, tx3, s3); ly2 = lerp(ly2, ty3, s3); lz2 = lerp(lz2, tz3, s3);
   }
   camera.position.set(ex, ey, ez); camera.lookAt(lx2, ly2, lz2); camera.updateMatrixWorld(); lodUpdate();
 
