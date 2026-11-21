@@ -116,7 +116,8 @@ var MP = (function(){
   }
   function removePeer(id){ var P = Q.peers[id]; if (!P) return; Object.keys(P.held).forEach(function(k){ var a = k.split(':'); try { NOTE[a[0]][1](+a[1]); } catch (e) {} }); scene.remove(P.g); delete Q.peers[id]; paintHud(); }
   function paintHud(){
-    var n = Object.keys(Q.peers).length + (Q.spec ? 0 : 1), w = Q.watch | 0; document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max + (w ? ' · ' + w + ' watching' : '');
+    var n = Object.keys(Q.peers).filter(function(id){ return id.indexOf('dbg') !== 0; }).length + (Q.spec ? 0 : 1), w = Q.watch | 0;      /* test players are not counted */
+    document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max + (w ? ' · ' + w + ' watching' : '');
     var list = Q.spec ? '<li><i style="background:#888"></i>you are watching</li>' : '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + ' (you)</li>';
     Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; list += '<li><i style="background:' + esc(P.color) + '"></i>' + esc(P.name) + '</li>'; });
     document.getElementById('mpList').innerHTML = list;
@@ -147,6 +148,7 @@ var MP = (function(){
   function applySet(k, v, quiet){
     if (typeof k !== 'string') return;
     if (k === 'transport'){ transport(v); return; }
+    if (k === 'dbg'){ dbgPlayers(v === '1', true); dbgPaint(); return; }       // the F2 test players, switched on by someone in the room
     if (typeof v !== 'string') return; Q.seen[k] = v; Q.applying = true;
     try {
       if (k === 'tr:m') trMeta(JSON.parse(v)); else if (k.indexOf('tr:p') === 0) trPat(+k.slice(4), JSON.parse(v));
@@ -302,14 +304,15 @@ var MP = (function(){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
       if (m.t === 'welcome' && Q.spec){                      // watching: take the room as it is, own nothing in it
         Q.id = null; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; Q.watch = m.watching | 0; if (typeof m.now === 'number') Q.off = m.now - Date.now();
-        Object.keys(Q.peers).forEach(removePeer); Q.dbg = false;
+        var hadDbg = Q.dbg; Object.keys(Q.peers).forEach(removePeer); Q.dbg = false;
         m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
         MPON = true; MPHOST = false; hud.hidden = false; chat.hidden = false; chat.classList.add('watch'); paintHud();
         try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
         var w0 = m.world || {}; Object.keys(w0).filter(function(k){ return k !== 'transport'; }).sort().forEach(function(k){ applySet(k, w0[k]); }); if (M.playing && !(w0.transport && w0.transport.on)) stopSeq(true); if (w0.transport) transport(w0.transport);
+        if (hadDbg && !Q.dbg) dbgPlayers(true, true);          // test players this screen had switched on stay on
         specOn(true); toast(m.players.length ? 'Watching room ' + Q.code : 'Room ' + Q.code + ' is empty for now'); line('Watching room <b>' + esc(Q.code) + '</b> · click once for sound', true);
       } else if (m.t === 'welcome'){
-        Q.watch = m.watching | 0; Q.dbg = false;
+        Q.watch = m.watching | 0; var hadDbg2 = Q.dbg; Q.dbg = false;
         var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
         if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 1.1 : 0.5; }
         Object.keys(Q.peers).forEach(removePeer);
@@ -318,6 +321,7 @@ var MP = (function(){
         try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
         if (MPHOST){ if (M.playing) stopSeq(true); Q.force = true; SAVENOW.forEach(function(f){ try { f(); } catch (e) {} }); Q.force = false; }   // first in: this browser's machines become the room's
         else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); ks.forEach(function(k){ applySet(k, w[k]); }); if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
+        if (hadDbg2 && !Q.dbg) dbgPlayers(true);               // and the rest of the room gets them too
         toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
         line('You joined room <b>' + esc(Q.code) + '</b>', true);
       } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; var wasSpec = Q.spec; Q.spec = false; showLobby(wasSpec ? 'Room ' + Q.code + ' has no room left for spectators.' : 'Room ' + Q.code + ' is full (' + Q.max + ' players).'); }
@@ -443,14 +447,15 @@ var MP = (function(){
 
   /* ---- F2: a small debug menu ---- */
   var dbgEl = null, DBGDEV = ['tr', 'mx', 'mf', 'bs', 'sh', 'sc'], DBGCOL = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
-  function dbgPlayers(on){
-    Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on) return;
+  function dbgPlayers(on, remote){                           // a player who switches them on shows them to the whole room, spectators included
+    if (!remote && Q.ws && !Q.spec) send({ t:'set', k:'dbg', v:on ? '1' : '0' });
+    Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on){ if (Q.ws) paintHud(); return; }
     DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1, 0]; P.x = x; P.z = z; P.yaw = yaw; });
     if (Q.ws) paintHud();
   }
   function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–6)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
   function dbgMenu(){
-    if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgS"></button><p>Test players are only on this screen. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
+    if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgS"></button><p>In a room, test players switched on by a player show for everyone, spectators too. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
       dbgEl.querySelector('#dbgP').addEventListener('click', function(){ dbgPlayers(!Q.dbg); dbgPaint(); });
       dbgEl.querySelector('#dbgS').addEventListener('click', function(){ if (!Q.spec) specOn(!SPEC.on); dbgPaint(); }); }
     dbgEl.hidden = !dbgEl.hidden; if (!dbgEl.hidden){ dbgPaint(); releaseLock(); }
