@@ -22,13 +22,14 @@ function wallPanel(P){                                       // called by vidBoo
   HOST = o.H; LX = o.X; LZ = o.Z; DEV = o.D; FACE = o.F;
 }
 /* everything a pattern is, on every machine, as one small file (the Tape's loop is audio and stays out) */
-var JAMSKIP = { 'jambutek-studio-video-v1':1, 'jambutek-studio-bz-v1':1, 'jambutek-studio-flow-v1':1 };       // the video synths are not part of a jam
-/* A jam file is the music side of the whole room: every machine's patterns, sounds and settings, the mixer and the effects.
+var JAMSKIP = {};                                           // nothing is left out now: the video synths and the roof switch travel with a jam too
+/* A jam file is the whole room: every machine's patterns, sounds and settings, the mixer, the effects, both video synths and the roof switch.
    It is the same text each machine already saves for itself, gathered under `state`. The older pattern-only fields stay in the
    file too, so a file still means something to an older copy of the room. The Tape's recorded loop is audio and is left out. */
 function roomState(){
   var cap = {}, hook = storeHook; storeHook = function(k, v){ cap[k] = v; };                 // ask every machine to save now, and catch what it writes instead of sending it on
   try { SAVENOW.forEach(function(f){ try { f(); } catch (e) {} }); } finally { storeHook = hook; }
+  cap['jambutek-studio-video-v1'] = JSON.stringify({ v:1, src:VID.src });                          // which synth is on the roof, or none
   var out = {}; Object.keys(cap).forEach(function(k){ if (RESTORE[k] && !JAMSKIP[k] && typeof cap[k] === 'string') out[k] = cap[k]; }); return out;
 }
 RESTORE[SAVE_KEY] = function(){                                // the drum machine, from a jam file
@@ -51,7 +52,7 @@ function patternDump(){ return { app:'jambutek-studio', kind:'jam', v:2, made:ne
 function patternExport(){
   try { var a = document.createElement('a'), d = new Date(), p2 = function(n){ return (n < 10 ? '0' : '') + n; };
     a.href = URL.createObjectURL(new Blob([JSON.stringify(patternDump())], { type:'application/json' })); a.download = 'jambutek-studio-jam-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.json';
-    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast('Jam saved to ' + a.download + ' · patterns, sounds and settings', 3600);
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast('Jam saved to ' + a.download + ' · patterns, sounds, settings and visuals', 3600);
   } catch (e) { toast('Could not save the jam file'); }
 }
 /* saved jams */
@@ -68,7 +69,7 @@ function jamOpen(){
   var el = jamEl = document.createElement('div'); el.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(4,6,10,.72);font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;color:#E6E6E2';
   var box = document.createElement('div'); box.style.cssText = 'width:min(420px,92vw);max-height:84vh;overflow:auto;background:#14161B;border:2px solid #C08AFF;border-radius:10px;padding:16px 16px 12px';
   var h = document.createElement('div'); h.textContent = 'LOAD A JAM'; h.style.cssText = 'font-weight:700;letter-spacing:.08em;margin-bottom:4px'; box.appendChild(h);
-  var p = document.createElement('div'); p.textContent = 'Replaces the patterns, sounds and settings on every machine' + (typeof MPON !== 'undefined' && MPON ? ', for everyone in the room.' : '.'); p.style.cssText = 'color:#9A9CA4;font-size:12px;margin-bottom:10px'; box.appendChild(p);
+  var p = document.createElement('div'); p.textContent = 'Replaces the patterns, sounds, settings and visuals on every machine' + (typeof MPON !== 'undefined' && MPON ? ', for everyone in the room.' : '.'); p.style.cssText = 'color:#9A9CA4;font-size:12px;margin-bottom:10px'; box.appendChild(p);
   function row(label, sub, fn, col){ var b = document.createElement('button'); b.type = 'button'; b.style.cssText = 'display:flex;justify-content:space-between;gap:12px;width:100%;margin:5px 0;padding:10px 12px;background:' + (col || '#23262C') + ';color:#F0F0EC;border:1px solid #3A3D46;border-radius:7px;font:inherit;cursor:pointer;text-align:left';
     var a = document.createElement('span'); a.textContent = label; a.style.fontWeight = '700'; var c = document.createElement('span'); c.textContent = sub; c.style.color = '#9A9CA4'; b.appendChild(a); b.appendChild(c); b.addEventListener('click', fn); box.appendChild(b); return b; }
   JAMS.forEach(function(j){ row(j.name, (j === DEF ? 'starter · ' : '') + j.bpm + ' BPM', function(){ if (loadJam(j, j.name)) jamClose(); }); });
