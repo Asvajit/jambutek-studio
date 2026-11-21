@@ -132,7 +132,7 @@ body{
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.55</span>
+    <span id="verFps">studio v1.56</span>
   </div>
 </div>
 
@@ -7400,7 +7400,7 @@ var SKA = null;
 /* a Snake can play it: every step is one scratch stroke. The note sets how fast the record is pushed, strokes alternate forwards and
    backwards like a baby scratch, and the gate is how long the stroke lasts. Between strokes the platter does whatever it was doing. */
 var SKQ = [];
-function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; var e = [t, Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), Math.max(0.03, dur)]; if (SKA.wk){ SKA.wk.port.postMessage({ ev:e }); return; } SKQ.push(e); if (SKQ.length > 64) SKQ.shift(); }
+function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; var e = [t, clamp(Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), 0.2, 4), Math.max(0.03, dur)]; if (SKA.wk){ SKA.wk.port.postMessage({ ev:e }); return; } SKQ.push(e); if (SKQ.length > 64) SKQ.shift(); }
 function skSeek(v){ SK.pos = v; SK.seekAt = performance.now(); if (SKA && SKA.wk) SKA.wk.port.postMessage({ pos:v }); }
 function skMake(kind, sr){
   var n = Math.floor(sr * (kind === 2 ? 1.1 : 1.5)), d = new Float32Array(n), i, t, ph = 0, ph2 = 0, s1 = 0, s2 = 0, s3 = 0;
@@ -7448,12 +7448,13 @@ function skAudio(){
   return true;
 }
 var SKWORK = "class SkP extends AudioWorkletProcessor{constructor(){super();this.b=[];this.s=0;this.p=0;this.r=0;this.g=0;this.rt=0;this.gt=1;this.go=1;this.k=0.0025;this.touch=0;this.motor=0;this.q=[];this.dir=-1;this.sqEnd=0;this.sqRate=0;this.c=0;" +
-  "this.port.onmessage=e=>{const m=e.data;if(m.b)this.b=m.b;if(m.st){const s=m.st;this.s=s[0];this.rt=s[1];this.gt=s[2];this.k=s[3];this.touch=s[4];this.motor=s[5];this.go=s[6];}if(m.pos!=null)this.p=m.pos;if(m.ev){this.q.push(m.ev);if(this.q.length>64)this.q.shift();}};}" +
-  "process(i,o){const out=o[0][0],b=this.b[this.s];if(!b)return true;const n=b.length;let p=this.p,r=this.r,g=this.g,rt=this.rt,gt=this.gt,k=this.k;if(!(p>=0&&p<n))p=0;const tb=currentTime+0.004;" +
+  "this.port.onmessage=e=>{const m=e.data;if(m.b){this.b=m.b;this.cs=m.b.map(b=>{const c=new Float64Array(b.length+1);for(let i=0;i<b.length;i++)c[i+1]=c[i]+b[i];return c;});}if(m.st){const s=m.st;this.s=s[0];this.rt=s[1];this.gt=s[2];this.k=s[3];this.touch=s[4];this.motor=s[5];this.go=s[6];}if(m.pos!=null)this.p=m.pos;if(m.ev){this.q.push(m.ev);if(this.q.length>64)this.q.shift();}};}" +
+  "S(c,n,x){const q=Math.floor(x/n),y=x-q*n,i=y|0;return q*c[n]+c[i]+(c[i+1]-c[i])*(y-i);}" +
+  "process(i,o){const out=o[0][0],b=this.b[this.s];if(!b)return true;const n=b.length,cs=this.cs[this.s];let p=this.p,r=this.r,g=this.g,rt=this.rt,gt=this.gt,k=this.k;if(!(p>=0&&p<n))p=0;const tb=currentTime+0.004;" +
   "while(this.q.length&&this.q[0][0]<=tb){const q=this.q.shift();this.dir=-this.dir;this.sqRate=q[1]*this.dir;this.sqEnd=q[0]+q[2];}" +
   "if(this.sqEnd&&!this.touch){if(tb<this.sqEnd){rt=this.sqRate;k=0.02;gt=this.go;}else if(tb<this.sqEnd+0.25&&!this.motor){rt=0;k=0.02;}}" +
   "if(!(rt>-64&&rt<64))rt=0;if(!(gt>=0&&gt<=1))gt=0;if(!(k>0&&k<1))k=0.0025;if(!(r>-64&&r<64))r=0;if(!(g>=0&&g<=1))g=0;" +
-  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;const ar=r<0?-r:r,mv=ar>0.04?1:ar*25;g+=(gt*mv-g)*0.02;p+=r;if(p>=n)p-=n*Math.floor(p/n);else if(p<0)p+=n*Math.ceil(-p/n);if(!(p>=0&&p<n))p=0;const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;let v=(b[i0]+(b[i1]-b[i0])*f)*g;out[j]=v>-1.5&&v<1.5?v:0;}" +
+  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;const ar=r<0?-r:r,mv=ar>0.04?1:ar*25;g+=(gt*mv-g)*0.02;p+=r;if(p>=n)p-=n*Math.floor(p/n);else if(p<0)p+=n*Math.ceil(-p/n);if(!(p>=0&&p<n))p=0;let v;if(ar<=1.2){const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;v=b[i0]+(b[i1]-b[i0])*f;}else{const h=ar*0.5;v=(this.S(cs,n,p+h)-this.S(cs,n,p-h))/ar;}v*=g;out[j]=v>-1.5&&v<1.5?v:0;}" +
   "if(!(r>-64&&r<64))r=0;this.p=p;this.r=r;this.g=g;if(++this.c>=6){this.c=0;this.port.postMessage([p,r]);}return true;}}registerProcessor('jb-scratch',SkP);";
 function skOnPage(A){
   A.node = ac.createScriptProcessor(512, 1, 1);
@@ -9323,7 +9324,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.55 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.56 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -9433,7 +9434,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>

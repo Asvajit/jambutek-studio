@@ -48,7 +48,7 @@ var SKA = null;
 /* a Snake can play it: every step is one scratch stroke. The note sets how fast the record is pushed, strokes alternate forwards and
    backwards like a baby scratch, and the gate is how long the stroke lasts. Between strokes the platter does whatever it was doing. */
 var SKQ = [];
-function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; var e = [t, Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), Math.max(0.03, dur)]; if (SKA.wk){ SKA.wk.port.postMessage({ ev:e }); return; } SKQ.push(e); if (SKQ.length > 64) SKQ.shift(); }
+function skSeqAt(n, vel, t, dur){ if (!skAudio()) return; var e = [t, clamp(Math.pow(2, (n - 60) / 12) * (0.6 + vel * 0.6), 0.2, 4), Math.max(0.03, dur)]; if (SKA.wk){ SKA.wk.port.postMessage({ ev:e }); return; } SKQ.push(e); if (SKQ.length > 64) SKQ.shift(); }
 function skSeek(v){ SK.pos = v; SK.seekAt = performance.now(); if (SKA && SKA.wk) SKA.wk.port.postMessage({ pos:v }); }
 function skMake(kind, sr){
   var n = Math.floor(sr * (kind === 2 ? 1.1 : 1.5)), d = new Float32Array(n), i, t, ph = 0, ph2 = 0, s1 = 0, s2 = 0, s3 = 0;
@@ -96,12 +96,13 @@ function skAudio(){
   return true;
 }
 var SKWORK = "class SkP extends AudioWorkletProcessor{constructor(){super();this.b=[];this.s=0;this.p=0;this.r=0;this.g=0;this.rt=0;this.gt=1;this.go=1;this.k=0.0025;this.touch=0;this.motor=0;this.q=[];this.dir=-1;this.sqEnd=0;this.sqRate=0;this.c=0;" +
-  "this.port.onmessage=e=>{const m=e.data;if(m.b)this.b=m.b;if(m.st){const s=m.st;this.s=s[0];this.rt=s[1];this.gt=s[2];this.k=s[3];this.touch=s[4];this.motor=s[5];this.go=s[6];}if(m.pos!=null)this.p=m.pos;if(m.ev){this.q.push(m.ev);if(this.q.length>64)this.q.shift();}};}" +
-  "process(i,o){const out=o[0][0],b=this.b[this.s];if(!b)return true;const n=b.length;let p=this.p,r=this.r,g=this.g,rt=this.rt,gt=this.gt,k=this.k;if(!(p>=0&&p<n))p=0;const tb=currentTime+0.004;" +
+  "this.port.onmessage=e=>{const m=e.data;if(m.b){this.b=m.b;this.cs=m.b.map(b=>{const c=new Float64Array(b.length+1);for(let i=0;i<b.length;i++)c[i+1]=c[i]+b[i];return c;});}if(m.st){const s=m.st;this.s=s[0];this.rt=s[1];this.gt=s[2];this.k=s[3];this.touch=s[4];this.motor=s[5];this.go=s[6];}if(m.pos!=null)this.p=m.pos;if(m.ev){this.q.push(m.ev);if(this.q.length>64)this.q.shift();}};}" +
+  "S(c,n,x){const q=Math.floor(x/n),y=x-q*n,i=y|0;return q*c[n]+c[i]+(c[i+1]-c[i])*(y-i);}" +
+  "process(i,o){const out=o[0][0],b=this.b[this.s];if(!b)return true;const n=b.length,cs=this.cs[this.s];let p=this.p,r=this.r,g=this.g,rt=this.rt,gt=this.gt,k=this.k;if(!(p>=0&&p<n))p=0;const tb=currentTime+0.004;" +
   "while(this.q.length&&this.q[0][0]<=tb){const q=this.q.shift();this.dir=-this.dir;this.sqRate=q[1]*this.dir;this.sqEnd=q[0]+q[2];}" +
   "if(this.sqEnd&&!this.touch){if(tb<this.sqEnd){rt=this.sqRate;k=0.02;gt=this.go;}else if(tb<this.sqEnd+0.25&&!this.motor){rt=0;k=0.02;}}" +
   "if(!(rt>-64&&rt<64))rt=0;if(!(gt>=0&&gt<=1))gt=0;if(!(k>0&&k<1))k=0.0025;if(!(r>-64&&r<64))r=0;if(!(g>=0&&g<=1))g=0;" +
-  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;const ar=r<0?-r:r,mv=ar>0.04?1:ar*25;g+=(gt*mv-g)*0.02;p+=r;if(p>=n)p-=n*Math.floor(p/n);else if(p<0)p+=n*Math.ceil(-p/n);if(!(p>=0&&p<n))p=0;const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;let v=(b[i0]+(b[i1]-b[i0])*f)*g;out[j]=v>-1.5&&v<1.5?v:0;}" +
+  "for(let j=0;j<out.length;j++){r+=(rt-r)*k;const ar=r<0?-r:r,mv=ar>0.04?1:ar*25;g+=(gt*mv-g)*0.02;p+=r;if(p>=n)p-=n*Math.floor(p/n);else if(p<0)p+=n*Math.ceil(-p/n);if(!(p>=0&&p<n))p=0;let v;if(ar<=1.2){const i0=p|0,i1=i0+1<n?i0+1:0,f=p-i0;v=b[i0]+(b[i1]-b[i0])*f;}else{const h=ar*0.5;v=(this.S(cs,n,p+h)-this.S(cs,n,p-h))/ar;}v*=g;out[j]=v>-1.5&&v<1.5?v:0;}" +
   "if(!(r>-64&&r<64))r=0;this.p=p;this.r=r;this.g=g;if(++this.c>=6){this.c=0;this.port.postMessage([p,r]);}return true;}}registerProcessor('jb-scratch',SkP);";
 function skOnPage(A){
   A.node = ac.createScriptProcessor(512, 1, 1);
