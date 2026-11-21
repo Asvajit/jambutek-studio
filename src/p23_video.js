@@ -209,5 +209,8 @@ function bzUpdate(now, dt){
 }
 RESTORE['jambutek-studio-bz-v1'] = function(){ bzRestore(); CTLIST.forEach(function(c){ if (c.dev === 'bz' && c.kind === 'knob'){ c.v = BZ.p[c.pk]; c.show(); } }); }; SAVENOW.push(bzSaveNow);
 RESTORE['jambutek-studio-video-v1'] = function(){ try { var s = JSON.parse(store('jambutek-studio-video-v1') || 'null'); if (s && s.v === 1) vidSet(s.src | 0, true); } catch (e) {} };
-try { localStorage.setItem('jambutek-studio-video-v1', JSON.stringify({ v:1, src:0 })); } catch (e) {}       // the roof is always dark when the room loads
+/* The roof comes up as it was left, or as the starter jam has it for a first visit. Until v1.59 every load wrote "off" here, so that
+   leftover is dropped once; otherwise nobody who had visited before would ever see the starter's visuals. */
+try { if (!localStorage.getItem('jambutek-studio-roof-v2')){ localStorage.removeItem('jambutek-studio-video-v1'); localStorage.setItem('jambutek-studio-roof-v2', '1'); } } catch (e) {}
+RESTORE['jambutek-studio-video-v1']();
 vidApply();
