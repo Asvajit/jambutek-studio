@@ -304,7 +304,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.61 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.62 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -315,7 +315,7 @@ function frame(now){
     if (keys.arrowleft) turn += 1; if (keys.arrowright) turn -= 1;
     cam.ty += turn * 1.8 * dt;
     if (MP.emoting() || SPEC.on){ mv = 0; st = 0; cam.walkTo = null; cam.homing = false; }      // an emote plays on the spot; a spectator's eye is fixed
-    if (SPEC.on){ cam.x = SPEC.x; cam.z = SPEC.z; }
+    if (SPEC.on){ MP.specTick(dt); cam.x = SPEC.x; cam.z = SPEC.z; }
     if (mv || st){
       var sp = (crouch.on ? 1.0 : running ? 3.3 : 2.1) * dt, fy = cam.yaw;
       cam.x += (-Math.sin(fy) * mv + Math.cos(fy) * st) * sp;
