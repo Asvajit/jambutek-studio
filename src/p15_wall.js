@@ -41,12 +41,13 @@ RESTORE[SAVE_KEY] = function(){                                // the drum machi
 };
 function roomLoad(st){
   var keys = Object.keys(st).filter(function(k){ return k.indexOf('jambutek-studio-') === 0 && RESTORE[k] && !JAMSKIP[k] && typeof st[k] === 'string' && st[k].length < 600000; }), n = 0;
+  SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });                                 // a loaded jam opens on page A of every Snake
   keys.sort(function(a, b){ return (a === SAVE_KEY ? 0 : 1) - (b === SAVE_KEY ? 0 : 1); });         // the drum machine first: it carries the tempo
   keys.forEach(function(k){ REMOTE[k] = st[k]; try { RESTORE[k](); n++; } catch (e) {} finally { delete REMOTE[k]; } store(k, st[k]); });      // apply it here, then keep it and pass it to everyone in the room
   return n;
 }
 function patternDump(){ return { app:'jambutek-studio', kind:'jam', v:2, made:new Date().toISOString(), bpm:M.bpm, drums:PAT, synth:{ seq:MF.seq, seqLen:MF.seqLen }, bass:{ seqs:BS.seqs }, ambi:{ seq:AM.seq },
-  snakes:SNAKES.map(function(s){ return { root:s.SN.root, scale:s.SN.scale, swing:s.SN.swing, out:s.SN.out, lanes:s.SN.lanes }; }), state:roomState() }; }
+  snakes:SNAKES.map(function(s){ return { root:s.SN.root, scale:s.SN.scale, swing:s.SN.swing, out:s.SN.out, lanes:s.SN.pgs[0] }; }), state:roomState() }; }
 function patternExport(){
   try { var a = document.createElement('a'), d = new Date(), p2 = function(n){ return (n < 10 ? '0' : '') + n; };
     a.href = URL.createObjectURL(new Blob([JSON.stringify(patternDump())], { type:'application/json' })); a.download = 'jambutek-studio-jam-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + '.json';
