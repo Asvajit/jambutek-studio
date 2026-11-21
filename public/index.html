@@ -95,6 +95,18 @@ body{
 #mpLobby .row input{ flex:1; margin:0 }
 #mpLobby button{ font:inherit; font-size:12px; letter-spacing:.1em; text-transform:uppercase; border:0; border-radius:6px; padding:11px 14px; cursor:pointer; color:#0B0D12; background:#90F0A8 }
 #mpLobby button.alt{ background:#30A8F0 }
+#mpLobby button.alt.watch{ background:#8A3FD0; color:#fff }
+body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ display:none !important }
+#specHud{ position:fixed; z-index:5; left:50%; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--bone); background:rgba(8,10,14,.72); border:1px solid rgba(216,216,216,.18); border-radius:8px; padding:8px 12px; pointer-events:none; white-space:nowrap }
+#specHud[hidden]{ display:none }
+#specHud b{ color:#C08AFF; font-weight:600 }
+#dbgMenu{ position:fixed; z-index:30; left:16px; top:50%; transform:translateY(-50%); width:300px; background:rgba(8,10,14,.94); border:1px solid rgba(255,225,90,.5); border-radius:10px; padding:14px; font-size:12px; color:var(--bone) }
+#dbgMenu[hidden]{ display:none }
+#dbgMenu h3{ margin:0 0 10px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#FFE15A; font-weight:600 }
+#dbgMenu button{ display:block; width:100%; text-align:left; font:inherit; color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(216,216,216,.22); border-radius:6px; padding:9px 10px; margin-bottom:8px; cursor:pointer }
+#dbgMenu button:hover{ border-color:#FFE15A }
+#dbgMenu button:disabled{ opacity:.4; cursor:default }
+#dbgMenu p{ margin:4px 0 0; color:rgba(216,216,216,.6); font-size:11px; line-height:1.5 }
 #mpLobby button.ghost{ background:none; color:rgba(216,216,216,.7); border:1px solid rgba(216,216,216,.25); width:100%; margin-top:14px }
 #mpLobby .or{ text-align:center; font-size:10px; letter-spacing:.2em; color:rgba(216,216,216,.4); margin:14px 0 }
 #mpLobby .err{ color:#FF6F88; font-size:12px; min-height:16px; margin-top:10px }
@@ -132,7 +144,7 @@ body{
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.60</span>
+    <span id="verFps">studio v1.61</span>
   </div>
 </div>
 
@@ -141,14 +153,14 @@ body{
 <div id="mpLobby" hidden>
   <div class="card">
     <h2>Jambutek Studio &middot; online</h2>
-    <p>Make a room and send the code to up to 5 friends, or type a friend's code to join them. The first one in brings their patterns; the room resets when everyone leaves.</p>
+    <p>Make a room and send the code to up to 5 friends, or type a friend's code to join them, or to <b>Spectate</b>: watch and listen from five cameras without taking a seat. The first one in brings their patterns; the room resets when everyone leaves.</p>
     <label for="mpName">Your name</label>
     <input id="mpName" maxlength="16" autocomplete="nickname" placeholder="e.g. Roo">
     <label>Pick your look</label>
     <div id="mpSkins"></div>
     <button type="button" id="mpCreate">Make a new room</button>
     <div class="or">or join a friend</div>
-    <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="CODE" autocomplete="off"><button type="button" class="alt" id="mpJoin">Join</button></div>
+    <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="CODE" autocomplete="off"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from five cameras without being in it">Spectate</button></div>
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
@@ -4242,6 +4254,7 @@ var DEF = window.JB_DEFAULTS || null;
 function defCopy(x){ return JSON.parse(JSON.stringify(x)); }
 var MPQUIET = false;            // set while a Snake's custom lane is turning a knob, so it is not sent to the room as if a hand did it
 var SNLEARN = null;             // the Snake waiting to learn which knob its custom lane should turn
+var SPEC = { on:false, i:0, x:0, y:0, z:0 };                  // spectator view: the eye is pinned to one of five fixed cameras
 var MPON = false, MPHOST = true, REMOTE = {}, storeHook = null, RESTORE = {}, SAVENOW = [];
 function saveMs(d){ return MPON ? 250 : d; }
 function store(k, v){ try { if (v === undefined) { if (k in REMOTE) return REMOTE[k]; var got = localStorage.getItem(k); return got === null && DEF && DEF.state && typeof DEF.state[k] === 'string' ? DEF.state[k] : got; }      /* nothing saved here yet: the starter jam's own sounds and settings */ if (storeHook) storeHook(k, v); if (!MPON || MPHOST || k.indexOf('jambutek-studio-') !== 0) localStorage.setItem(k, v); } catch (e) {} return null; }
@@ -8767,13 +8780,14 @@ var MP = (function(){
   }
   function removePeer(id){ var P = Q.peers[id]; if (!P) return; Object.keys(P.held).forEach(function(k){ var a = k.split(':'); try { NOTE[a[0]][1](+a[1]); } catch (e) {} }); scene.remove(P.g); delete Q.peers[id]; paintHud(); }
   function paintHud(){
-    var n = Object.keys(Q.peers).length + 1; document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max;
-    var list = '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + ' (you)</li>';
+    var n = Object.keys(Q.peers).length + (Q.spec ? 0 : 1), w = Q.watch | 0; document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max + (w ? ' · ' + w + ' watching' : '');
+    var list = Q.spec ? '<li><i style="background:#888"></i>you are watching</li>' : '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + ' (you)</li>';
     Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; list += '<li><i style="background:' + esc(P.color) + '"></i>' + esc(P.name) + '</li>'; });
     document.getElementById('mpList').innerHTML = list;
   }
   function line(html, sys){ var d = document.createElement('div'); d.innerHTML = html; if (sys) d.className = 'sys'; log.appendChild(d); while (log.children.length > 8) log.removeChild(log.firstChild); setTimeout(function(){ d.classList.add('old'); }, 9000); }
-  function send(o){ if (Q.ws && Q.ws.readyState === 1){ try { Q.ws.send(JSON.stringify(o)); } catch (e) {} return true; } return false; }
+  function send(o){ if (Q.spec && o.t !== 'ping') return false;      /* a spectator never changes the room */
+    if (Q.ws && Q.ws.readyState === 1){ try { Q.ws.send(JSON.stringify(o)); } catch (e) {} return true; } return false; }
   function serverNow(){ return Date.now() + Q.off; }
 
   // ---- machine state: sent a moment after it changes, applied when it arrives ----
@@ -8879,7 +8893,7 @@ var MP = (function(){
   }
   document.addEventListener('keydown', function(e){
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
-    var i = '123456'.indexOf(e.key); if (i >= 0) emoteSet(i + 1);
+    var i = '123456'.indexOf(e.key); if (i >= 0 && !SPEC.on) emoteSet(i + 1);
   }, true);
   document.addEventListener('keyup', function(e){ var i = '123456'.indexOf(e.key); if (i >= 0 && EM.id === i + 1) emoteSet(0); }, true);
   window.addEventListener('blur', function(){ emoteSet(0); });
@@ -8946,11 +8960,20 @@ var MP = (function(){
   // ---- connection ----
   function connect(){
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : ''));
+    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + (Q.spec ? '?spec=1' : '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : '')));
     Q.ws = ws; Q.closedByUs = false;
     ws.onmessage = function(ev){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
-      if (m.t === 'welcome'){
+      if (m.t === 'welcome' && Q.spec){                      // watching: take the room as it is, own nothing in it
+        Q.id = null; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; Q.watch = m.watching | 0; if (typeof m.now === 'number') Q.off = m.now - Date.now();
+        Object.keys(Q.peers).forEach(removePeer); Q.dbg = false;
+        m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
+        MPON = true; MPHOST = false; hud.hidden = false; chat.hidden = false; chat.classList.add('watch'); paintHud();
+        try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
+        var w0 = m.world || {}; Object.keys(w0).filter(function(k){ return k !== 'transport'; }).sort().forEach(function(k){ applySet(k, w0[k]); }); if (M.playing && !(w0.transport && w0.transport.on)) stopSeq(true); if (w0.transport) transport(w0.transport);
+        specOn(true); toast(m.players.length ? 'Watching room ' + Q.code : 'Room ' + Q.code + ' is empty for now'); line('Watching room <b>' + esc(Q.code) + '</b> · click once for sound', true);
+      } else if (m.t === 'welcome'){
+        Q.watch = m.watching | 0; Q.dbg = false;
         var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
         if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 1.1 : 0.5; }
         Object.keys(Q.peers).forEach(removePeer);
@@ -8961,7 +8984,8 @@ var MP = (function(){
         else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); ks.forEach(function(k){ applySet(k, w[k]); }); if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
         toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
         line('You joined room <b>' + esc(Q.code) + '</b>', true);
-      } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; showLobby('Room ' + Q.code + ' is full (' + Q.max + ' players).'); }
+      } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; var wasSpec = Q.spec; Q.spec = false; showLobby(wasSpec ? 'Room ' + Q.code + ' has no room left for spectators.' : 'Room ' + Q.code + ' is full (' + Q.max + ' players).'); }
+      else if (m.t === 'watch'){ Q.watch = m.n | 0; paintHud(); }
       else if (m.t === 'join'){ if (!Q.peers[m.id]) Q.peers[m.id] = avatar(m.color, m.name, m.skin); paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + '</b> joined', true); toast(m.name + ' joined'); }
       else if (m.t === 'leave'){ var P = Q.peers[m.id]; if (P) line('<b style="color:' + esc(P.color) + '">' + esc(P.name) + '</b> left', true); removePeer(m.id); }
       else if (m.t === 's'){ var R = Q.peers[m.id]; if (R){ if (!R.s){ R.x = m.s[0]; R.z = m.s[1]; } R.s = m.s; } }
@@ -8977,8 +9001,8 @@ var MP = (function(){
       line('Connection lost · reconnecting…', true); setTimeout(function(){ if (Q.on && !Q.ws) connect(); }, 800 * Q.retry);
     };
   }
-  function start(code){
-    var nm = nameIn.value.trim().slice(0, 16);
+  function start(code, spec){
+    var nm = nameIn.value.trim().slice(0, 16); Q.spec = !!spec; if (spec && !nm) nm = 'Spectator';
     if (!nm){ err.textContent = 'Type a name first.'; nameIn.focus(); return; }
     code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (code.length < 4){ err.textContent = 'Room codes are 4 letters or numbers.'; codeIn.focus(); return; }
@@ -8989,6 +9013,7 @@ var MP = (function(){
   function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); }
   document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
+  document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
   codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') start(codeIn.value); });
   nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? start(codeIn.value) : start(newCode())); });
   document.getElementById('mpSolo').addEventListener('click', function(){ Q.on = false; hideLobby(); });
@@ -9008,7 +9033,7 @@ var MP = (function(){
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }
-    if (Q.ws && !Q.chatOpen && (e.key === 't' || e.key === 'T') && mode === 'walk' && !e.repeat){ e.preventDefault(); e.stopPropagation(); openChat(); }
+    if (Q.ws && !Q.spec && !Q.chatOpen && (e.key === 't' || e.key === 'T') && mode === 'walk' && !e.repeat){ e.preventDefault(); e.stopPropagation(); openChat(); }
   }, true);
   // ---- every frame: send where we are and which knobs moved; move everyone else smoothly ----
   Q.tick = function(now, dt){
@@ -9049,6 +9074,40 @@ var MP = (function(){
       showLobby('');
     }).catch(function(){});
   };
+  /* ---- spectating: five fixed cameras, keys 1 to 5. One in each ceiling corner where the stage lights hang, and one in the middle of
+     the rig just above the sequencers that can look all the way round. The mouse still turns the view. ---- */
+  var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 1.78, RIG.z]];
+    return L.map(function(c, k){ var dx = RIG.x - c[1], dz = RIG.z - c[3], dy = 1.0 - c[2]; return { name:c[0], x:c[1], y:c[2], z:c[3], yaw:k === 4 ? 0 : Math.atan2(-dx, -dz), pitch:k === 4 ? -0.08 : Math.atan2(dy, Math.hypot(dx, dz)) }; }); })();
+  var specEl = null;
+  function specCam(i, quiet){ var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); if (specEl) specEl.querySelector('b').textContent = 'CAMERA ' + (i + 1); }
+  function specOn(on){
+    if (on === SPEC.on) return; if (on && mode === 'tr'){ try { leaveTR(); } catch (e) {} }
+    emoteSet(0); SPEC.on = on; document.body.classList.toggle('spec', on);
+    if (!specEl){ specEl = document.createElement('div'); specEl.id = 'specHud'; specEl.innerHTML = '<b>CAMERA 1</b> &middot; spectating &middot; keys <b>1</b>&ndash;<b>5</b> change camera &middot; mouse looks round'; document.body.appendChild(specEl); }
+    specEl.hidden = !on;
+    if (on) specCam(SPEC.i || 0, true); else { cam.x = HOME.x; cam.z = HOME.z; cam.yaw = cam.ty = HOME.yaw; cam.pitch = cam.tp = HOME.pitch; }
+  }
+  document.addEventListener('keydown', function(e){          // while watching, the keyboard only changes camera
+    if (!SPEC.on || Q.lobbyOpen || e.key === 'F2' || e.key === 'Escape' || e.ctrlKey || e.metaKey || e.altKey) return;
+    var i = '12345'.indexOf(e.key); if (i >= 0 && !e.repeat) specCam(i); e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
+  }, true);
+
+  /* ---- F2: a small debug menu ---- */
+  var dbgEl = null, DBGDEV = ['tr', 'mx', 'mf', 'bs', 'sh', 'sc'], DBGCOL = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
+  function dbgPlayers(on){
+    Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on) return;
+    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1, 0]; P.x = x; P.z = z; P.yaw = yaw; });
+    if (Q.ws) paintHud();
+  }
+  function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–5)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
+  function dbgMenu(){
+    if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgS"></button><p>Test players are only on this screen. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
+      dbgEl.querySelector('#dbgP').addEventListener('click', function(){ dbgPlayers(!Q.dbg); dbgPaint(); });
+      dbgEl.querySelector('#dbgS').addEventListener('click', function(){ if (!Q.spec) specOn(!SPEC.on); dbgPaint(); }); }
+    dbgEl.hidden = !dbgEl.hidden; if (!dbgEl.hidden){ dbgPaint(); releaseLock(); }
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'F2'){ e.preventDefault(); e.stopPropagation(); if (!Q.lobbyOpen) dbgMenu(); } else if (e.key === 'Escape' && dbgEl && !dbgEl.hidden) dbgEl.hidden = true; }, true);
+  Q.debug = { players:dbgPlayers, spec:specOn, cam:specCam, cams:SPECCAMS };
   Q.serverNow = serverNow;
   return Q;
 })();
@@ -9177,9 +9236,9 @@ function iaOf(hit){ return hit ? hit.object.userData.ia : null; }
 function ndcOf(e){ var r = canvas.getBoundingClientRect(); return new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
 function centred(){ return locked; }                                             // is the crosshair doing the pointing?
 function curAim(){ return centred() ? aim() : (pointer.in ? aim(new THREE.Vector2(pointer.x, pointer.y)) : null); }
-function ctlOf(hit){ return hit && iaOf(hit) === 'ctl' && (mode === 'tr' || hit.distance <= (hit.object.userData.ctl.dev === 'wall' ? REACH + 0.6 : CTL_REACH)) ? hit.object.userData.ctl : null; }
+function ctlOf(hit){ return !SPEC.on && hit && iaOf(hit) === 'ctl' && (mode === 'tr' || hit.distance <= (hit.object.userData.ctl.dev === 'wall' ? REACH + 0.6 : CTL_REACH)) ? hit.object.userData.ctl : null; }
 function labelFor(hit){
-  var ia = iaOf(hit); if (!ia) return null;
+  var ia = iaOf(hit); if (!ia || SPEC.on) return null;
   if (ia === 'ctl' || ia === 'trbody'){
     var c = ia === 'ctl' ? ctlOf(hit) : null; if (c) return labelOf(c);
     if (hit.distance > REACH) return 'Get closer'; if (mode === 'tr') return null;
@@ -9243,12 +9302,12 @@ var look = null;
 canvas.addEventListener('mousedown', function(e){ if (e.button === 1) e.preventDefault(); });      // the middle button pings; it must not start the browser's scroll
 canvas.addEventListener('pointerdown', function(e){
   unlock(); dimHint();
-  if (e.button === 1){ e.preventDefault(); MP.ping(); return; }
+  if (e.button === 1){ e.preventDefault(); if (!SPEC.on) MP.ping(); return; }
   var isMouse = e.pointerType === 'mouse'; pointer.mouse = isMouse;
   var h = centred() ? aim() : aim(ndcOf(e)), c = e.button === 0 ? ctlOf(h) : null;
   if (c && (isMouse || mode === 'tr')){ startCtl(c, e, h); return; }
   if (mode === 'tr') return;
-  if (locked){ act(h, false); return; }
+  if (locked){ if (!SPEC.on) act(h, false); return; }
   if (isMouse && lockApi && (!lockFailed || everLocked)){ requestLock(); return; }      // like the arcade: click takes the mouse, Esc gives it back
   if (isMouse && lockFailed && e.detail >= 2) requestLock();
   try { canvas.setPointerCapture(e.pointerId); } catch (x) {}
@@ -9358,7 +9417,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.60 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.61 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -9368,7 +9427,8 @@ function frame(now){
     if (keys.d) st += 1; if (keys.a) st -= 1;
     if (keys.arrowleft) turn += 1; if (keys.arrowright) turn -= 1;
     cam.ty += turn * 1.8 * dt;
-    if (MP.emoting()){ mv = 0; st = 0; cam.walkTo = null; }                 // an emote plays on the spot
+    if (MP.emoting() || SPEC.on){ mv = 0; st = 0; cam.walkTo = null; cam.homing = false; }      // an emote plays on the spot; a spectator's eye is fixed
+    if (SPEC.on){ cam.x = SPEC.x; cam.z = SPEC.z; }
     if (mv || st){
       var sp = (crouch.on ? 1.0 : running ? 3.3 : 2.1) * dt, fy = cam.yaw;
       cam.x += (-Math.sin(fy) * mv + Math.cos(fy) * st) * sp;
@@ -9387,7 +9447,7 @@ function frame(now){
       cam.ty += dyaw * hk; cam.tp = lerp(cam.tp, HOME.pitch, hk);
       if (Math.abs(cam.x - HOME.x) + Math.abs(cam.z - HOME.z) + Math.abs(dyaw) < 0.01) cam.homing = false;
     }
-    collide();
+    if (!SPEC.on) collide();
     var ck = locked ? 1 : 1 - Math.exp(-dt * 12);
     cam.yaw = lerp(cam.yaw, cam.ty, ck); cam.pitch = lerp(cam.pitch, cam.tp, ck);
   }
@@ -9404,6 +9464,7 @@ function frame(now){
     ex = lerp(ex, eyeV.x, tk); ey = lerp(ey, eyeV.y, tk); ez = lerp(ez, eyeV.z, tk);
     lx2 = lerp(lx2, lookV.x, tk); ly2 = lerp(ly2, lookV.y, tk); lz2 = lerp(lz2, lookV.z, tk);
   }
+  if (SPEC.on){ var sy = SPEC.y - ey; ey += sy; ly2 += sy; }      // a spectator camera: same look, fixed height
   var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
   var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back
   if (k3 > 0){

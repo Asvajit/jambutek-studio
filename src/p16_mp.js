@@ -116,13 +116,14 @@ var MP = (function(){
   }
   function removePeer(id){ var P = Q.peers[id]; if (!P) return; Object.keys(P.held).forEach(function(k){ var a = k.split(':'); try { NOTE[a[0]][1](+a[1]); } catch (e) {} }); scene.remove(P.g); delete Q.peers[id]; paintHud(); }
   function paintHud(){
-    var n = Object.keys(Q.peers).length + 1; document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max;
-    var list = '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + ' (you)</li>';
+    var n = Object.keys(Q.peers).length + (Q.spec ? 0 : 1), w = Q.watch | 0; document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max + (w ? ' · ' + w + ' watching' : '');
+    var list = Q.spec ? '<li><i style="background:#888"></i>you are watching</li>' : '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + ' (you)</li>';
     Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; list += '<li><i style="background:' + esc(P.color) + '"></i>' + esc(P.name) + '</li>'; });
     document.getElementById('mpList').innerHTML = list;
   }
   function line(html, sys){ var d = document.createElement('div'); d.innerHTML = html; if (sys) d.className = 'sys'; log.appendChild(d); while (log.children.length > 8) log.removeChild(log.firstChild); setTimeout(function(){ d.classList.add('old'); }, 9000); }
-  function send(o){ if (Q.ws && Q.ws.readyState === 1){ try { Q.ws.send(JSON.stringify(o)); } catch (e) {} return true; } return false; }
+  function send(o){ if (Q.spec && o.t !== 'ping') return false;      /* a spectator never changes the room */
+    if (Q.ws && Q.ws.readyState === 1){ try { Q.ws.send(JSON.stringify(o)); } catch (e) {} return true; } return false; }
   function serverNow(){ return Date.now() + Q.off; }
 
   // ---- machine state: sent a moment after it changes, applied when it arrives ----
@@ -228,7 +229,7 @@ var MP = (function(){
   }
   document.addEventListener('keydown', function(e){
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
-    var i = '123456'.indexOf(e.key); if (i >= 0) emoteSet(i + 1);
+    var i = '123456'.indexOf(e.key); if (i >= 0 && !SPEC.on) emoteSet(i + 1);
   }, true);
   document.addEventListener('keyup', function(e){ var i = '123456'.indexOf(e.key); if (i >= 0 && EM.id === i + 1) emoteSet(0); }, true);
   window.addEventListener('blur', function(){ emoteSet(0); });
@@ -295,11 +296,20 @@ var MP = (function(){
   // ---- connection ----
   function connect(){
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : ''));
+    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + (Q.spec ? '?spec=1' : '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : '')));
     Q.ws = ws; Q.closedByUs = false;
     ws.onmessage = function(ev){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
-      if (m.t === 'welcome'){
+      if (m.t === 'welcome' && Q.spec){                      // watching: take the room as it is, own nothing in it
+        Q.id = null; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; Q.watch = m.watching | 0; if (typeof m.now === 'number') Q.off = m.now - Date.now();
+        Object.keys(Q.peers).forEach(removePeer); Q.dbg = false;
+        m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
+        MPON = true; MPHOST = false; hud.hidden = false; chat.hidden = false; chat.classList.add('watch'); paintHud();
+        try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
+        var w0 = m.world || {}; Object.keys(w0).filter(function(k){ return k !== 'transport'; }).sort().forEach(function(k){ applySet(k, w0[k]); }); if (M.playing && !(w0.transport && w0.transport.on)) stopSeq(true); if (w0.transport) transport(w0.transport);
+        specOn(true); toast(m.players.length ? 'Watching room ' + Q.code : 'Room ' + Q.code + ' is empty for now'); line('Watching room <b>' + esc(Q.code) + '</b> · click once for sound', true);
+      } else if (m.t === 'welcome'){
+        Q.watch = m.watching | 0; Q.dbg = false;
         var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
         if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 1.1 : 0.5; }
         Object.keys(Q.peers).forEach(removePeer);
@@ -310,7 +320,8 @@ var MP = (function(){
         else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); ks.forEach(function(k){ applySet(k, w[k]); }); if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
         toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
         line('You joined room <b>' + esc(Q.code) + '</b>', true);
-      } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; showLobby('Room ' + Q.code + ' is full (' + Q.max + ' players).'); }
+      } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; var wasSpec = Q.spec; Q.spec = false; showLobby(wasSpec ? 'Room ' + Q.code + ' has no room left for spectators.' : 'Room ' + Q.code + ' is full (' + Q.max + ' players).'); }
+      else if (m.t === 'watch'){ Q.watch = m.n | 0; paintHud(); }
       else if (m.t === 'join'){ if (!Q.peers[m.id]) Q.peers[m.id] = avatar(m.color, m.name, m.skin); paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + '</b> joined', true); toast(m.name + ' joined'); }
       else if (m.t === 'leave'){ var P = Q.peers[m.id]; if (P) line('<b style="color:' + esc(P.color) + '">' + esc(P.name) + '</b> left', true); removePeer(m.id); }
       else if (m.t === 's'){ var R = Q.peers[m.id]; if (R){ if (!R.s){ R.x = m.s[0]; R.z = m.s[1]; } R.s = m.s; } }
@@ -326,8 +337,8 @@ var MP = (function(){
       line('Connection lost · reconnecting…', true); setTimeout(function(){ if (Q.on && !Q.ws) connect(); }, 800 * Q.retry);
     };
   }
-  function start(code){
-    var nm = nameIn.value.trim().slice(0, 16);
+  function start(code, spec){
+    var nm = nameIn.value.trim().slice(0, 16); Q.spec = !!spec; if (spec && !nm) nm = 'Spectator';
     if (!nm){ err.textContent = 'Type a name first.'; nameIn.focus(); return; }
     code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (code.length < 4){ err.textContent = 'Room codes are 4 letters or numbers.'; codeIn.focus(); return; }
@@ -338,6 +349,7 @@ var MP = (function(){
   function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); }
   document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
+  document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
   codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') start(codeIn.value); });
   nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? start(codeIn.value) : start(newCode())); });
   document.getElementById('mpSolo').addEventListener('click', function(){ Q.on = false; hideLobby(); });
@@ -357,7 +369,7 @@ var MP = (function(){
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }
-    if (Q.ws && !Q.chatOpen && (e.key === 't' || e.key === 'T') && mode === 'walk' && !e.repeat){ e.preventDefault(); e.stopPropagation(); openChat(); }
+    if (Q.ws && !Q.spec && !Q.chatOpen && (e.key === 't' || e.key === 'T') && mode === 'walk' && !e.repeat){ e.preventDefault(); e.stopPropagation(); openChat(); }
   }, true);
   // ---- every frame: send where we are and which knobs moved; move everyone else smoothly ----
   Q.tick = function(now, dt){
@@ -398,6 +410,40 @@ var MP = (function(){
       showLobby('');
     }).catch(function(){});
   };
+  /* ---- spectating: five fixed cameras, keys 1 to 5. One in each ceiling corner where the stage lights hang, and one in the middle of
+     the rig just above the sequencers that can look all the way round. The mouse still turns the view. ---- */
+  var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 1.78, RIG.z]];
+    return L.map(function(c, k){ var dx = RIG.x - c[1], dz = RIG.z - c[3], dy = 1.0 - c[2]; return { name:c[0], x:c[1], y:c[2], z:c[3], yaw:k === 4 ? 0 : Math.atan2(-dx, -dz), pitch:k === 4 ? -0.08 : Math.atan2(dy, Math.hypot(dx, dz)) }; }); })();
+  var specEl = null;
+  function specCam(i, quiet){ var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); if (specEl) specEl.querySelector('b').textContent = 'CAMERA ' + (i + 1); }
+  function specOn(on){
+    if (on === SPEC.on) return; if (on && mode === 'tr'){ try { leaveTR(); } catch (e) {} }
+    emoteSet(0); SPEC.on = on; document.body.classList.toggle('spec', on);
+    if (!specEl){ specEl = document.createElement('div'); specEl.id = 'specHud'; specEl.innerHTML = '<b>CAMERA 1</b> &middot; spectating &middot; keys <b>1</b>&ndash;<b>5</b> change camera &middot; mouse looks round'; document.body.appendChild(specEl); }
+    specEl.hidden = !on;
+    if (on) specCam(SPEC.i || 0, true); else { cam.x = HOME.x; cam.z = HOME.z; cam.yaw = cam.ty = HOME.yaw; cam.pitch = cam.tp = HOME.pitch; }
+  }
+  document.addEventListener('keydown', function(e){          // while watching, the keyboard only changes camera
+    if (!SPEC.on || Q.lobbyOpen || e.key === 'F2' || e.key === 'Escape' || e.ctrlKey || e.metaKey || e.altKey) return;
+    var i = '12345'.indexOf(e.key); if (i >= 0 && !e.repeat) specCam(i); e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
+  }, true);
+
+  /* ---- F2: a small debug menu ---- */
+  var dbgEl = null, DBGDEV = ['tr', 'mx', 'mf', 'bs', 'sh', 'sc'], DBGCOL = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
+  function dbgPlayers(on){
+    Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on) return;
+    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1, 0]; P.x = x; P.z = z; P.yaw = yaw; });
+    if (Q.ws) paintHud();
+  }
+  function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–5)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
+  function dbgMenu(){
+    if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgS"></button><p>Test players are only on this screen. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
+      dbgEl.querySelector('#dbgP').addEventListener('click', function(){ dbgPlayers(!Q.dbg); dbgPaint(); });
+      dbgEl.querySelector('#dbgS').addEventListener('click', function(){ if (!Q.spec) specOn(!SPEC.on); dbgPaint(); }); }
+    dbgEl.hidden = !dbgEl.hidden; if (!dbgEl.hidden){ dbgPaint(); releaseLock(); }
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'F2'){ e.preventDefault(); e.stopPropagation(); if (!Q.lobbyOpen) dbgMenu(); } else if (e.key === 'Escape' && dbgEl && !dbgEl.hidden) dbgEl.hidden = true; }, true);
+  Q.debug = { players:dbgPlayers, spec:specOn, cam:specCam, cams:SPECCAMS };
   Q.serverNow = serverNow;
   return Q;
 })();

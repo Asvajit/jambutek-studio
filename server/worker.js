@@ -3,6 +3,7 @@
    every knob they turn, keeps the latest state of each machine for people who arrive later,
    and wipes itself when everyone leaves. */
 const MAX_PLAYERS = 6;
+const MAX_WATCHERS = 24;        // spectators: they see and hear the room, are not in it, and do not count towards the six
 const SKINS = 6;                 // one of each look per room
 const COLORS = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
 
@@ -16,25 +17,40 @@ export class Room {
       for (const [k, v] of all) this.world[k.slice(2)] = v;
     });
   }
-  players(except) {
+  everyone(except) {                                 // every open connection: players and spectators
     return this.ctx.getWebSockets().map((ws) => {
       try { return { ws, a: ws.deserializeAttachment() }; } catch (e) { return null; }
     }).filter((p) => p && p.a && !p.a.gone && p.ws !== except);
   }
+  players(except) { return this.everyone(except).filter((p) => !p.a.spec); }
+  watchers(except) { return this.everyone(except).filter((p) => p.a.spec); }
   broadcast(msg, except) {
     const s = JSON.stringify(msg);
-    for (const p of this.players(except)) { try { p.ws.send(s); } catch (e) {} }
+    for (const p of this.everyone(except)) { try { p.ws.send(s); } catch (e) {} }
   }
   async fetch(req) {
     if (new URL(req.url).pathname.startsWith('/room/')) {    // which looks are already being worn here
       const ps = this.players();
-      return Response.json({ n: ps.length, taken: ps.map((p) => p.a.skin || 0) }, { headers: { 'Cache-Control': 'no-store' } });
+      return Response.json({ n: ps.length, taken: ps.map((p) => p.a.skin || 0), watching: this.watchers().length }, { headers: { 'Cache-Control': 'no-store' } });
     }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 });
     const url = new URL(req.url);
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     const others = this.players();
+    if (url.searchParams.get('spec') === '1') {              // a spectator: gets everything the players send, sends nothing, takes no seat
+      const w = this.watchers();
+      if (w.length >= MAX_WATCHERS) { server.accept(); server.send(JSON.stringify({ t: 'full', spec: 1 })); server.close(4001, 'Room full'); return new Response(null, { status: 101, webSocket: client }); }
+      this.ctx.acceptWebSocket(server);
+      server.serializeAttachment({ id: crypto.randomUUID().slice(0, 8), spec: 1 });
+      server.send(JSON.stringify({
+        t: 'welcome', spec: 1, max: MAX_PLAYERS, now: Date.now(), watching: w.length + 1,
+        players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s })),
+        world: this.world,
+      }));
+      this.broadcast({ t: 'watch', n: w.length + 1 }, server);
+      return new Response(null, { status: 101, webSocket: client });
+    }
     if (others.length >= MAX_PLAYERS) {
       server.accept();
       server.send(JSON.stringify({ t: 'full' }));
@@ -52,7 +68,7 @@ export class Room {
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ id, name, color, skin, s: null });
     server.send(JSON.stringify({
-      t: 'welcome', id, color, skin, max: MAX_PLAYERS, now: Date.now(),
+      t: 'welcome', id, color, skin, max: MAX_PLAYERS, now: Date.now(), watching: this.watchers().length,
       players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s })),
       world: this.world,
     }));
@@ -75,6 +91,7 @@ export class Room {
     if (typeof raw !== 'string' || raw.length > 200000) return;
     let m; try { m = JSON.parse(raw); } catch (e) { return; }
     const a = ws.deserializeAttachment(); if (!a || a.gone) return;
+    if (a.spec && m.t !== 'ping') return;                // spectators only keep time with the room
     switch (m.t) {
       case 's':                                   // where a player is and where they're looking
         if (!Array.isArray(m.s)) return;
@@ -107,6 +124,7 @@ export class Room {
     let a; try { a = ws.deserializeAttachment(); } catch (e) {}
     if (!a || a.gone) return;
     a.gone = true; try { ws.serializeAttachment(a); } catch (e) {}
+    if (a.spec) { this.broadcast({ t: 'watch', n: this.watchers(ws).length }, ws); return; }
     this.broadcast({ t: 'leave', id: a.id, name: a.name }, ws);
     if (!this.players(ws).length) { this.world = {}; await this.ctx.storage.deleteAll(); }   // last one out: the room resets
   }

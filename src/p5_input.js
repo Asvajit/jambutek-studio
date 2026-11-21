@@ -123,9 +123,9 @@ function iaOf(hit){ return hit ? hit.object.userData.ia : null; }
 function ndcOf(e){ var r = canvas.getBoundingClientRect(); return new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
 function centred(){ return locked; }                                             // is the crosshair doing the pointing?
 function curAim(){ return centred() ? aim() : (pointer.in ? aim(new THREE.Vector2(pointer.x, pointer.y)) : null); }
-function ctlOf(hit){ return hit && iaOf(hit) === 'ctl' && (mode === 'tr' || hit.distance <= (hit.object.userData.ctl.dev === 'wall' ? REACH + 0.6 : CTL_REACH)) ? hit.object.userData.ctl : null; }
+function ctlOf(hit){ return !SPEC.on && hit && iaOf(hit) === 'ctl' && (mode === 'tr' || hit.distance <= (hit.object.userData.ctl.dev === 'wall' ? REACH + 0.6 : CTL_REACH)) ? hit.object.userData.ctl : null; }
 function labelFor(hit){
-  var ia = iaOf(hit); if (!ia) return null;
+  var ia = iaOf(hit); if (!ia || SPEC.on) return null;
   if (ia === 'ctl' || ia === 'trbody'){
     var c = ia === 'ctl' ? ctlOf(hit) : null; if (c) return labelOf(c);
     if (hit.distance > REACH) return 'Get closer'; if (mode === 'tr') return null;
@@ -189,12 +189,12 @@ var look = null;
 canvas.addEventListener('mousedown', function(e){ if (e.button === 1) e.preventDefault(); });      // the middle button pings; it must not start the browser's scroll
 canvas.addEventListener('pointerdown', function(e){
   unlock(); dimHint();
-  if (e.button === 1){ e.preventDefault(); MP.ping(); return; }
+  if (e.button === 1){ e.preventDefault(); if (!SPEC.on) MP.ping(); return; }
   var isMouse = e.pointerType === 'mouse'; pointer.mouse = isMouse;
   var h = centred() ? aim() : aim(ndcOf(e)), c = e.button === 0 ? ctlOf(h) : null;
   if (c && (isMouse || mode === 'tr')){ startCtl(c, e, h); return; }
   if (mode === 'tr') return;
-  if (locked){ act(h, false); return; }
+  if (locked){ if (!SPEC.on) act(h, false); return; }
   if (isMouse && lockApi && (!lockFailed || everLocked)){ requestLock(); return; }      // like the arcade: click takes the mouse, Esc gives it back
   if (isMouse && lockFailed && e.detail >= 2) requestLock();
   try { canvas.setPointerCapture(e.pointerId); } catch (x) {}
@@ -304,7 +304,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.60 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.61 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -314,7 +314,8 @@ function frame(now){
     if (keys.d) st += 1; if (keys.a) st -= 1;
     if (keys.arrowleft) turn += 1; if (keys.arrowright) turn -= 1;
     cam.ty += turn * 1.8 * dt;
-    if (MP.emoting()){ mv = 0; st = 0; cam.walkTo = null; }                 // an emote plays on the spot
+    if (MP.emoting() || SPEC.on){ mv = 0; st = 0; cam.walkTo = null; cam.homing = false; }      // an emote plays on the spot; a spectator's eye is fixed
+    if (SPEC.on){ cam.x = SPEC.x; cam.z = SPEC.z; }
     if (mv || st){
       var sp = (crouch.on ? 1.0 : running ? 3.3 : 2.1) * dt, fy = cam.yaw;
       cam.x += (-Math.sin(fy) * mv + Math.cos(fy) * st) * sp;
@@ -333,7 +334,7 @@ function frame(now){
       cam.ty += dyaw * hk; cam.tp = lerp(cam.tp, HOME.pitch, hk);
       if (Math.abs(cam.x - HOME.x) + Math.abs(cam.z - HOME.z) + Math.abs(dyaw) < 0.01) cam.homing = false;
     }
-    collide();
+    if (!SPEC.on) collide();
     var ck = locked ? 1 : 1 - Math.exp(-dt * 12);
     cam.yaw = lerp(cam.yaw, cam.ty, ck); cam.pitch = lerp(cam.pitch, cam.tp, ck);
   }
@@ -350,6 +351,7 @@ function frame(now){
     ex = lerp(ex, eyeV.x, tk); ey = lerp(ey, eyeV.y, tk); ez = lerp(ez, eyeV.z, tk);
     lx2 = lerp(lx2, lookV.x, tk); ly2 = lerp(ly2, lookV.y, tk); lz2 = lerp(lz2, lookV.z, tk);
   }
+  if (SPEC.on){ var sy = SPEC.y - ey; ey += sy; ly2 += sy; }      // a spectator camera: same look, fixed height
   var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
   var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back
   if (k3 > 0){

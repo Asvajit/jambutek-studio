@@ -95,6 +95,18 @@ body{
 #mpLobby .row input{ flex:1; margin:0 }
 #mpLobby button{ font:inherit; font-size:12px; letter-spacing:.1em; text-transform:uppercase; border:0; border-radius:6px; padding:11px 14px; cursor:pointer; color:#0B0D12; background:#90F0A8 }
 #mpLobby button.alt{ background:#30A8F0 }
+#mpLobby button.alt.watch{ background:#8A3FD0; color:#fff }
+body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ display:none !important }
+#specHud{ position:fixed; z-index:5; left:50%; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--bone); background:rgba(8,10,14,.72); border:1px solid rgba(216,216,216,.18); border-radius:8px; padding:8px 12px; pointer-events:none; white-space:nowrap }
+#specHud[hidden]{ display:none }
+#specHud b{ color:#C08AFF; font-weight:600 }
+#dbgMenu{ position:fixed; z-index:30; left:16px; top:50%; transform:translateY(-50%); width:300px; background:rgba(8,10,14,.94); border:1px solid rgba(255,225,90,.5); border-radius:10px; padding:14px; font-size:12px; color:var(--bone) }
+#dbgMenu[hidden]{ display:none }
+#dbgMenu h3{ margin:0 0 10px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#FFE15A; font-weight:600 }
+#dbgMenu button{ display:block; width:100%; text-align:left; font:inherit; color:#fff; background:rgba(255,255,255,.06); border:1px solid rgba(216,216,216,.22); border-radius:6px; padding:9px 10px; margin-bottom:8px; cursor:pointer }
+#dbgMenu button:hover{ border-color:#FFE15A }
+#dbgMenu button:disabled{ opacity:.4; cursor:default }
+#dbgMenu p{ margin:4px 0 0; color:rgba(216,216,216,.6); font-size:11px; line-height:1.5 }
 #mpLobby button.ghost{ background:none; color:rgba(216,216,216,.7); border:1px solid rgba(216,216,216,.25); width:100%; margin-top:14px }
 #mpLobby .or{ text-align:center; font-size:10px; letter-spacing:.2em; color:rgba(216,216,216,.4); margin:14px 0 }
 #mpLobby .err{ color:#FF6F88; font-size:12px; min-height:16px; margin-top:10px }
@@ -132,7 +144,7 @@ body{
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.60</span>
+    <span id="verFps">studio v1.61</span>
   </div>
 </div>
 
@@ -141,14 +153,14 @@ body{
 <div id="mpLobby" hidden>
   <div class="card">
     <h2>Jambutek Studio &middot; online</h2>
-    <p>Make a room and send the code to up to 5 friends, or type a friend's code to join them. The first one in brings their patterns; the room resets when everyone leaves.</p>
+    <p>Make a room and send the code to up to 5 friends, or type a friend's code to join them, or to <b>Spectate</b>: watch and listen from five cameras without taking a seat. The first one in brings their patterns; the room resets when everyone leaves.</p>
     <label for="mpName">Your name</label>
     <input id="mpName" maxlength="16" autocomplete="nickname" placeholder="e.g. Roo">
     <label>Pick your look</label>
     <div id="mpSkins"></div>
     <button type="button" id="mpCreate">Make a new room</button>
     <div class="or">or join a friend</div>
-    <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="CODE" autocomplete="off"><button type="button" class="alt" id="mpJoin">Join</button></div>
+    <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="CODE" autocomplete="off"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from five cameras without being in it">Spectate</button></div>
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
