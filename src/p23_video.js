@@ -12,10 +12,10 @@ function bzx(u){ return (u - BZW / 2) * SC; }
 function bzz(u){ return (u - BZD / 2) * SC; }
 var BZY = new THREE.Group(); BZY.position.set(PGPOS.x, PFH, PGPOS.z); BZY.rotation.y = PGPOS.r; scene.add(BZY);
 var BZG = new THREE.Group(); BZG.rotation.x = PFTILT; BZY.add(BZG);
-var BZ = { p:{ a:0.5, b:0.5, c:0.5, d:0.5, mode:0, frz:0 }, t:0, ph:0, an:null, bins:null, dirty:true, band:[0, 0, 0, 0, 0, 0, 0], rms:0, cent:0.4 };
+var BZ = { p:{ a:0.5, b:0.5, c:0.5, d:0.5, h:0.42, mode:0, frz:0 }, t:0, ph:0, an:null, bins:null, dirty:true, band:[0, 0, 0, 0, 0, 0, 0], rms:0, cent:0.4 };
 var BZMODES = ['RETICLE', 'STRAND', 'CASCADE', 'CYMATICS', 'MORPH', 'PANORAMA', 'SYMBIOSIS', 'TIDE', 'TESLA', 'FLUX'], BZKN = [['A', 'a'], ['B', 'b'], ['C', 'c'], ['SPEED', 'd']],
     BZPN = [['count', 'size', 'glide'], ['strands', 'twist', 'box size'], ['speed', 'spread', 'curl'], ['figure', 'pull', 'spin'], ['spring', 'turbulence', 'scatter'], ['spread', 'scatter', 'hue'], ['species', 'force', 'friction'], ['flow', 'eddies', 'hue'], ['field', 'charge mix', 'tightness'], ['flow', 'colour', 'density']];
-function bzRestore(){ try { var s = JSON.parse(store('jambutek-studio-bz-v1') || 'null'); if (s && s.v === 1 && s.p){ ['a', 'b', 'c', 'd'].forEach(function(k){ if (typeof s.p[k] === 'number') BZ.p[k] = clamp(s.p[k], 0, 1); }); BZ.p.mode = clamp(s.p.mode | 0, 0, 9); BZ.p.frz = s.p.frz ? 1 : 0; } } catch (e) {} BZ.dirty = true; } bzRestore();
+function bzRestore(){ try { var s = JSON.parse(store('jambutek-studio-bz-v1') || 'null'); if (s && s.v === 1 && s.p){ ['a', 'b', 'c', 'd', 'h'].forEach(function(k){ if (typeof s.p[k] === 'number') BZ.p[k] = clamp(s.p[k], 0, 1); }); BZ.p.mode = clamp(s.p.mode | 0, 0, 9); BZ.p.frz = s.p.frz ? 1 : 0; } } catch (e) {} BZ.dirty = true; } bzRestore();
 var bzSaveT = null; function bzSaveNow(){ store('jambutek-studio-bz-v1', JSON.stringify({ v:1, p:BZ.p })); } function bzSaveSoon(){ clearTimeout(bzSaveT); bzSaveT = setTimeout(bzSaveNow, saveMs(800)); }
 
 
@@ -121,7 +121,11 @@ function fxStep(dt, F){                                     // F: what the music
       if (x > 1) x -= 2; else if (x < -1) x += 2; if (y > 1) y -= 2; else if (y < -1) y += 2; px[i] = x; py[i] = y; fxPal(Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i]) * 1.5 + B + t * 0.02, F.cent, 0, c); fxDot(x, y, c[0] * 0.05, c[1] * 0.05, c[2] * 0.05); }
   }
 }
-function fxShow(){ var d = FX.img.data, b = FX.buf, sr = 0, sg = 0, sb = 0; for (var i = 0, o = 0; i < b.length; i += 3, o += 4){ var r = 1 - Math.exp(-b[i] * 1.8), g = 1 - Math.exp(-b[i + 1] * 1.8), bl = 1 - Math.exp(-b[i + 2] * 1.8); d[o] = r * 255; d[o + 1] = g * 255; d[o + 2] = bl * 255; sr += r; sg += g; sb += bl; }
+/* The picture is one colour: every effect is read as brightness only and tinted with the HUE knob, with the very brightest parts
+   leaning towards white. (The effects still work in three colours inside; a few of their own colour pots now only shift brightness.) */
+function fxHue(h){ var k = function(n){ var q = (n + h * 12) % 12; return 0.5 - 0.5 * Math.max(-1, Math.min(q - 3, 9 - q, 1)); }; return [k(0), k(8), k(4)]; }
+function fxShow(){ var d = FX.img.data, b = FX.buf, sr = 0, sg = 0, sb = 0, T = fxHue(BZ.p.h), tr = T[0], tg = T[1], tb = T[2];
+  for (var i = 0, o = 0; i < b.length; i += 3, o += 4){ var m = b[i] > b[i + 1] ? b[i] : b[i + 1]; if (b[i + 2] > m) m = b[i + 2]; var L = 1 - Math.exp(-m * 1.8), w = L * L * L * L * 0.4, r = L * (tr + (1 - tr) * w), g = L * (tg + (1 - tg) * w), bl = L * (tb + (1 - tb) * w); d[o] = r * 255; d[o + 1] = g * 255; d[o + 2] = bl * 255; sr += r; sg += g; sb += bl; }
   FX.ctx.putImageData(FX.img, 0, 0); FX.tex.needsUpdate = true; var n = 16384; FX.avg = [sr / n, sg / n, sb / n]; }
 
 /* the unit: four pots, its own screen, four effect buttons and a freeze button */
@@ -134,6 +138,7 @@ function paintBZ(){
   function T(s, x, y, size, col, al){ g.font = 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#C8D2CC'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
   g.strokeStyle = GR; g.lineWidth = 0.6; g.strokeRect(4, 4, BZW - 8, BZD - 8);
   [[40, 44, 'A'], [100, 44, 'B'], [40, 104, 'C'], [100, 104, 'SPEED']].forEach(function(a){ g.strokeStyle = 'rgba(107,255,168,.5)'; g.lineWidth = 0.5; g.beginPath(); g.arc(a[0], a[1], 12.5, 0, 7); g.stroke(); T(a[2], a[0], a[1] + 20, 4.2, GR); });
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 0.5; g.beginPath(); g.arc(70, 74, 11, 0, 7); g.stroke(); T('HUE', 70, 91, 3.6, '#FFFFFF');
   g.fillStyle = '#000'; g.fillRect(148, 12, 140, 76); g.strokeStyle = GR; g.lineWidth = 0.7; g.strokeRect(148, 12, 140, 76); T('PREVIEW', 218, 8, 2.8, GR);
   BZMODES.forEach(function(s, k){ T(s, 160 + (k % 5) * 29, 115 + Math.floor(k / 5) * 24, 2.4); });
   T('FREEZE', 218, 176, 3.4);
@@ -151,6 +156,7 @@ paintBZ(); bzTex = smoothTex(bzC);
 })();
 HOST = BZG; LX = bzx; LZ = bzz; DEV = 'bz';
 [[40, 44], [100, 44], [40, 104], [100, 104]].forEach(function(a, i){ knob('bzk' + i, a[0], a[1], 8.4, 'Pot ' + BZKN[i][0], BZ.p[BZKN[i][1]], { h:13, sides:16, color:0x1A1C20, tick:0x6BFFA8 }).pk = BZKN[i][1]; });
+knob('bzkh', 70, 74, 7.2, 'Hue', BZ.p.h, { h:13, sides:16, color:0x1A1C20, tick:0xFFFFFF }).pk = 'h';
 FACE = { bg:'#2A2D33', fg:'#DDE6E0' };
 BZMODES.forEach(function(nm, i){ button('bzm' + i, 160 + (i % 5) * 29, 103.5 + Math.floor(i / 5) * 24, 23, 15, String((i + 1) % 10), nm.charAt(0) + nm.slice(1).toLowerCase(), 0x6BFFA8).bm = i; });
 button('bzfrz', 218, 160, 34, 20, '', 'Freeze the picture', 0xFFFFFF).frz = true;
@@ -165,6 +171,7 @@ function bzLabel(c){
   if (c.vs != null) return c.name + ' · click';
   if (c.bm != null) return c.name + (BZ.p.mode === c.bm ? ' · showing' : '') + ' · click';
   if (c.frz) return 'Freeze ' + (BZ.p.frz ? 'on' : 'off') + ' · click';
+  if (c.pk === 'h') return 'Hue ' + Math.round(c.v * 360) + '° · scroll or drag';
   var i = ['a', 'b', 'c'].indexOf(c.pk); return (i >= 0 ? BZMODES[BZ.p.mode].charAt(0) + BZMODES[BZ.p.mode].slice(1).toLowerCase() + ' ' + BZPN[BZ.p.mode][i] : 'Speed') + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
 }
 function bzPress(c){
