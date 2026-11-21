@@ -29,7 +29,7 @@ function paintSN(){
   function box(x0, y0, x1, y1){ g.fillStyle = '#22252B'; g.fillRect(x0, y0, x1 - x0, y1 - y0); }
   box(4, 14, 78, 186); box(82, 14, 154, 186); box(158, 14, 296, 186);
   T('SNAKE', 5, 7, 7.5, '#90F0A8', true, 'left'); T('after MDD SnAkE by Maxime Dangles', 296, 7.5, 4, '#9A9CA0', false, 'right');
-  T('FUNDAMENTAL', 22, 131, 3.6); T('SCALE', 59, 131, 3.6); T('OUT', 12, 172, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT', 'SCR'].forEach(function(s, k){ T(s, 24.5 + k * 5.33, 181.5, 2.1, '#B8B8B4'); });
+  T('FUNDAMENTAL', 22, 114, 3.6); T('SCALE', 59, 114, 3.6); T('OUT', 12, 177, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT', 'SCR'].forEach(function(s, k){ T(s, 24.5 + k * 5.33, 185.5, 2.1, '#B8B8B4'); });
   T('STEPS', 100, 113, 3.6); T('SHIFT', 136, 113, 3.6); T('SWING', 100, 149, 3.6); T('SNAKE SHAPE', 136, 149, 3.6);
   SNGY.forEach(function(y, r){ SNGX.forEach(function(x, c){ g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.4; g.beginPath(); g.arc(x, y - 5, 9.4, Math.PI * 0.75, Math.PI * 0.25); g.stroke(); T(String(r * 4 + c + 1), x - 13.2, y + 12, 3.2, '#7C7E84'); }); });
   g.setTransform(1, 0, 0, 1, 0, 0); if (snTex) snTex.needsUpdate = true;
@@ -67,10 +67,10 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
   var d = new THREE.Mesh(new THREE.PlaneGeometry(68 * SC, 28 * SC), new THREE.MeshBasicMaterial({ map:snDispT })); d.rotation.x = -Math.PI / 2; d.position.set(sx(118), 0.002, sz(31)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; SNG.add(d); solids.push(d);
 })();
 HOST = SNG; LX = sx; LZ = sz; DEV = DK; FACE = { bg:'#30343B', fg:'#F0F0EC' };
-SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 26 + [0, 0, 1, 2, 3][i] * 21, 66, 15, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
-knob((PX + 'root'), 22, 116, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 116, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
-button((PX + 'resetall'), 22, 150, 30, 12, 'RESET\nALL', 'Reset all lanes', 0xFFFFFF); button((PX + 'randall'), 59, 150, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
-slide((PX + 'out'), 48.5, 172, 10, false, 'Out', 0.096);
+SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 24 + [0, 0, 1, 2, 3][i] * 17.5, 66, 14, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
+knob((PX + 'root'), 22, 99, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 99, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
+button((PX + 'resetall'), 22, 126, 30, 12, 'RESET\nALL', 'Reset all lanes', 0xFFFFFF); button((PX + 'randall'), 59, 126, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
+slide((PX + 'out'), 48.5, 177, 10, false, 'Out', 0.096);
 button((PX + 'dir'), 118, 58, 64, 13, 'DIRECTION', 'Direction', 0xFFFFFF); button((PX + 'speed'), 118, 76, 64, 13, 'SPEED', 'Speed', 0xFFFFFF);
 knob((PX + 'steps'), 100, 98, 6.5, 'Steps', 1, { h:8 }).detents = 15; knob((PX + 'shift'), 136, 98, 6.5, 'Shift', 0, { h:8 }).detents = 15;
 knob((PX + 'swing'), 100, 134, 6.5, 'Swing', 0, { h:8 }); knob((PX + 'shape'), 136, 134, 7, 'Snake shape', 0, { h:8, endless:true, sides:14 });
