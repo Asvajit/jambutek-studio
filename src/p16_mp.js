@@ -374,12 +374,12 @@ var MP = (function(){
   function uiPlay(buf, vol){ var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = buf; g.gain.value = vol; n.connect(g); g.connect(uiAC.destination); n.start(); }
   function uiPress(){ Q.uiLastSound = 'press';
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiClick) uiPlay(uiClick, 0.42);
+    if (uiClick) uiPlay(uiClick, 0.48);
   }
-  function uiErr(){ Q.uiLastSound = 'err'; uiBlip(196, 150, 0.11, 0.07, 'square'); setTimeout(function(){ uiBlip(147, 104, 0.2, 0.07, 'square'); }, 120); }      // a small two-note "nope"
+  function uiErr(){ Q.uiLastSound = 'err'; uiBlip(196, 150, 0.11, 0.08, 'square'); setTimeout(function(){ uiBlip(147, 104, 0.2, 0.08, 'square'); }, 120); }      // a small two-note "nope"
   function uiOver(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiHover) uiPlay(uiHover, 0.42);
+    if (uiHover) uiPlay(uiHover, 0.48);
   }
   function uiBlip(f0, f1, dur, vol, type){
     if (!uiAC || muted || uiAC.state !== 'running') return;
