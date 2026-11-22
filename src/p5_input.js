@@ -269,6 +269,9 @@ document.addEventListener('keydown', function(e){
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
     if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat){ if (hasSeq(LEAN)) swapLean(); else if (k === 'q'){ LOOKUP.on = true; LOOKUP.yaw = 0; LOOKUP.pitch = 0; } } return; }
     if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi); } return; }      // 1-10 mute, with Shift solo
+    if (LEAN.key && LEAN.key.indexOf('sn') === 0){                     // a Snake: 1-8 switch gates 1-8, with Shift gates 9-16
+      var gi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8'].indexOf(e.code); if (gi < 0 && !e.shiftKey) gi = '12345678'.indexOf(e.key);
+      if (gi >= 0 && !e.repeat){ var gc = CT[LEAN.key + '_g' + (gi + (e.shiftKey ? 8 : 0))]; if (gc){ press(gc); release(gc); } } return; }
     if (LEAN === DEVS.tr){                                             // on the drum machine the number keys follow its mode
       if (e.code === 'Backquote' || e.key === '`' || e.key === '\u00AC'){ e.preventDefault(); if (!e.repeat){ M.kbHalf = M.kbHalf ? 0 : 1; say('KEYS 1-8  STEPS ' + (M.kbHalf ? '9-16' : '1-8'), 1600); } return; }
       var ti = '1234567890-'.indexOf(e.key); if (ti < 0 || e.repeat) return;
@@ -310,7 +313,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.64 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.65 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
