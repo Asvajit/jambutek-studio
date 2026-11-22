@@ -353,29 +353,33 @@ var MP = (function(){
   /* ---- menu music: loops while the lobby is up, fades away when you go in. Browsers only let sound start after a click or a key,
      so it begins on the first one if it could not start by itself. It obeys the room's mute. ---- */
   var menuA = null, menuFade = null;
-  function menuTry(){ if (!menuA || !Q.lobbyOpen) return; menuA.muted = muted; var p = menuA.play(); if (p && p.catch) p.catch(function(){}); }
+  function menuTry(){ if (!menuA || !Q.lobbyOpen) return; menuA.muted = muted; if (!menuA.paused) return; var p = menuA.play(); if (p && p.catch) p.catch(function(){}); }
   function menuOn(){
-    if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; document.addEventListener('pointerdown', menuTry); document.addEventListener('keydown', menuTry); }
-    clearInterval(menuFade); menuA.volume = 0.85; menuTry();
+    if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; }
+    clearInterval(menuFade); menuA.volume = 1; menuTry(); uiStart();          // the file itself is levelled to the room's starter jam (about -16 dB average)
   }
   function menuOff(){ if (!menuA) return; clearInterval(menuFade); menuFade = setInterval(function(){ var v = menuA.volume - 0.04; if (v <= 0.02){ clearInterval(menuFade); menuA.pause(); menuA.volume = 0; } else menuA.volume = v; }, 60); }
   Q.menuAudio = function(){ return menuA; };
   /* ---- menu sounds: a tick when the pointer comes onto a button, a two-note blip on a click. They have their own little audio
      context (the room's is not built until you go in), started by the first click or key, and they obey the mute button. ---- */
   var uiAC = null, uiLast = null, uiClick = null, uiHover = null;
+  /* The context and both samples are made ready as soon as the lobby shows (a context may exist before a click, it just stays asleep),
+     and every click, tap or key wakes it, so the very first hover or press already has its real sound. */
   function uiStart(){
-    if (uiAC || !Q.lobbyOpen) return; try { uiAC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ return; }
+    if (uiAC) return; try { uiAC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ return; }
     function get(url, put){ fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(b){ uiAC.decodeAudioData(b, put, function(){}); }).catch(function(){}); }
     get('click.mp3', function(buf){ uiClick = buf; }); get('hover.mp3', function(buf){ uiHover = buf; });      // the press sound (a dub clank) and the hover tick
   }
+  function uiWake(){ if (!Q.lobbyOpen) return; uiStart(); if (uiAC && uiAC.state !== 'running' && uiAC.resume) uiAC.resume().catch(function(){}); menuTry(); }
   function uiPlay(buf, vol){ var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = buf; g.gain.value = vol; n.connect(g); g.connect(uiAC.destination); n.start(); }
-  function uiPress(){
+  function uiPress(){ Q.uiLastSound = 'press';
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiClick) uiPlay(uiClick, 0.42); else uiBlip(520, 780, 0.07, 0.09, 'square');          // not loaded yet: the old blip
+    if (uiClick) uiPlay(uiClick, 0.42);
   }
+  function uiErr(){ Q.uiLastSound = 'err'; uiBlip(196, 150, 0.11, 0.07, 'square'); setTimeout(function(){ uiBlip(147, 104, 0.2, 0.07, 'square'); }, 120); }      // a small two-note "nope"
   function uiOver(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiHover) uiPlay(uiHover, 0.42); else uiBlip(1500, 2100, 0.05, 0.05, 'triangle');
+    if (uiHover) uiPlay(uiHover, 0.42);
   }
   function uiBlip(f0, f1, dur, vol, type){
     if (!uiAC || muted || uiAC.state !== 'running') return;
@@ -385,9 +389,12 @@ var MP = (function(){
     o.connect(g); g.connect(uiAC.destination); o.start(t); o.stop(t + dur + 0.02);
   }
   function uiBtn(e){ var b = e.target && e.target.closest ? e.target.closest('button') : null; return b && !b.classList.contains('taken') && (lobby.contains(b) || cred.contains(b)) ? b : null; }
-  document.addEventListener('pointerdown', uiStart, true); document.addEventListener('keydown', uiStart, true);
+  ['pointerdown', 'pointerup', 'mousedown', 'touchend', 'click', 'keydown'].forEach(function(ev){ document.addEventListener(ev, uiWake, true); });
   document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiOver(); });
-  document.addEventListener('click', function(e){ if (!Q.lobbyOpen || !uiBtn(e)) return; uiPress(); }, true);
+  document.addEventListener('click', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (!b) return;
+    if (b.id === 'mpCreate' || b.id === 'mpJoin' || b.id === 'mpSpec') setTimeout(function(){ if (err.textContent) uiErr(); else uiPress(); }, 0);      // refused (no name, bad code): the error sound instead
+    else uiPress(); }, true);
+  Q.uiLastSound = null;
   Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') + (uiHover ? ' hover ' + uiHover.duration.toFixed(2) + 's' : '') : null; };
   /* the credits sheet, opened from the line under the lobby card */
   var cred = document.getElementById('mpCredits');
@@ -395,7 +402,7 @@ var MP = (function(){
   document.getElementById('mpCredX').addEventListener('click', function(){ cred.hidden = true; });
   cred.addEventListener('click', function(e){ if (e.target === cred) cred.hidden = true; });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !cred.hidden){ cred.hidden = true; e.stopPropagation(); } }, true);
-  function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
+  function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; if (msg) uiErr(); releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
   function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); cred.hidden = true; }
   document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
