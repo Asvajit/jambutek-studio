@@ -163,9 +163,16 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 @font-face{ font-family:'Anton'; src:url(fonts/anton.woff2) format('woff2'); font-display:swap }
 @font-face{ font-family:'Yellowtail'; src:url(fonts/yellowtail.woff2) format('woff2'); font-display:swap }
 /* ---- lobby look 2 (arcade): everything here hangs off the class "v2" on #mpLobby; take the class away and the old look is back ---- */
-#mpLobby.v2{ --metal:#A9B1C4; --metalD:#3A3F4E; --edge:0 0 0 2px #14161D, 0 3px 0 2px #05060A; --disp:'Anton', Impact, 'Arial Narrow', sans-serif;
-  --dots:radial-gradient(rgba(0,0,0,.22) 1px, transparent 1.4px) 0 0/5px 5px }
-#mpLobby.v2 .card{ background:linear-gradient(#12141B, #0B0C11); border:0; padding:16px 18px 18px; border-radius:12px }
+#mpLobby.v2{ --metal:#A9B1C4; --metalD:#3A3F4E; --edge:0 0 0 2px #14161D, 0 3px 0 2px #05060A; --disp:'Anton', Impact, 'Arial Narrow', sans-serif; }
+#mpLobby.v2 .card{ position:relative; background:linear-gradient(#171A24, #0A0B10); border:0; padding:16px 18px 18px; border-radius:4px; filter:url(#psx) }
+/* the PSX pass: the whole card is drawn in 2-pixel blocks with few colour steps (the filter #psx), under a faint checker that turns the
+   smooth gradients into dither, and scanlines */
+#mpLobby.v2 .card::after{ content:''; position:absolute; inset:0; pointer-events:none; z-index:5; border-radius:inherit; mix-blend-mode:overlay; opacity:.5;
+  background:repeating-conic-gradient(rgba(255,255,255,.2) 0 25%, rgba(0,0,0,.2) 0 50%) 0 0/4px 4px, repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,.3) 2px 4px) }
+#mpLobby.v2 input, #mpLobby.v2 #mpSkins button, #mpLobby.v2 .card > button, #mpLobby.v2 .row button{ border-radius:3px !important }
+#mpLobby.v2 #mpSkins button canvas{ image-rendering:pixelated }
+#mpLobby.v2 .err{ font-family:var(--disp); font-size:17px; letter-spacing:.05em }
+#mpLobby.v2 .ver{ font-family:var(--disp); font-size:15px; letter-spacing:.14em; filter:url(#psx2) }
 #mpLobby.v2 label{ font-family:var(--disp); font-size:21px; letter-spacing:.05em; color:#F4F5F8; margin:0 0 7px; text-shadow:0 2px 0 #000, 0 4px 0 rgba(0,0,0,.45), 0 0 1px #000 }
 #mpLobby.v2 input{ font-family:var(--disp); font-size:21px; letter-spacing:.06em; padding:8px 14px; margin:0 0 12px; background:linear-gradient(#07080C, #10121A); border:3px solid var(--metal); border-radius:7px;
   box-shadow:var(--edge), inset 0 0 0 2px #05060A, inset 0 4px 10px rgba(0,0,0,.9); outline:0; transition:border-color .12s, box-shadow .12s }
@@ -188,12 +195,12 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 @keyframes v2Sheen{ to{ left:130% } }
 #mpLobby.v2 .card > button:hover, #mpLobby.v2 .row button:hover{ transform:translateY(-2px) scale(1.015); filter:brightness(1.15) saturate(1.1); border-color:#fff }
 #mpLobby.v2 .card > button:active, #mpLobby.v2 .row button:active{ transform:translateY(2px) scale(.985); filter:brightness(.9); box-shadow:0 0 0 2px #14161D, inset 0 3px 6px rgba(0,0,0,.5) }
-#mpLobby.v2 #mpCreate{ font-size:30px; padding:5px 14px 7px; background:var(--dots), linear-gradient(#6CF07A, #2BC548 48%, #1C9A35 52%, #22B03E) }
-#mpLobby.v2 button.alt{ font-size:22px; padding:6px 14px 8px; background:var(--dots), linear-gradient(#58B4FF, #1E78E0 48%, #1558B4 52%, #1A68CC) }
-#mpLobby.v2 button.alt.watch{ background:var(--dots), linear-gradient(#B773F5, #7C34CE 48%, #5F22A8 52%, #6E2ABE) }
-#mpLobby.v2 button.ghost{ font-size:28px; padding:5px 14px 7px; margin-top:6px; color:#fff; background:var(--dots), linear-gradient(#4A4F62, #2B2F3D 48%, #1E2029 52%, #262935) }
+#mpLobby.v2 #mpCreate{ font-size:30px; padding:5px 14px 7px; background:linear-gradient(#6CF07A, #2BC548 48%, #1C9A35 52%, #22B03E) }
+#mpLobby.v2 button.alt{ font-size:22px; padding:6px 14px 8px; background:linear-gradient(#58B4FF, #1E78E0 48%, #1558B4 52%, #1A68CC) }
+#mpLobby.v2 button.alt.watch{ background:linear-gradient(#B773F5, #7C34CE 48%, #5F22A8 52%, #6E2ABE) }
+#mpLobby.v2 button.ghost{ font-size:28px; padding:5px 14px 7px; margin-top:6px; color:#fff; background:linear-gradient(#4A4F62, #2B2F3D 48%, #1E2029 52%, #262935) }
 #mpLobby.v2 .row{ gap:10px; align-items:stretch } #mpLobby.v2 .row input{ margin:0 }
-#mpLobby.v2 .or{ display:flex; align-items:center; gap:14px; margin:12px 6px 10px; font-family:'Yellowtail', 'Brush Script MT', cursive; font-size:27px; letter-spacing:.02em; line-height:1; text-transform:none; color:#FFE11E;
+#mpLobby.v2 .or{ display:flex; align-items:center; gap:14px; margin:12px 6px 10px; font-family:'Yellowtail', 'Brush Script MT', cursive; font-size:32px; letter-spacing:.03em; line-height:1; text-transform:none; color:#FFE11E;
   text-shadow:0 0 6px rgba(255,236,60,.9), 0 0 18px rgba(255,220,0,.55), 0 0 34px rgba(255,200,0,.3); animation:neonFlicker 5.3s linear infinite; animation-delay:-2.1s }
 #mpLobby.v2 .or::before, #mpLobby.v2 .or::after{ content:''; flex:1; height:2px; border-radius:2px; background:#D8DCE6; box-shadow:0 0 6px rgba(255,255,255,.35) }
 #mpLobby.v2 .err{ min-height:14px; margin-top:8px }
@@ -215,12 +222,25 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.79</span>
+    <span id="verFps">studio v1.80</span>
   </div>
 </div>
 
 <div id="xh" hidden><div class="plus"></div><div class="lab" id="xhLab"></div></div>
 <div id="tip" hidden></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="psx" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feFlood x="0" y="0" width="1" height="1"/><feComposite width="2" height="2"/><feTile result="g"/>
+    <feComposite in="SourceGraphic" in2="g" operator="in" result="s"/><feOffset in="s" dx="1" result="a"/><feOffset in="s" dy="1" result="b"/><feOffset in="s" dx="1" dy="1" result="c"/>
+    <feMerge><feMergeNode in="s"/><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/></feMerge>
+    <feComponentTransfer><feFuncR type="discrete" tableValues="0 .07 .14 .21 .29 .36 .43 .5 .57 .64 .71 .79 .86 .93 1"/><feFuncG type="discrete" tableValues="0 .07 .14 .21 .29 .36 .43 .5 .57 .64 .71 .79 .86 .93 1"/><feFuncB type="discrete" tableValues="0 .07 .14 .21 .29 .36 .43 .5 .57 .64 .71 .79 .86 .93 1"/></feComponentTransfer>
+  </filter>
+  <filter id="psx2" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feFlood x="0" y="0" width="1" height="1"/><feComposite width="2" height="2"/><feTile result="g"/>
+    <feComposite in="SourceGraphic" in2="g" operator="in" result="s"/><feOffset in="s" dx="1" result="a"/><feOffset in="s" dy="1" result="b"/><feOffset in="s" dx="1" dy="1" result="c"/>
+    <feMerge><feMergeNode in="s"/><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/></feMerge>
+  </filter>
+</defs></svg>
 <div id="mpLobby" class="v2" hidden>
   <div class="wrap">
   <div id="mpLogo" aria-label="Jambutek Jam Studio" role="img"><img id="mpLogoA" alt=""><img id="mpLogoB" alt=""></div>
@@ -235,7 +255,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.79</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.80</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -9703,7 +9723,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.79 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.80 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
