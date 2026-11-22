@@ -101,7 +101,7 @@ function swapLean(){                                           // Q: between a s
   var i, S;
   if (LEAN.key.indexOf('sn') === 0){
     for (i = 0; i < SNAKES.length; i++) if (SNAKES[i].key === LEAN.key) S = SNAKES[i];
-    var dk = S && SNDEV[S.SN.out]; if (!dk){ toast('Set OUT on this sequencer first'); return; }
+    var dk = S && SNDEV[S.SN.out]; if (!dk){ toast('Set INST on this sequencer first'); return; }
     LASTSN[dk] = S.key; switchLean(dk); toast(DEVS[dk].name.charAt(0).toUpperCase() + DEVS[dk].name.slice(1) + ' · Q goes back to its sequencer'); return;
   }
   var want = LASTSN[LEAN.key], pick = null;
@@ -313,7 +313,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.65 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.66 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -391,7 +391,7 @@ function frame(now){
     if (cen) xhLab.textContent = dl; else { tip.hidden = false; tip.textContent = dl; tip.style.left = pointer.cx + 'px'; tip.style.top = pointer.cy + 'px'; }
   }
 
-  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); ecUpdate(now, dt); rvUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); zkUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); scopeUpdate(); flowUpdate(now, dt); bzUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
+  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); ecUpdate(now, dt); rvUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); zkUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); scopeUpdate(); monUpdate(); flowUpdate(now, dt); bzUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
   var kick = SEQ.kick; snLightUpdate(dt);
   monitors.forEach(function(m){ var s = 1 + kick * 0.025; m.spk.scale.set(s, s, 1); var q = 0.3 + clamp(kick, 0, 1) * 0.7; m.mat.color.setRGB(q, q, q); });
   trLamp.light.intensity = trLamp.base * (1 + kick * 0.08);

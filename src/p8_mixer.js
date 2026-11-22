@@ -59,11 +59,13 @@ vfader('mxmaster', MXMX, 234, 310, 'Master volume', MX.master, { color:0xC8343A,
 CTLIST.forEach(function(c){ if (c.dev === 'mx' && c.kind === 'knob') c.def = /^mxs[ab]/.test(c.id) ? 0 : 0.5; else if (c.dev === 'mx' && c.kind === 'fader') c.def = c.id === 'mxmaster' ? 0.8 : 0.75; });
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 function mxDb(v){ var d = Math.round((v - 0.5) * 30); return (d > 0 ? '+' : '') + d + ' dB'; }
+var MON = { ch:-1, mix:1, sig:'' };                           // a Snake's SOLO: what this player alone hears, on top of the shared mix
 function mxApply(){
   if (!AU.ready) return; var t = ac.currentTime;
   var anySolo = MX.ch.some(function(c){ return c.solo; });                    // with any channel soloed, only the soloed ones are heard
   MX.ch.forEach(function(c, i){ var C = AU.ch[i]; C.hi.gain.setTargetAtTime((c.hi - 0.5) * 30, t, 0.02); C.mid.gain.setTargetAtTime((c.mid - 0.5) * 30, t, 0.02); C.lo.gain.setTargetAtTime((c.lo - 0.5) * 30, t, 0.02);
-    C.fad.gain.setTargetAtTime(c.mute || (anySolo && !c.solo) ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3, t, 0.02); });
+    var mo = MON.ch < 0 || MON.ch === i ? 1 : MON.mix;
+    C.fad.gain.setTargetAtTime(c.mute || (anySolo && !c.solo) ? 0 : Math.pow(c.vol, 1.7) * 1.63 * mo, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3 * mo, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3 * mo, t, 0.02); });
   AU.master.gain.setTargetAtTime(Math.pow(MX.master, 1.7) * 1.46, t, 0.02);
 }
 function mxSolo(i){ var c = MX.ch[i]; c.solo = c.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.solo ? ' solo' : ' solo off')); }

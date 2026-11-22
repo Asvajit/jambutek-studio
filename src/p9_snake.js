@@ -29,7 +29,7 @@ function paintSN(){
   function box(x0, y0, x1, y1){ g.fillStyle = '#22252B'; g.fillRect(x0, y0, x1 - x0, y1 - y0); }
   box(4, 14, 78, 186); box(82, 14, 154, 186); box(158, 14, 296, 186);
   T('SNAKE', 5, 7, 7.5, '#90F0A8', true, 'left'); T('after MDD SnAkE by Maxime Dangles', 296, 7.5, 4, '#9A9CA0', false, 'right');
-  T('FUNDAMENTAL', 22, 114, 3.6); T('SCALE', 59, 114, 3.6); T('OUT', 12, 177, 4.2, '#E6E6E2', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT', 'SCR'].forEach(function(s, k){ T(s, 24.5 + k * 5.33, 185.5, 2.1, '#B8B8B4'); });
+  T('FUNDAMENTAL', 22, 114, 3.6); T('SCALE', 59, 114, 3.6); T('INST', 9, 177, 3.9, '#E6E6E2', false, 'left'); T('MIX', 87, 7.2, 3, '#B8B8B4', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT', 'SCR'].forEach(function(s, k){ T(s, 24.5 + k * 5.33, 185.5, 2.1, '#B8B8B4'); });
   T('STEPS', 100, 113, 3.6); T('SHIFT', 136, 113, 3.6); T('SWING', 100, 149, 3.6); T('SNAKE SHAPE', 136, 149, 3.6);
   SNGY.forEach(function(y, r){ SNGX.forEach(function(x, c){ g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.4; g.beginPath(); g.arc(x, y - 5, 9.4, Math.PI * 0.75, Math.PI * 0.25); g.stroke(); T(String(r * 4 + c + 1), x - 13.2, y + 12, 3.2, '#7C7E84'); }); });
   g.setTransform(1, 0, 0, 1, 0, 0); if (snTex) snTex.needsUpdate = true;
@@ -58,7 +58,7 @@ function snLanesOk(a){ return Array.isArray(a) && a.length === 5 && a.every(func
 var snSaveT = null; function snSaveNow(){ store(('jambutek-studio-snake-v3-' + K), JSON.stringify({ v:1, root:SN.root, scale:SN.scale, out:SN.out, swing:SN.swing, lanes:SN.pgs[0], b:SN.pgs[1], act:SN.act, cc:SN.cc || null })); } function snSaveSoon(){ clearTimeout(snSaveT); snSaveT = setTimeout(snSaveNow, saveMs(900)); }
 function snRestore(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-' + K)) || 'null'); if (!s || s.v !== 1 || !Array.isArray(s.lanes) || (s.lanes.length !== 4 && s.lanes.length !== 5) || !s.lanes.every(function(l){ return l && Array.isArray(l.vals) && l.vals.length === 16; })) return;
   if (s.lanes.length < 5) s.lanes.push(snDefaults().lanes[4]); SN.cc = s.cc && typeof s.cc === 'object' && typeof s.cc.dev === 'string' ? s.cc : null;
-  SN.pgs[0] = s.lanes; SN.pgs[1] = snLanesOk(s.b) ? s.b : snDefaults().lanes; SN.act = Array.isArray(s.act) && s.act.length === 2 && (s.act[0] || s.act[1]) ? [s.act[0] ? 1 : 0, s.act[1] ? 1 : 0] : [1, 0];      // a save from before there was a page B: A alone, exactly as it played
+  SN.pgs[0] = s.lanes; SN.pgs[1] = snLanesOk(s.b) ? s.b : snDefaults().lanes; SN.act = Array.isArray(s.act) && s.act.length === 2 ? [s.act[0] ? 1 : 0, s.act[1] ? 1 : 0] : [1, 0];      // a save from before there was a page B: A alone, exactly as it played
   SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 9); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
 var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.minFilter = THREE.LinearFilter; snDispT.magFilter = THREE.LinearFilter;
 (function(){
@@ -75,14 +75,19 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
 HOST = SNG; LX = sx; LZ = sz; DEV = DK; FACE = { bg:'#30343B', fg:'#F0F0EC' };
 SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 24 + [0, 0, 1, 2, 3][i] * 17.5, 66, 14, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
 knob((PX + 'root'), 22, 99, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 99, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
-button((PX + 'resetall'), 22, 126, 30, 12, 'RESET\nALL', 'Reset all lanes', 0xFFFFFF); button((PX + 'randall'), 59, 126, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
-slide((PX + 'out'), 48.5, 177, 10, false, 'Out', 0.096);
-button((PX + 'pa'), 134, 7, 13, 8.5, 'A', 'Page A', 0xFFFFFF).ab = 0; button((PX + 'pb'), 149, 7, 13, 8.5, 'B', 'Page B', 0xFFFFFF).ab = 1;
-button((PX + 'pcopy'), 169, 7, 22, 8.5, 'COPY', 'Copy a page', 0xFFE15A); button((PX + 'pact'), 195, 7, 26, 8.5, 'ACTIVE', 'Page on / off', 0x3BFF6A);
+button((PX + 'resetall'), 22, 126, 30, 12, 'CLEAR\nALL', 'Clear this whole sequencer: every step off, every knob to the middle, on both A and B', 0xFFFFFF); button((PX + 'randall'), 59, 126, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
+slide((PX + 'out'), 48.5, 177, 10, false, 'Inst', 0.096);
+button((PX + 'pa'), 118, 7, 13, 8.5, 'A', 'Page A', 0xFFFFFF).ab = 0; button((PX + 'pta'), 134, 7, 16, 8.5, 'ON', 'Page A on / off', 0x3BFF6A).tg = 0;
+button((PX + 'pb'), 154, 7, 13, 8.5, 'B', 'Page B', 0xFFFFFF).ab = 1; button((PX + 'ptb'), 170, 7, 16, 8.5, 'OFF', 'Page B on / off', 0x3BFF6A).tg = 1;
+button((PX + 'pcopy'), 195, 7, 22, 8.5, 'COPY', 'Copy a page', 0xFFE15A);
+/* SOLO is for the player's own ears: while it is lit and you are leaned in here (or at its instrument) you hear only that instrument.
+   MIX brings the rest back in underneath. Nothing about the shared mix changes, and neither control is saved or sent. */
+SN.mon = false; SN.monMix = 0;
+button((PX + 'msolo'), 54, 7, 20, 8.5, 'SOLO', 'Solo this instrument in your own ears', 0x3A8BFF); knob((PX + 'mmix'), 80, 7, 3.4, 'Solo mix', 0, { h:5 });
 button((PX + 'dir'), 118, 58, 64, 13, 'DIRECTION', 'Direction', 0xFFFFFF); button((PX + 'speed'), 118, 76, 64, 13, 'SPEED', 'Speed', 0xFFFFFF);
 knob((PX + 'steps'), 100, 98, 6.5, 'Steps', 1, { h:8 }).detents = 15; knob((PX + 'shift'), 136, 98, 6.5, 'Shift', 0, { h:8 }).detents = 15;
 knob((PX + 'swing'), 100, 134, 6.5, 'Swing', 0, { h:8 }); knob((PX + 'shape'), 136, 134, 7, 'Snake shape', 0, { h:8, endless:true, sides:14 });
-button((PX + 'rand'), 100, 170, 30, 12, 'RANDOM', 'Randomise this lane', 0xFFFFFF); button((PX + 'reset'), 136, 170, 30, 12, 'RESET', 'Reset this lane', 0xFFFFFF);
+button((PX + 'rand'), 100, 170, 30, 12, 'RANDOM', 'Randomise this lane', 0xFFFFFF); button((PX + 'reset'), 136, 170, 30, 12, 'CLEAR', 'Clear this lane on this page: knobs to the middle', 0xFFFFFF);
 for (var sni = 0; sni < 16; sni++){ (function(i){ var c = knob((PX + 'c') + i, SNGX[i % 4], SNGY[(i / 4) | 0] - 5, 6.4, 'Cell ' + (i + 1), 0, { h:9, sides:12 }); c.cell = i; })(sni); }
 /* gates page: the 16 cell knobs give way to 16 on/off step buttons */
 for (var sgi = 0; sgi < 16; sgi++){ (function(i){ var n0 = HOST.children.length, c = pad((PX + 'g') + i, SNGX[i % 4], SNGY[(i / 4) | 0] + 12, 21, 8.5, SNCOL[1], 'Step ' + (i + 1)); c.gate = i; c.hitM = HOST.children[n0 + 1]; })(sgi); }
@@ -103,10 +108,13 @@ function snLabel(c){
   if (c.gate != null) return 'Step ' + (c.gate + 1) + ': ' + (SN.lanes[1].vals[c.gate] ? 'On' : 'Off') + ' · click to switch';
   if (c.cell != null) return SNLN[SN.page].charAt(0) + SNLN[SN.page].slice(1).toLowerCase() + ' ' + (c.cell + 1) + ': ' + snCellTxt(SN.page, L.vals[c.cell]) + ' · scroll or drag';
   switch (id){ case (PX + 'root'): return 'Fundamental ' + NOTEN[SN.root] + ' · scroll or drag'; case (PX + 'scale'): return 'Scale: ' + SCALES[SN.scale][0] + ' · scroll or drag'; case (PX + 'steps'): return 'Steps ' + L.len + ' · scroll or drag'; case (PX + 'shift'): return 'Shift ' + L.shift + ' · scroll or drag';
-    case (PX + 'swing'): return 'Swing ' + Math.round(SN.swing * 100) + ' · scroll or drag'; case (PX + 'shape'): return 'Snake shape ' + (L.shape + 1) + ' · scroll or drag'; case (PX + 'dir'): return 'Direction: ' + SNDIR[L.dir] + ' · click'; case (PX + 'speed'): return 'Speed: ' + SNSPD[L.speed][1] + ' · click'; case (PX + 'out'): return 'Out: ' + SNOUT[SN.out] + ' · click';
-    case (PX + 'pa'): case (PX + 'pb'): return 'Page ' + 'AB'[c.ab] + (SN.act[c.ab] ? ' · active' : ' · off') + (SN.copy ? (SN.copy.src == null ? ' · click to copy from it' : ' · click to paste here') : ' · click to show');
+    case (PX + 'swing'): return 'Swing ' + Math.round(SN.swing * 100) + ' · scroll or drag'; case (PX + 'shape'): return 'Snake shape ' + (L.shape + 1) + ' · scroll or drag'; case (PX + 'dir'): return 'Direction: ' + SNDIR[L.dir] + ' · click'; case (PX + 'speed'): return 'Speed: ' + SNSPD[L.speed][1] + ' · click'; case (PX + 'out'): return 'Inst: ' + SNOUT[SN.out] + ' · click';
+    case (PX + 'pta'): case (PX + 'ptb'): return 'Page ' + 'AB'[c.tg] + ' is ' + (SN.act[c.tg] ? 'on' : 'off') + ' · click · both on plays A then B, a bar each';
+    case (PX + 'msolo'): return 'Solo ' + (SN.mon ? 'on' : 'off') + ' · only you hear the change · click';
+    case (PX + 'mmix'): return 'Solo mix ' + Math.round(SN.monMix * 100) + '% · how much of everything else you hear while solo is on';
+    case (PX + 'pa'): case (PX + 'pb'): return 'Page ' + 'AB'[c.ab] + (SN.act[c.ab] ? ' · on' : ' · off') + (SN.copy ? (SN.copy.src == null ? ' · click to copy from it' : ' · click to paste here') : ' · click to show');
     case (PX + 'pcopy'): return SN.copy ? 'Copy: now click A or B · click to cancel' : 'Copy a page: click, then the page to copy, then the page to paste to';
-    case (PX + 'pact'): return 'Page ' + 'AB'[SN.view] + ' is ' + (SN.act[SN.view] ? 'active' : 'off') + ' · click · both on plays A then B, a bar each'; }
+    }
   return c.name;
 }
 function snCtl(c){
@@ -116,6 +124,7 @@ function snCtl(c){
   else if (id === (PX + 'steps')){ L.len = 1 + Math.round(v * 15); snSay(SNLN[SN.page] + ' steps', L.len); }
   else if (id === (PX + 'shift')){ L.shift = Math.round(v * 15); snSay(SNLN[SN.page] + ' shift', L.shift); }
   else if (id === (PX + 'swing')){ SN.swing = v; snSay('Swing', Math.round(v * 100)); }
+  else if (id === (PX + 'mmix')){ SN.monMix = v; snSay('Solo mix', Math.round(v * 100) + '%'); return; }      // yours alone: not saved, not sent
   snSaveSoon();
 }
 function snTurn(c, n){
@@ -128,7 +137,7 @@ function snTurn(c, n){
 function snLearn(on){
   SN.learn = !!on; SN.dirty = true;
   if (!on){ if (SNLEARN === snHear) SNLEARN = null; return; }
-  if (!SN.out){ SN.learn = false; snSay('CUSTOM', 'set OUT to a synth first', 2200); return; }
+  if (!SN.out){ SN.learn = false; snSay('CUSTOM', 'set INST to a synth first', 2200); return; }
   if (SNLEARN && SNLEARN !== snHear) SNLEARN(null);          // only one Snake listens at a time
   SNLEARN = snHear; snSay('LEARN', 'click a knob on the ' + SNOUT[SN.out], 60000);
   if (!MPQUIET && typeof switchLean === 'function' && mode === 'tr' && LEAN.key === DK){ LASTSN[SNDEV[SN.out]] = DK; SN.back = true; switchLean(SNDEV[SN.out]); toast('Click the knob or fader for CUSTOM to turn · Q goes back'); }     // jump to the synth so the control can be picked
@@ -155,6 +164,9 @@ function snTurnCC(v){
   MPQUIET = false;
 }
 function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i] = p === 0 ? 12 + ((Math.random() * 25) | 0) : p === 1 ? (Math.random() < 0.7 ? 1 : 0) : 30 + ((Math.random() * 98) | 0); }
+/* CLEAR empties, it does not go back to the starter jam. A lane's knobs go to 12 o'clock; gates go off. Probability is the one exception:
+   12 o'clock there means a step only plays half the time, so it clears to "always". */
+function snClearLane(pg, p){ var mid = [42, 0, 64, 127, 64][p]; SN.pgs[pg][p] = { vals:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map(function(){ return mid; }), dir:0, speed:1, len:16, shift:0, shape:0 }; }
 function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
 function snRelease(c){ var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
 function snHoldTick(){
@@ -173,32 +185,32 @@ function snPress(c){
     if (SN.copy){ if (SN.copy.src == null){ SN.copy.src = c.ab; SN.view = c.ab; snSync(); snSay('COPY ' + 'AB'[c.ab], 'now press ' + 'AB'[1 - c.ab], 8000); return; }
       var from = SN.copy.src; SN.copy = null; if (from === c.ab){ snSay('COPY', 'cancelled'); return; }
       SN.pgs[c.ab] = defCopy(SN.pgs[from]); SN.view = c.ab; snSync(); snSay('COPIED', 'AB'[from] + ' to ' + 'AB'[c.ab], 2200); snSaveSoon(); return; }
-    SN.view = c.ab; snSync(); snSay('PAGE ' + 'AB'[c.ab], SN.act[c.ab] ? 'active' : 'off', 1600); return; }
+    SN.view = c.ab; snSync(); snSay('PAGE ' + 'AB'[c.ab], SN.act[c.ab] ? 'on' : 'off', 1600); return; }
   if (id === (PX + 'pcopy')){ SN.copy = SN.copy ? null : { src:null }; snSay('COPY', SN.copy ? 'press the page to copy' : 'cancelled', SN.copy ? 8000 : 1200); return; }
-  if (id === (PX + 'pact')){ var v = SN.view; if (SN.act[v] && !SN.act[1 - v]){ snSay('PAGE ' + 'AB'[v], 'the only page on', 2000); return; }      // one page always plays
-    SN.act[v] = SN.act[v] ? 0 : 1; snSay('PAGE ' + 'AB'[v], SN.act[v] ? 'active' : 'off', 1800); snSaveSoon(); return; }
+  if (c.tg != null){ SN.act[c.tg] = SN.act[c.tg] ? 0 : 1; snSay('PAGE ' + 'AB'[c.tg], SN.act[c.tg] ? 'on' : 'off', 1800); SN.dirty = true; snSaveSoon(); return; }
+  if (id === (PX + 'msolo')){ SN.mon = !SN.mon; snSay('SOLO', SN.mon ? 'only in your ears' : 'off', 1800); return; }
   if (c.pg != null){
     if (c.pg === 4){ if (SN.cc && !SN.learn){ SN.hold = { c:c, t0:performance.now(), done:false }; return; } snCustomClick(); return; }       // with something learned, wait: a short click acts on release, a long hold clears it   // the custom lane: first click with nothing learned, or a second click, listens for a knob
     snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
-  if (c.sw){ SN.out = (c.pos + 1) % 10; c.set(SN.out); SN.cv = 0; snSay('Out', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
+  if (c.sw){ SN.out = (c.pos + 1) % 10; c.set(SN.out); SN.cv = 0; snSay('Inst', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
   switch (id){
     case (PX + 'dir'): L.dir = (L.dir + 1) % 5; snSay(SNLN[SN.page] + ' direction', SNDIR[L.dir]); break;
     case (PX + 'speed'): L.speed = (L.speed + 1) % 5; snSay(SNLN[SN.page] + ' speed', SNSPD[L.speed][1]); break;
     case (PX + 'rand'): snRandom(SN.page); snSync(); snSay(SNLN[SN.page], 'Random'); break;
-    case (PX + 'reset'): SN.lanes[SN.page] = D.lanes[SN.page]; snSync(); snSay(SNLN[SN.page], 'Reset'); break;
+    case (PX + 'reset'): snClearLane(SN.view, SN.page); if (SN.page === 0) snClearLane(SN.view, 1); snSync(); snSay(SNLN[SN.page], 'Cleared · page ' + 'AB'[SN.view]); break;      // clearing the notes also switches the steps off
     case (PX + 'randall'): for (var p = 0; p < 5; p++) snRandom(p); snSync(); snSay('All lanes', 'Random'); break;
-    case (PX + 'resetall'): SN.lanes = D.lanes; snSync(); snSay('All lanes', 'Reset'); break;
+    case (PX + 'resetall'): for (var q = 0; q < 2; q++) for (var p2 = 0; p2 < 5; p2++) snClearLane(q, p2); snSync(); snSay('Sequencer', 'Cleared · A and B'); break;
   }
   snSaveSoon();
 }
 function clock(t, N, sd, sw){                       // one call per 16th from the drum machine
-  var ev = [], swg = sw + SN.swing * 0.33, pp = SN.act[0] && SN.act[1] ? Math.floor(N / 16) % 2 : SN.act[1] ? 1 : 0, LS = SN.pgs[pp]; SN.playPg = pp;      // both pages on: a bar of A, a bar of B
+  var ev = [], swg = sw + SN.swing * 0.33, pp = SN.act[0] && SN.act[1] ? Math.floor(N / 16) % 2 : SN.act[1] ? 1 : 0, LS = SN.pgs[pp], mute = !SN.act[0] && !SN.act[1]; SN.playPg = mute ? -1 : pp;      // both pages on: a bar of A, a bar of B
   [1, 2, 3, 4, 0].forEach(function(li, ord){ var L = LS[li], S = SNSPD[L.speed][0];
     for (var k = Math.ceil(N / S - 1e-6); k * S < N + 1 - 1e-6; k++){ var pos = k * S, r = Math.round(pos), on = Math.abs(pos - r) < 1e-6; ev.push([t + (pos - N) * sd + (on && r % 2 ? swg * sd : 0), ord, li, k, S]); } });
   ev.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
   ev.forEach(function(e){
-    var li = e[2], L = LS[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell }); if (li === 4 && SN.cc) SN.vis.push({ t:e[0], cc:L.vals[cell] / 127 });
-    if (li !== 0 || !SN.out || !LS[1].vals[cell] || snDice(N * 31 + e[3] * 7 + K * 131) * 127 >= LS[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
+    var li = e[2], L = LS[li], cell = snCellAt(L, e[3]); SN.cell[li] = cell; SN.vis.push({ t:e[0], l:li, c:cell }); if (li === 4 && SN.cc && !mute) SN.vis.push({ t:e[0], cc:L.vals[cell] / 127 });
+    if (mute || li !== 0 || !SN.out || !LS[1].vals[cell] || snDice(N * 31 + e[3] * 7 + K * 131) * 127 >= LS[3].vals[SN.cell[3]]) return;   // the step's own button, then its dice roll
     var n = snNote(L.vals[cell]), vel = clamp(LS[2].vals[SN.cell[2]] / 127, 0.05, 1), dur = sd * e[4] * 0.6;
     var o = SN.out; if (o === 1){ if (mfAudio()) mfNoteAt(n + 12, vel, e[0], dur); } else if (o === 2){ if (bsAudio()) bsNoteAt(n, vel, e[0], dur); } else if (o === 3) mbNoteAt(n, vel, e[0], dur); else if (o === 4) amNoteAt(n + 12, vel, e[0], dur); else if (o === 5) tpNoteAt(n + 24, vel, e[0], dur); else if (o === 6) shNoteAt(n + 12, vel, e[0], dur); else if (o === 8) zkNoteAt(n + 12, vel, e[0], dur); else if (o === 9) skSeqAt(n, vel, e[0], dur); else mcSeqAt(n, vel, e[0], dur);
   });
@@ -225,8 +237,8 @@ function update(now, dt){
   for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); CT[(PX + 'c') + i].mat.color.setHex(g[i] ? 0x202226 : 0x121316); }
   for (i = 0; i < 16; i++){ var gp = CT[(PX + 'g') + i], gl = (g[i] ? 0.75 : 0) + (vc[0] === i ? 0.3 : 0); if (gl !== gp.lit){ gp.lit = gl; gp.col.copy(gp.base); if (vc[0] === i && !g[i]) gp.col.setHex(0xFFFFFF); gp.paintLit(); } var gy = gp.y0 - (gp.down ? 0.003 : 0); if (gp.m.position.y !== gy) gp.m.position.y = gy; }
   CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15;
-    if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : SN.act[c.ab] ? (M.playing && SN.playPg === c.ab ? 0.55 : 0.3) : 0;
-    else if (c.id === (PX + 'pcopy')) L = SN.copy ? (Math.floor(now / 160) % 2 ? 1 : 0.15) : 0; else if (c.id === (PX + 'pact')) L = SN.act[SN.view] ? 0.9 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+    if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : M.playing && SN.playPg === c.ab ? 0.5 : 0.1;
+    else if (c.id === (PX + 'pcopy')) L = SN.copy ? (Math.floor(now / 160) % 2 ? 1 : 0.15) : 0; else if (c.tg != null){ L = SN.act[c.tg] ? 0.9 : 0; var tt = SN.act[c.tg] ? 'ON' : 'OFF'; if (c.tgT !== tt){ c.tgT = tt; c.repaintFace(tt); } } else if (c.id === (PX + 'msolo')) L = SN.mon ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
   snHoldTick(); snBtnFace();
   if (now > SN.msgUntil && SN.msgA){ SN.msgA = ''; SN.dirty = true; }
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }

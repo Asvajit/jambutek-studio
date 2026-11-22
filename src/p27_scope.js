@@ -13,7 +13,7 @@ var SCOPECH = { mf:1, bs:2, mb:3, am:4, tp:5, sh:6, mc:7, sc:8, zk:9 };
     var scr = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.175), new THREE.MeshBasicMaterial({ map:t })); scr.position.z = 0.0005; g.add(scr);
     var arm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.1), metalMat); arm.position.set(0, -0.04, -0.075); g.add(arm);          // the bracket back to the Snake's underside
     g.traverse(function(o){ o.userData.noShadow = true; });
-    // the same picture on the Snake's own panel, above its OUT slider, for whoever is playing it
+    // the same picture on the Snake's own panel, above its INST slider, for whoever is playing it
     var fr = new THREE.Mesh(new THREE.PlaneGeometry(64 * SC, 33 * SC), new THREE.MeshBasicMaterial({ color:0x08090C })), own = new THREE.Mesh(new THREE.PlaneGeometry(60 * SC, 29 * SC), scr.material);
     [fr, own].forEach(function(m, k){ m.rotation.x = -Math.PI / 2; m.position.set((41 - SNW / 2) * SC, 0.0012 + k * 0.0008, (152.5 - SND / 2) * SC); m.userData.noShadow = true; S.G.add(m); });
     SCOPE.list.push({ S:S, c:c, g:c.getContext('2d'), t:t, gain:4, flat:false, ch:-2 });
@@ -48,4 +48,11 @@ function scopeUpdate(){
     var flat = peak < 0.004; if (flat && o.flat && o.ch === ch) continue;                      // silent and already showing a flat line: nothing to redraw
     o.flat = flat; o.ch = ch; scopeDraw(o, ch, a ? SCOPE.buf : null, peak);
   }
+}
+
+/* A Snake's SOLO button, checked every frame: it only counts while you are leaned in at that Snake or at the instrument it plays. */
+function monUpdate(){
+  var ch = -1, mix = 1;
+  if (mode === 'tr' && LEAN && LEAN.key) for (var i = 0; i < SNAKES.length; i++){ var S = SNAKES[i], dev = SNDEV[S.SN.out | 0]; if (!S.SN.mon || !dev || SCOPECH[dev] == null) continue; if (S.key === LEAN.key || dev === LEAN.key){ ch = SCOPECH[dev]; mix = Math.pow(S.SN.monMix, 1.5); if (S.key === LEAN.key) break; } }
+  var sig = ch + ':' + mix.toFixed(3); if (sig !== MON.sig){ MON.sig = sig; MON.ch = ch; MON.mix = mix; mxApply(); }
 }
