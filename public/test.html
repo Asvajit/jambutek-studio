@@ -165,7 +165,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 /* ---- lobby look 2 (arcade): everything here hangs off the class "v2" on #mpLobby; take the class away and the old look is back ---- */
 #mpLobby.v2{ --metal:#A9B1C4; --metalD:#3A3F4E; --edge:0 0 0 2px #14161D, 0 3px 0 2px #05060A; --disp:'Anton', Impact, 'Arial Narrow', sans-serif; }
 #mpLobby.v2 .card{ position:relative; background:linear-gradient(#171A24, #0A0B10); border:0; padding:16px 18px 18px; border-radius:4px; filter:url(#psx) }
-/* the PSX pass: the whole card is drawn in 2-pixel blocks with few colour steps (the filter #psx), under a faint checker that turns the
+/* the PSX pass: the whole card is drawn in 2-pixel blocks mixed 40/60 with the sharp picture so the lettering stays readable, with few colour steps (the filter #psx), under a faint checker that turns the
    smooth gradients into dither, and scanlines */
 #mpLobby.v2 .card::after{ content:''; position:absolute; inset:0; pointer-events:none; z-index:5; border-radius:inherit; mix-blend-mode:overlay; opacity:.5;
   background:repeating-conic-gradient(rgba(255,255,255,.2) 0 25%, rgba(0,0,0,.2) 0 50%) 0 0/4px 4px, repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,.3) 2px 4px) }
@@ -222,7 +222,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.86</span>
+    <span id="verFps">studio v1.87</span>
   </div>
 </div>
 
@@ -232,13 +232,15 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <filter id="psx" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
     <feFlood x="0" y="0" width="1" height="1"/><feComposite width="2" height="2"/><feTile result="g"/>
     <feComposite in="SourceGraphic" in2="g" operator="in" result="s"/><feOffset in="s" dx="1" result="a"/><feOffset in="s" dy="1" result="b"/><feOffset in="s" dx="1" dy="1" result="c"/>
-    <feMerge><feMergeNode in="s"/><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/></feMerge>
+    <feMerge result="p"><feMergeNode in="s"/><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/></feMerge>
+    <feComposite in="p" in2="SourceGraphic" operator="arithmetic" k1="0" k2=".4" k3=".6" k4="0"/>
     <feComponentTransfer><feFuncR type="discrete" tableValues="0 .07 .14 .21 .29 .36 .43 .5 .57 .64 .71 .79 .86 .93 1"/><feFuncG type="discrete" tableValues="0 .07 .14 .21 .29 .36 .43 .5 .57 .64 .71 .79 .86 .93 1"/><feFuncB type="discrete" tableValues="0 .07 .14 .21 .29 .36 .43 .5 .57 .64 .71 .79 .86 .93 1"/></feComponentTransfer>
   </filter>
   <filter id="psx2" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
     <feFlood x="0" y="0" width="1" height="1"/><feComposite width="2" height="2"/><feTile result="g"/>
     <feComposite in="SourceGraphic" in2="g" operator="in" result="s"/><feOffset in="s" dx="1" result="a"/><feOffset in="s" dy="1" result="b"/><feOffset in="s" dx="1" dy="1" result="c"/>
-    <feMerge><feMergeNode in="s"/><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/></feMerge>
+    <feMerge result="p"><feMergeNode in="s"/><feMergeNode in="a"/><feMergeNode in="b"/><feMergeNode in="c"/></feMerge>
+    <feComposite in="p" in2="SourceGraphic" operator="arithmetic" k1="0" k2=".4" k3=".6" k4="0"/>
   </filter>
 </defs></svg>
 <div id="mpLobby" class="v2" hidden>
@@ -255,7 +257,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.86</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.87</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -9549,7 +9551,7 @@ var MP = (function(){
   document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiOver(); });
   document.addEventListener('click', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (!b) return;
     if (b.id === 'mpCreate' || b.id === 'mpJoin' || b.id === 'mpSpec') setTimeout(function(){ if (err.textContent) uiErr(); else uiPress(); }, 0);      // refused (no name, bad code): the error sound instead
-    else uiPress(); }, true);
+    else if (b.id === 'mpSolo') uiPress(); }, true);                                         // only the four ways in make the press sound
   Q.uiLastSound = null;
   Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') + (uiHover ? ' hover ' + uiHover.duration.toFixed(2) + 's' : '') : null; };
   /* the credits sheet, opened from the line under the lobby card */
@@ -10005,7 +10007,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.86 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.87 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

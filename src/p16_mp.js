@@ -393,7 +393,7 @@ var MP = (function(){
   document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiOver(); });
   document.addEventListener('click', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (!b) return;
     if (b.id === 'mpCreate' || b.id === 'mpJoin' || b.id === 'mpSpec') setTimeout(function(){ if (err.textContent) uiErr(); else uiPress(); }, 0);      // refused (no name, bad code): the error sound instead
-    else uiPress(); }, true);
+    else if (b.id === 'mpSolo') uiPress(); }, true);                                         // only the four ways in make the press sound
   Q.uiLastSound = null;
   Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') + (uiHover ? ' hover ' + uiHover.duration.toFixed(2) + 's' : '') : null; };
   /* the credits sheet, opened from the line under the lobby card */
