@@ -371,7 +371,7 @@ var MP = (function(){
   function uiPlay(buf, vol){ var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = buf; g.gain.value = vol; n.connect(g); g.connect(uiAC.destination); n.start(); }
   function uiPress(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiClick) uiPlay(uiClick, 0.7); else uiBlip(520, 780, 0.07, 0.09, 'square');          // not loaded yet: the old blip
+    if (uiClick) uiPlay(uiClick, 0.42); else uiBlip(520, 780, 0.07, 0.09, 'square');          // not loaded yet: the old blip
   }
   function uiOver(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
