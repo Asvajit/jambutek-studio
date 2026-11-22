@@ -1,30 +1,54 @@
 
 /* ================= the jam panels, one on the front of each video booth counter =================
-   Two identical sets, in opposite corners, so one is always near. CLEAR ALL wipes every pattern on every machine; DEFAULT JAM puts
+   Two identical sets, in opposite corners, so one is always near. CLEAR wipes every pattern on every machine; DEMO puts
    the starter jam back, sounds and settings included. Both have to be held down for a moment, so a stray click does nothing.
-   EXPORT JAM saves the whole room to a file; LOAD JAM opens the list of jams that ship with the room (vendor/jams/), or takes a file. */
+   EXPORT saves the whole room to a file; LOAD opens the list of jams that ship with the room (vendor/jams/), or takes a file. */
 var WALLHOLD = 1300, WALL = { t0:0, c:null, done:false }, WALLBTN = [];
+/* The panels use one round push-button (model by DrakonSlayer, CC BY 4.0: see vendor/MODELS-NOTICE.md), painted here: a coloured cap with
+   its name, and a grey ring round it that is the indicator. On the two buttons that must be held the ring fills clockwise from twelve
+   o'clock until the action happens; on the others the whole ring lights while the button is down (or, for ROOM KEY, while it is on). */
+var RBG = window.JB_BUTTON ? { base:bakedGeo(window.JB_BUTTON.base), cap:bakedGeo(window.JB_BUTTON.cap) } : null;
+if (RBG) [RBG.base, RBG.cap].forEach(function(g){ var p = g.attributes.position, uv = new Float32Array(p.count * 2); for (var i = 0; i < p.count; i++){ uv[i * 2] = (p.getX(i) + 1) / 2; uv[i * 2 + 1] = (1 - p.getZ(i)) / 2; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); });      // painted from straight above
+function rbCap(c, text){
+  if (c.capText === text) return; c.capText = text; var g = c.capC.getContext('2d'), lines = String(text).split('\n'), size = c.capSize || 62;
+  g.fillStyle = c.capCol; g.fillRect(0, 0, 256, 256); g.fillStyle = c.capInk || '#FFFFFF'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (;;){ g.font = size + 'px ' + FONT; var w = 0; lines.forEach(function(l){ w = Math.max(w, g.measureText(l).width); }); if (w <= 172 || size <= 20) break; size -= 3; }
+  lines.forEach(function(l, i){ g.fillText(l, 128, 130 + (i - (lines.length - 1) / 2) * size * 1.05); }); c.capT.needsUpdate = true;
+}
+function rbRing(c, f){                                       // f: how much of the ring is lit, 0 to 1
+  var q = Math.round(clamp(f, 0, 1) * 60); if (c.ringQ === q) return; c.ringQ = q; var g = c.ringC.getContext('2d');
+  g.fillStyle = '#050506'; g.fillRect(0, 0, 256, 256); g.lineWidth = 17; g.strokeStyle = '#7C7C80'; g.beginPath(); g.arc(128, 128, 118, 0, Math.PI * 2); g.stroke();
+  if (q > 0){ g.strokeStyle = '#FFFFFF'; g.beginPath(); g.arc(128, 128, 118, -Math.PI / 2, -Math.PI / 2 + q / 60 * Math.PI * 2); g.stroke(); } c.ringT.needsUpdate = true;
+}
+function roundBtn(G, id, x, y, dia, text, name, col, wk, opt){
+  var c = button(id, x, y, dia, dia, '', name, 0xFFFFFF), s = dia * SC / 2; c.wk = wk; c.m.visible = false; opt = opt || {};
+  c.capC = mk(256, 256); c.capT = smoothTex(c.capC); c.capCol = col; c.capInk = opt.ink; c.capSize = opt.size; c.ringC = mk(256, 256); c.ringT = smoothTex(c.ringC);
+  if (RBG){
+    var base = new THREE.Mesh(RBG.base, new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:c.ringT, emissive:0xffffff, emissiveMap:c.ringT, emissiveIntensity:0.6, shininess:12, specular:0x111111 })); base.scale.setScalar(s); base.position.set(LX(x), 0, LZ(y)); G.add(base);
+    c.cap = new THREE.Mesh(RBG.cap, new THREE.MeshPhongMaterial({ color:0xA8A8A8, map:c.capT, emissive:0xffffff, emissiveMap:c.capT, emissiveIntensity:0.45, shininess:30, specular:0x222222 })); c.cap.scale.setScalar(s); c.cap.position.set(LX(x), 0, LZ(y)); G.add(c.cap);
+    base.userData.noShadow = c.cap.userData.noShadow = true;
+  }
+  c.repaintFace = function(t){ if (t != null) rbCap(c, t); }; c.paintLit = NOP; c.hover = function(on){ c.hov = on; if (c.cap) c.cap.material.emissiveIntensity = on ? 0.7 : 0.45; };
+  rbCap(c, text); rbRing(c, 0); WALLBTN.push(c); return c;
+}
 function wallPanel(P){                                       // called by vidBooth with that booth's place
   var n = WALLBTN.length ? '2' : '', nx = -Math.sin(P.r), nz = -Math.cos(P.r), o = { H:HOST, X:LX, Z:LZ, D:DEV, F:FACE };
   var Y = new THREE.Group(); Y.position.set(P.x + nx * 0.565, 0.72, P.z + nz * 0.565); Y.rotation.y = P.r + Math.PI; scene.add(Y);
   var G = new THREE.Group(); G.rotation.x = Math.PI / 2; Y.add(G);
-  var c = mk(500, 360), g = c.getContext('2d'); g.fillStyle = '#1B1D22'; g.fillRect(0, 0, 500, 360); g.strokeStyle = '#F2C230'; g.lineWidth = 6; g.strokeRect(7, 7, 486, 346);
-  g.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = '#D8D8D8'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('JAMS  ·  SAVE AND LOAD', 250, 40);
-  var t = smoothTex(c), box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.36), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x1B1D22 }); }));
-  box.position.set(0, -0.02, 0.06); box.userData.noShadow = true; G.add(box);
+  function plate(w, x, title){
+    var c = mk(w * 1000, 420), g = c.getContext('2d'); g.fillStyle = '#0A0A0C'; g.fillRect(0, 0, c.width, 420); g.font = '22px ' + FONT; g.fillStyle = '#8E8E92'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(title, c.width / 2, 22);
+    var t = smoothTex(c), box = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, 0.42), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x0A0A0C }); }));
+    box.position.set(x, -0.02, 0.09); box.userData.noShadow = true; G.add(box);
+  }
+  plate(0.5, 0, 'JAMS'); plate(0.26, 0.4, 'ROOM KEY');
   HOST = G; LX = function(u){ return u * SC; }; LZ = function(u){ return u * SC; }; DEV = 'wall';
-  var b;
-  FACE = { bg:'#D8262E', fg:'#FFFFFF' }; b = button('wallclear' + n, -58, 14, 100, 62, 'CLEAR\nALL', 'Clear all patterns', 0xFF2A3C); b.wk = 'clear'; WALLBTN.push(b);
-  FACE = { bg:'#2E9E55', fg:'#FFFFFF' }; b = button('walldef' + n, 58, 14, 100, 62, 'DEFAULT\nJAM', 'Back to the starter jam', 0x3BFF6A); b.wk = 'def'; WALLBTN.push(b);
-  FACE = { bg:'#3A6FD8', fg:'#FFFFFF' }; b = button('wallexp' + n, -58, 86, 100, 44, 'EXPORT\nJAM', 'Save the whole room to a file: patterns, sounds and settings', 0x7AB8FF); b.wk = 'exp'; WALLBTN.push(b);
-  FACE = { bg:'#8A3FD0', fg:'#FFFFFF' }; b = button('wallload' + n, 58, 86, 100, 44, 'LOAD\nJAM', 'Load a saved jam', 0xC08AFF); b.wk = 'load'; WALLBTN.push(b);
-  WALLBTN.slice(-4).forEach(function(x){ x.mat.color.setHex(0x8A8A8A); });
-  // the room key, on its own small plate beside the jam buttons
-  var c2 = mk(260, 360), g2 = c2.getContext('2d'); g2.fillStyle = '#1B1D22'; g2.fillRect(0, 0, 260, 360); g2.strokeStyle = '#3BFF6A'; g2.lineWidth = 6; g2.strokeRect(7, 7, 246, 346); g2.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g2.fillStyle = '#D8D8D8'; g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText('ROOM KEY', 130, 40);
-  var t2 = smoothTex(c2), box2 = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.04, 0.36), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t2, emissive:0xffffff, emissiveMap:t2, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x1B1D22 }); }));
-  box2.position.set(0.4, -0.02, 0.06); box2.userData.noShadow = true; G.add(box2);
-  FACE = { bg:'#2A2D33', fg:'#FFFFFF' }; b = button('wallkey' + n, 200, 14, 108, 62, 'OFF', 'Room key', 0x3BFF6A); b.wk = 'key'; WALLBTN.push(b);
-  FACE = { bg:'#C9C7C0', fg:'#0B0B0D' }; b = button('wallnote' + n, 171, 86, 50, 44, 'C', 'Room key note', 0xFFFFFF); b.wk = 'note'; WALLBTN.push(b); b = button('wallscale' + n, 228, 86, 56, 44, 'Minor', 'Room key scale', 0xFFFFFF); b.wk = 'scale'; WALLBTN.push(b);
+  roundBtn(G, 'wallclear' + n, -58, 10, 74, 'CLEAR', 'Clear all patterns', '#E53A3A', 'clear');
+  roundBtn(G, 'walldef' + n, 58, 10, 74, 'DEMO', 'Load the demo jam', '#177D32', 'def');
+  roundBtn(G, 'wallexp' + n, -58, 88, 74, 'EXPORT', 'Save the whole room to a file: patterns, sounds and settings', '#1E46A6', 'exp');
+  roundBtn(G, 'wallload' + n, 58, 88, 74, 'LOAD', 'Load a saved jam', '#56239E', 'load');
+  roundBtn(G, 'wallkey' + n, 200, 10, 74, 'KEY\nOFF', 'Room key', '#B8650F', 'key', { size:54 });
+  roundBtn(G, 'wallnote' + n, 171, 90, 54, 'C', 'Room key note', '#2B2D33', 'note', { size:76 });
+  roundBtn(G, 'wallscale' + n, 229, 90, 54, 'Minor', 'Room key scale', '#2B2D33', 'scale', { size:50 });
   HOST = o.H; LX = o.X; LZ = o.Z; DEV = o.D; FACE = o.F;
 }
 /* everything a pattern is, on every machine, as one small file (the Tape's loop is audio and stays out) */
@@ -127,15 +151,16 @@ function wallLabel(c){ if (c.wk === 'key') return 'Room key is ' + (RK.on ? 'on:
 function wallPress(c){ unlock(); c.down = 1;
   if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ if (c.wk === 'key') RK.on = RK.on ? 0 : 1; else if (c.wk === 'note') RK.root = (RK.root + 1) % 12; else RK.scale = (RK.scale + 1) % SCALES.length;
     rkShow(); rkSave(); toast('Room key ' + (RK.on ? 'on · ' : 'off · ') + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0], 2200); return; } if (c.wk === 'exp'){ patternExport(); return; } if (c.wk === 'load'){ jamOpen(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
-function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the starter jam')); WALL.c = null; } }
+function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the demo jam')); WALL.c = null; } }
 DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
 function wallUpdate(now){
   nowUpdate();
   WALLBTN.forEach(function(c){
-    var L = c.down ? 1 : 0.15;
-    if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ var tx = c.wk === 'key' ? (RK.on ? 'ON' : 'OFF') : c.wk === 'note' ? NOTEN[RK.root] : SCALES[RK.scale][0]; if (c.rkT !== tx){ c.rkT = tx; c.repaintFace(tx); } if (c.wk === 'key') L = RK.on ? 0.95 : 0.08; }
-    if (c.wk === 'clear' || c.wk === 'def'){ L = 0.12;
-      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(c.wk === 'def'); jamNamed(c.wk === 'def' ? (DEF && DEF.name) || 'Default jam' : 'New jam'); } } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
-    if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.004 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
+    var ring = c.down ? 1 : 0, wk = c.wk;
+    if (wk === 'clear' || wk === 'def'){ ring = 0;
+      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(wk === 'def'); jamNamed(wk === 'def' ? (DEF && DEF.name) || 'Demo jam' : 'New jam'); } } ring = WALL.done ? 1 : clamp(k, 0, 1); } }      // held: the ring fills clockwise from the top
+    else if (wk === 'key'){ ring = RK.on || c.down ? 1 : 0; rbCap(c, 'KEY\n' + (RK.on ? 'ON' : 'OFF')); }
+    else if (wk === 'note') rbCap(c, NOTEN[RK.root]); else if (wk === 'scale') rbCap(c, SCALES[RK.scale][0]);
+    rbRing(c, ring); if (c.cap){ var ty = c.down ? -0.007 : 0; if (c.cap.position.y !== ty) c.cap.position.y = ty; }
   });
 }
