@@ -167,14 +167,13 @@ function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i
 /* CLEAR empties, it does not go back to the starter jam. A lane's knobs go to 12 o'clock; gates go off. Probability is the one exception:
    12 o'clock there means a step only plays half the time, so it clears to "always". */
 function snClearLane(pg, p){ var mid = [42, 0, 64, 127, 64][p]; SN.pgs[pg][p] = { vals:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map(function(){ return mid; }), dir:0, speed:1, len:16, shift:0, shape:0 }; }
-/* Undo and redo, for this Snake only: up to six steps back. A step is one action: a button, a clear, a paste, or one turn of a knob
+/* Undo, for this Snake only (Ctrl+Z): up to six steps back. A step is one action: a button, a clear, a paste, or one turn of a knob
    (a drag counts once). Changes other players make are not steps of yours, but undoing puts the whole Snake back as it was. */
-SN.hist = []; SN.redo = []; SN.hTag = null; SN.hT = 0;
+SN.hist = []; SN.hTag = null; SN.hT = 0;
 function snSnap(){ return JSON.stringify({ pgs:SN.pgs, act:SN.act, root:SN.root, scale:SN.scale, swing:SN.swing, out:SN.out, cc:SN.cc || null }); }
-function snMark(tag){ var now = performance.now(); if (tag && tag === SN.hTag && now - SN.hT < 1200){ SN.hT = now; return; } SN.hTag = tag || null; SN.hT = now; SN.hist.push(snSnap()); if (SN.hist.length > 6) SN.hist.shift(); SN.redo = []; }
+function snMark(tag){ var now = performance.now(); if (tag && tag === SN.hTag && now - SN.hT < 1200){ SN.hT = now; return; } SN.hTag = tag || null; SN.hT = now; SN.hist.push(snSnap()); if (SN.hist.length > 6) SN.hist.shift(); }
 function snPut(j){ var s = JSON.parse(j); SN.pgs = s.pgs; SN.act = s.act; SN.root = s.root; SN.scale = s.scale; SN.swing = s.swing; SN.out = s.out; SN.cc = s.cc; SN.copy = null; SN.hTag = null; SN.cv = 0; snLearn(false); snSync(); SN.dirty = true; snSaveSoon(); }
-function undo(){ if (!SN.hist.length){ snSay('UNDO', 'nothing to undo', 1500); return; } SN.redo.push(snSnap()); snPut(SN.hist.pop()); snSay('UNDO', SN.hist.length ? SN.hist.length + ' more' : 'that was the last', 1500); }
-function redo(){ if (!SN.redo.length){ snSay('REDO', 'nothing to redo', 1500); return; } SN.hist.push(snSnap()); snPut(SN.redo.pop()); snSay('REDO', SN.redo.length ? SN.redo.length + ' more' : 'up to date', 1500); }
+function undo(){ if (!SN.hist.length){ snSay('UNDO', 'nothing to undo', 1500); return; } snPut(SN.hist.pop()); snSay('UNDO', SN.hist.length ? SN.hist.length + ' more' : 'that was the last', 1500); }
 var SNCLR = 900;                                               // CLEAR and CLEAR ALL have to be held this long
 function snClrTick(){
   var h = SN.hold2; if (!h) return; if (h.done) return;
@@ -266,7 +265,7 @@ function patterns(def, jam){ var d0 = snDef(); SN.view = 0; SN.act = [1, 0]; SN.
   var jx = jam && DEF && DEF.snakes && DEF.snakes[K]; if (jx && typeof jx.out === 'number'){ SN.out = clamp(jx.out | 0, 0, 9); SN.cv = 0; }      // a saved jam also says which synth each Snake plays
   if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
-return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update, undo:undo, redo:redo };
+return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update, undo:undo };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8], [MCPOS, 7], [SCPOS, 9]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
