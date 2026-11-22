@@ -40,13 +40,13 @@ function wallPanel(P){                                       // called by vidBoo
     var t = smoothTex(c), box = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, 0.42), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x0A0A0C }); }));
     box.position.set(x, -0.02, 0.09); box.userData.noShadow = true; G.add(box);
   }
-  plate(0.5, 0, 'JAMS'); plate(0.26, 0.4, 'ROOM KEY');
+  plate(0.5, 0, 'JAM CONTROLZ'); plate(0.26, 0.4, 'ROOM KEY');
   HOST = G; LX = function(u){ return u * SC; }; LZ = function(u){ return u * SC; }; DEV = 'wall';
   roundBtn(G, 'wallclear' + n, -58, 10, 74, 'CLEAR', 'Clear all patterns', '#E53A3A', 'clear');
   roundBtn(G, 'walldef' + n, 58, 10, 74, 'DEMO', 'Load the demo jam', '#177D32', 'def');
   roundBtn(G, 'wallexp' + n, -58, 88, 74, 'EXPORT', 'Save the whole room to a file: patterns, sounds and settings', '#1E46A6', 'exp');
   roundBtn(G, 'wallload' + n, 58, 88, 74, 'LOAD', 'Load a saved jam', '#56239E', 'load');
-  roundBtn(G, 'wallkey' + n, 200, 10, 74, 'KEY\nOFF', 'Room key', '#B8650F', 'key', { size:54 });
+  roundBtn(G, 'wallkey' + n, 200, 10, 74, 'KEY\nOFF', 'Room key', '#E53A3A', 'key', { size:54 });
   roundBtn(G, 'wallnote' + n, 171, 90, 54, 'C', 'Room key note', '#2B2D33', 'note', { size:76 });
   roundBtn(G, 'wallscale' + n, 229, 90, 54, 'Minor', 'Room key scale', '#2B2D33', 'scale', { size:50 });
   HOST = o.H; LX = o.X; LZ = o.Z; DEV = o.D; FACE = o.F;
@@ -159,7 +159,7 @@ function wallUpdate(now){
     var ring = c.down ? 1 : 0, wk = c.wk;
     if (wk === 'clear' || wk === 'def'){ ring = 0;
       if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(wk === 'def'); jamNamed(wk === 'def' ? (DEF && DEF.name) || 'Demo jam' : 'New jam'); } } ring = WALL.done ? 1 : clamp(k, 0, 1); } }      // held: the ring fills clockwise from the top
-    else if (wk === 'key'){ ring = RK.on || c.down ? 1 : 0; rbCap(c, 'KEY\n' + (RK.on ? 'ON' : 'OFF')); }
+    else if (wk === 'key'){ ring = RK.on || c.down ? 1 : 0; var kc = RK.on ? '#177D32' : '#E53A3A'; if (c.capCol !== kc){ c.capCol = kc; c.capText = null; } rbCap(c, 'KEY\n' + (RK.on ? 'ON' : 'OFF')); }      // green when the room key is on, red when it is off
     else if (wk === 'note') rbCap(c, NOTEN[RK.root]); else if (wk === 'scale') rbCap(c, SCALES[RK.scale][0]);
     rbRing(c, ring); if (c.cap){ var ty = c.down ? -0.007 : 0; if (c.cap.position.y !== ty) c.cap.position.y = ty; }
   });
