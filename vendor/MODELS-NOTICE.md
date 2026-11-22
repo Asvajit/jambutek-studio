@@ -18,3 +18,7 @@ https://sketchfab.com/3d-models/button-dfff87207b394ded97a7c7c2669a5fe1
 Licence: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 Changes: only the two shapes (base ring and cap) are kept, as 16-bit positions; its textures are replaced by ones painted in the room
 (coloured caps with labels, and a ring that lights as an indicator). Made by `tools/make_button.py`.
+
+# Fonts (`public/fonts/`)
+Anton by Vernon Adams and Yellowtail by Astigmatic, used for the lobby. Anton is under the SIL Open Font Licence 1.1;
+Yellowtail is under the Apache Licence 2.0. Files taken from the Fontsource packages.

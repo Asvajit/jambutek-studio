@@ -360,6 +360,22 @@ var MP = (function(){
   }
   function menuOff(){ if (!menuA) return; clearInterval(menuFade); menuFade = setInterval(function(){ var v = menuA.volume - 0.04; if (v <= 0.02){ clearInterval(menuFade); menuA.pause(); menuA.volume = 0; } else menuA.volume = v; }, 60); }
   Q.menuAudio = function(){ return menuA; };
+  /* ---- menu sounds: a tick when the pointer comes onto a button, a two-note blip on a click. They have their own little audio
+     context (the room's is not built until you go in), started by the first click or key, and they obey the mute button. ---- */
+  var uiAC = null, uiLast = null;
+  function uiStart(){ if (uiAC || !Q.lobbyOpen) return; try { uiAC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){} }
+  function uiBlip(f0, f1, dur, vol, type){
+    if (!uiAC || muted || uiAC.state !== 'running') return;
+    var t = uiAC.currentTime, o = uiAC.createOscillator(), g = uiAC.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(uiAC.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function uiBtn(e){ var b = e.target && e.target.closest ? e.target.closest('button') : null; return b && !b.classList.contains('taken') && (lobby.contains(b) || cred.contains(b)) ? b : null; }
+  document.addEventListener('pointerdown', uiStart, true); document.addEventListener('keydown', uiStart, true);
+  document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiBlip(1500, 2100, 0.05, 0.05, 'triangle'); });
+  document.addEventListener('click', function(e){ if (!Q.lobbyOpen || !uiBtn(e)) return; uiBlip(520, 780, 0.07, 0.09, 'square'); setTimeout(function(){ uiBlip(1040, 1560, 0.09, 0.07, 'square'); }, 55); }, true);
+  Q.uiSound = function(){ return uiAC ? uiAC.state : null; };
   /* the credits sheet, opened from the line under the lobby card */
   var cred = document.getElementById('mpCredits');
   document.getElementById('mpCred').addEventListener('click', function(){ cred.hidden = false; });
