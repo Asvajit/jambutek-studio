@@ -123,6 +123,7 @@ function applyMix(){
 var TRIM = [1, 0.75, 1, 1, 1, 2, 2.2, 1, 1, 0.45, 1.1];              // level-matches the voices
 function trig(i, t, vel){
   if (!AU.ready || M.mutes[i]) return;
+  if (i === 0) mxDuck(Math.max(t, ac.currentTime));            // the kick ducks every channel that has its sidechain knob up
   try { VOICES[i](AU.chans[i].g, Math.max(t, ac.currentTime), vel * TRIM[i], { tune:CT['tune' + i].v, decay:CT['decay' + i].v, ctrl:CT['ctrl' + i].v }, TONES[pat().tones[i]] || '808'); } catch (e) {}
 }
 function hit(i, vel){                           // a pad played by hand

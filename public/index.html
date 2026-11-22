@@ -148,7 +148,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.66</span>
+    <span id="verFps">studio v1.67</span>
   </div>
 </div>
 
@@ -179,7 +179,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk cols" id="hudMx" hidden><div><i>Mixer controls</i><b>Scroll</b> or <b>drag</b> knobs and faders<br><b>Double-click</b> a knob or fader to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>10</b>: mute <span>(0 is 10)</span><br><b>Shift</b> + <b>1</b>&ndash;<b>10</b>: solo<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: look up <span>(hold)</span><br><b>E</b> / <b>Esc</b>: step away</div></div>
-  <div class="keys desk cols" id="hudSn" hidden><div><i>Sequencer controls</i><b>Scroll</b> or <b>drag</b> knobs<br><b>Double-click</b> knobs to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>8</b>: toggle gates 1&ndash;8<br><b>Shift</b> + <b>1</b>&ndash;<b>8</b>: toggle gates 9&ndash;16<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: swap to instrument<br><b>E</b> / <b>Esc</b>: step away</div></div>
+  <div class="keys desk cols" id="hudSn" hidden><div><i>Sequencer controls</i><b>Scroll</b> or <b>drag</b> knobs<br><b>Double-click</b> knobs to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>8</b>: toggle gates 1&ndash;8<br><b>Shift</b> + <b>1</b>&ndash;<b>8</b>: toggle gates 9&ndash;16<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: swap to instrument<br><b>Ctrl</b> + <b>Z</b>: undo &middot; <b>Ctrl</b> + <b>R</b>: redo<br><b>E</b> / <b>Esc</b>: step away</div></div>
   <div class="keys desk" id="hudEc" hidden>The echo (top) is fed by <b>SEND A</b> on the mixer, the reverb (bottom) by <b>SEND B</b> &middot; reverb: low <b>DENSITY</b> gives repeats, high a wash; <b>MODE</b> picks the space &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>Enter</b> start / stop &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBz" hidden>Video synth B, after Fosfora: it moves to the music and the drum machine&rsquo;s kick and snare &middot; the ten buttons pick the effect &middot; pots <b>A B C</b> shape it, <b>HUE</b> picks its one colour, <b>SPEED</b> sets its pace &middot; the big button freezes it<br>Its own screen shows the picture even when it is not on the roof &middot; the box on the right picks what the roof shows: <b>A</b>, <b>B</b> or <b>OFF</b> &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudZk" hidden>Four voices through one filter &middot; play it with <b>A W S E D F T G Y H U J K</b>, <b>Z</b> / <b>X</b> octave, or the four pads &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> the switches: LP / BP, POLY / ACID, THIN / FAT<br><b>WAVE</b>, <b>OCTAVE</b> and <b>HOLD</b> are the three buttons on the left &middot; <b>Q</b> hops to its sequencer &middot; <b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
@@ -4258,6 +4258,7 @@ var DEF = window.JB_DEFAULTS || null;
 function defCopy(x){ return JSON.parse(JSON.stringify(x)); }
 var MPQUIET = false;            // set while a Snake's custom lane is turning a knob, so it is not sent to the room as if a hand did it
 var SNLEARN = null;             // the Snake waiting to learn which knob its custom lane should turn
+var RK = { on:0, root:0, scale:2 };                           // the room key: when on, every Snake plays in this key instead of its own
 var SPEC = { on:false, i:0, x:0, y:0, z:0 };                  // spectator view: the eye is pinned to one of five fixed cameras
 var MPON = false, MPHOST = true, REMOTE = {}, storeHook = null, RESTORE = {}, SAVENOW = [];
 function saveMs(d){ return MPON ? 250 : d; }
@@ -4743,9 +4744,9 @@ function unlock(){
     var out = ac.createGain(); out.gain.value = muted ? 0 : 1; out.connect(ac.destination); AU.out = out;
     var comp = ac.createDynamicsCompressor(); comp.threshold.value = -9; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.12;
     var vol = ac.createGain(); AU.vol = vol;
-    AU.ch = []; AU.tap = ac.createGain(); AU.sendA = ac.createGain(); AU.sendB = ac.createGain(); for (var ci = 0; ci < 10; ci++){ var C = { sa:ac.createGain(), sb:ac.createGain(), inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), an:ac.createAnalyser() };
+    AU.ch = []; AU.tap = ac.createGain(); AU.sendA = ac.createGain(); AU.sendB = ac.createGain(); for (var ci = 0; ci < 10; ci++){ var C = { sa:ac.createGain(), sb:ac.createGain(), inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), duck:ac.createGain(), an:ac.createAnalyser() };
       C.lo.type = 'lowshelf'; C.lo.frequency.value = 110; C.mid.type = 'peaking'; C.mid.frequency.value = 1000; C.mid.Q.value = 0.8; C.hi.type = 'highshelf'; C.hi.frequency.value = 7000; C.an.fftSize = 256;
-      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.fad.connect(C.an); C.fad.connect(comp); if (ci !== 5) C.fad.connect(AU.tap); C.sa.gain.value = C.sb.gain.value = 0; C.fad.connect(C.sa); C.sa.connect(AU.sendA); C.fad.connect(C.sb); C.sb.connect(AU.sendB); AU.ch.push(C); }       // sends are post-fader: A feeds the echo, B the reverb
+      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.fad.connect(C.duck); C.duck.connect(C.an); C.duck.connect(comp); if (ci !== 5) C.duck.connect(AU.tap); C.sa.gain.value = C.sb.gain.value = 0; C.duck.connect(C.sa); C.sa.connect(AU.sendA); C.duck.connect(C.sb); C.sb.connect(AU.sendB); AU.ch.push(C); }       // sends are post-fader: A feeds the echo, B the reverb
     vol.connect(AU.ch[0].inp); AU.master = ac.createGain();
     var an = ac.createAnalyser(); an.fftSize = 256; an.smoothingTimeConstant = 0.5; AU.comp = comp; comp.connect(AU.master); AU.master.connect(an); an.connect(out); AU.an = an;
     // master FX: a low-pass below centre, a high-pass above it
@@ -4995,6 +4996,7 @@ function applyMix(){
 var TRIM = [1, 0.75, 1, 1, 1, 2, 2.2, 1, 1, 0.45, 1.1];              // level-matches the voices
 function trig(i, t, vel){
   if (!AU.ready || M.mutes[i]) return;
+  if (i === 0) mxDuck(Math.max(t, ac.currentTime));            // the kick ducks every channel that has its sidechain knob up
   try { VOICES[i](AU.chans[i].g, Math.max(t, ac.currentTime), vel * TRIM[i], { tune:CT['tune' + i].v, decay:CT['decay' + i].v, ctrl:CT['ctrl' + i].v }, TONES[pat().tones[i]] || '808'); } catch (e) {}
 }
 function hit(i, vel){                           // a pad played by hand
@@ -6373,8 +6375,8 @@ function qz(u){ return (u - MXD / 2) * SC; }
 var MXY = new THREE.Group(); MXY.position.set(MXPOS.x, MXH, MXPOS.z); MXY.rotation.y = MXPOS.r; scene.add(MXY);
 var MXG = new THREE.Group(); MXG.rotation.x = MXTILT; MXY.add(MXG);
 var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBI', 'TAPE', 'SHRU', 'CHORD', 'SCRATCH', 'KIT'], MXCOL = ['#FF2A3C', '#FF8A2A', '#4AA8FF', '#FF5A4A', '#C8C8FF', '#FFE15A', '#58C8FF', '#FF6AB0', '#35D8B8', '#F5C518'], MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416, 464], MXMX = 510, MXNC = 10;
-var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, vol:0.75, mute:0, solo:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
-function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch)){ s.ch.forEach(function(c, i){ if (!c || !MX.ch[i]) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; MX.ch[i].solo = c.solo ? 1 : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
+var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, sc:0, vol:0.75, mute:0, solo:0 }; }), master:0.8, lv:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch)){ s.ch.forEach(function(c, i){ if (!c || !MX.ch[i]) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; MX.ch[i].solo = c.solo ? 1 : 0; MX.ch[i].sc = i && typeof c.sc === 'number' ? clamp(c.sc, 0, 1) : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1); } } catch (e) {} } mxRestore();
 var mxSaveT = null; function mxSaveNow(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master })); } function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(mxSaveNow, saveMs(800)); }
 var mxC = mk(2144, 1312), mxTex = null;
 function paintMX(){
@@ -6382,9 +6384,10 @@ function paintMX(){
   g.fillStyle = '#1A1C21'; g.fillRect(0, 0, MXW, MXD);
   for (var i = 0; i < 3000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * MXW, Math.random() * MXD, .5, .3); }
   function T(s, x, y, size, col, anton){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E6E2'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-   T('MIX-10', 466, 11, 7, '#E0193C', true);
+   T('MIX-10', MXMX, 11, 6, '#E0193C', true);
   MXX.forEach(function(x, i){
     g.fillStyle = '#23262C'; g.fillRect(x - 21, 19, 42, 302); g.fillStyle = MXCOL[i]; g.fillRect(x - 21, 19, 42, 2.5);
+    if (i){ T('SIDE', x - 13, 7.4, 2.7, '#B8B8B4'); T('CHAIN', x - 13, 11.2, 2.7, '#B8B8B4'); g.fillStyle = '#FF2A3C'; g.fillRect(x + 2.7, 2.6, 0.6, 1.4); }
     g.fillStyle = '#E6E6E2'; g.fillRect(x - 17, 25, 34, 11); T(MXN[i], x, 30.8, 6.2, '#111318', true); T(String(i + 1), x - 15, 313, 7, MXCOL[i], true);
     [['HI', 52], ['MID', 88], ['LOW', 124]].forEach(function(a){ T(a[0], x, a[1] + 15, 4.2); g.fillStyle = '#B8B8B4'; g.fillRect(x - 0.3, a[1] - 13, 0.6, 2); });
     [['A', 157, '#F2B544'], ['B', 186, '#7FD0FF']].forEach(function(a){ T('SEND', x - 12.5, a[1] - 3, 2.9, '#B8B8B4'); T(a[0], x - 12.5, a[1] + 2.6, 5.4, a[2], true); g.fillStyle = a[2]; g.fillRect(x - 0.3, a[1] - 9.6, 0.6, 1.6); });
@@ -6414,6 +6417,7 @@ var MXMET = [];
 HOST = MXG; LX = qx; LZ = qz; DEV = 'mx';
 MXX.forEach(function(x, i){
   knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
+  if (i) knob('mxsc' + i, x + 3, 9.6, 3.9, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc, { h:6, color:0x3A1216 }).ch = i;
   knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B (reverb)', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
   button('mxmute' + i, x - 9.6, 210, 17.5, 9, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 210, 17.5, 9, 'SOLO', MXN[i] + ' solo', 0xFFE15A); so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
@@ -6432,14 +6436,20 @@ function mxApply(){
   MX.ch.forEach(function(c, i){ var C = AU.ch[i]; C.hi.gain.setTargetAtTime((c.hi - 0.5) * 30, t, 0.02); C.mid.gain.setTargetAtTime((c.mid - 0.5) * 30, t, 0.02); C.lo.gain.setTargetAtTime((c.lo - 0.5) * 30, t, 0.02);
     var mo = MON.ch < 0 || MON.ch === i ? 1 : MON.mix;
     C.fad.gain.setTargetAtTime(c.mute || (anySolo && !c.solo) ? 0 : Math.pow(c.vol, 1.7) * 1.63 * mo, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3 * mo, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3 * mo, t, 0.02); });
+  MX.ch.forEach(function(c, i){ if (!(c.sc > 0.01)) AU.ch[i].duck.gain.setTargetAtTime(1, t, 0.03); });       // sidechain off: make sure the channel is fully open
   AU.master.gain.setTargetAtTime(Math.pow(MX.master, 1.7) * 1.46, t, 0.02);
+}
+/* Sidechain: on every kick, a channel with its knob up dips fast and swells back. The knob is how deep the dip goes. */
+function mxDuck(t){
+  if (!AU.ready) return; var rel = clamp(60 / M.bpm * 0.22, 0.05, 0.16);
+  for (var i = 1; i < MX.ch.length; i++){ var d = MX.ch[i].sc; if (!(d > 0.01)) continue; var g = AU.ch[i].duck.gain; try { g.cancelScheduledValues(t); g.setTargetAtTime(1 - d * 0.94, t, 0.005); g.setTargetAtTime(1, t + 0.04, rel); } catch (e) {} }
 }
 function mxSolo(i){ var c = MX.ch[i]; c.solo = c.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.solo ? ' solo' : ' solo off')); }
 function mxMute(i){ var c = MX.ch[i]; c.mute = c.mute ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.mute ? ' muted' : ' on')); }
 function mxCtl(c){
   var id = c.id, v = c.v;
   if (id === 'mxmaster') MX.master = v;
-  else { var k = id.indexOf('mxhi') === 0 ? 'hi' : id.indexOf('mxmid') === 0 ? 'mid' : id.indexOf('mxlo') === 0 ? 'lo' : id.indexOf('mxsa') === 0 ? 'sa' : id.indexOf('mxsb') === 0 ? 'sb' : 'vol'; if ((k === 'hi' || k === 'mid' || k === 'lo') && Math.abs(v - 0.5) < 0.025){ v = 0.5; } MX.ch[c.ch][k] = v; }
+  else { var k = id.indexOf('mxhi') === 0 ? 'hi' : id.indexOf('mxmid') === 0 ? 'mid' : id.indexOf('mxlo') === 0 ? 'lo' : id.indexOf('mxsa') === 0 ? 'sa' : id.indexOf('mxsb') === 0 ? 'sb' : id.indexOf('mxsc') === 0 ? 'sc' : 'vol'; if ((k === 'hi' || k === 'mid' || k === 'lo') && Math.abs(v - 0.5) < 0.025){ v = 0.5; } MX.ch[c.ch][k] = v; }
   mxApply(); mxSaveSoon();
 }
 function mxLabel(c){
@@ -6470,7 +6480,7 @@ var NOP = function(){};
 var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, turn:mfTurn }, bs:{ label:bsLabel, press:bsPress, release:bsRelease, ctl:bsCtl, turn:bsTurn }, mx:{ label:mxLabel, press:mxPress, release:NOP, ctl:mxCtl, turn:NOP },
   am:{ label:amLabel, press:amPress, release:NOP, ctl:amCtl, turn:amTurn }, tp:{ label:tpLabel, press:tpPress, release:tpRelease, ctl:tpCtl, turn:NOP } };
 
-RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);
+RESTORE['jambutek-studio-mix-v1'] = function(){ mxRestore(); for (var i = 0; i < MXNC; i++){ ['hi', 'mid', 'lo', 'sa', 'sb', 'sc', 'vol'].forEach(function(k){ var c = CT['mx' + k + i]; if (!c) return; c.v = MX.ch[i][k]; c.show(); }); } CT.mxmaster.v = MX.master; CT.mxmaster.show(); mxApply(); }; SAVENOW.push(mxSaveNow);
 
 /* ================= the Ambi: a 6-voice hybrid polysynth module, after Mutable Instruments' Ambika =================
    Eight pots edit the eight parameters on the two-line display; S1-S8 pick the page (press again for a page's second half).
@@ -7896,7 +7906,7 @@ var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.mi
 HOST = SNG; LX = sx; LZ = sz; DEV = DK; FACE = { bg:'#30343B', fg:'#F0F0EC' };
 SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 24 + [0, 0, 1, 2, 3][i] * 17.5, 66, 14, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
 knob((PX + 'root'), 22, 99, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 99, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
-button((PX + 'resetall'), 22, 126, 30, 12, 'CLEAR\nALL', 'Clear this whole sequencer: every step off, every knob to the middle, on both A and B', 0xFFFFFF); button((PX + 'randall'), 59, 126, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
+button((PX + 'resetall'), 22, 126, 30, 12, 'CLEAR\nALL', 'Clear this whole sequencer, A and B · press and hold', 0xFFFFFF); button((PX + 'randall'), 59, 126, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
 slide((PX + 'out'), 48.5, 177, 10, false, 'Inst', 0.096);
 button((PX + 'pa'), 118, 7, 13, 8.5, 'A', 'Page A', 0xFFFFFF).ab = 0; button((PX + 'pta'), 134, 7, 16, 8.5, 'ON', 'Page A on / off', 0x3BFF6A).tg = 0;
 button((PX + 'pb'), 154, 7, 13, 8.5, 'B', 'Page B', 0xFFFFFF).ab = 1; button((PX + 'ptb'), 170, 7, 16, 8.5, 'OFF', 'Page B on / off', 0x3BFF6A).tg = 1;
@@ -7908,14 +7918,14 @@ button((PX + 'msolo'), 54, 7, 20, 8.5, 'SOLO', 'Solo this instrument in your own
 button((PX + 'dir'), 118, 58, 64, 13, 'DIRECTION', 'Direction', 0xFFFFFF); button((PX + 'speed'), 118, 76, 64, 13, 'SPEED', 'Speed', 0xFFFFFF);
 knob((PX + 'steps'), 100, 98, 6.5, 'Steps', 1, { h:8 }).detents = 15; knob((PX + 'shift'), 136, 98, 6.5, 'Shift', 0, { h:8 }).detents = 15;
 knob((PX + 'swing'), 100, 134, 6.5, 'Swing', 0, { h:8 }); knob((PX + 'shape'), 136, 134, 7, 'Snake shape', 0, { h:8, endless:true, sides:14 });
-button((PX + 'rand'), 100, 170, 30, 12, 'RANDOM', 'Randomise this lane', 0xFFFFFF); button((PX + 'reset'), 136, 170, 30, 12, 'CLEAR', 'Clear this lane on this page: knobs to the middle', 0xFFFFFF);
+button((PX + 'rand'), 100, 170, 30, 12, 'RANDOM', 'Randomise this lane', 0xFFFFFF); button((PX + 'reset'), 136, 170, 30, 12, 'CLEAR', 'Clear this lane on this page · press and hold', 0xFFFFFF);
 for (var sni = 0; sni < 16; sni++){ (function(i){ var c = knob((PX + 'c') + i, SNGX[i % 4], SNGY[(i / 4) | 0] - 5, 6.4, 'Cell ' + (i + 1), 0, { h:9, sides:12 }); c.cell = i; })(sni); }
 /* gates page: the 16 cell knobs give way to 16 on/off step buttons */
 for (var sgi = 0; sgi < 16; sgi++){ (function(i){ var n0 = HOST.children.length, c = pad((PX + 'g') + i, SNGX[i % 4], SNGY[(i / 4) | 0] + 12, 21, 8.5, SNCOL[1], 'Step ' + (i + 1)); c.gate = i; c.hitM = HOST.children[n0 + 1]; })(sgi); }
 function snShowCells(){ return; var gp = SN.page === 1; for (var i = 0; i < 16; i++){ var k = CT[(PX + 'c') + i], p = CT[(PX + 'g') + i]; k.g.visible = !gp; k.g.position.y = gp ? -9 : 0; p.m.visible = gp; p.m.position.y = gp ? p.y0 : -9; p.hitM.position.y = gp ? 0.009 : -9; p.gone = !gp; } }
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 function snSay(a, b, ms){ SN.msgA = a; SN.msgB = b == null ? '' : String(b); SN.msgUntil = performance.now() + (ms || 1500); SN.dirty = true; }
-function snNote(v){ return 24 + SN.root + scaleQ(Math.round(v), SCALES[SN.scale][1]); }
+function snNote(v){ return 24 + (RK.on ? RK.root : SN.root) + scaleQ(Math.round(v), SCALES[RK.on ? RK.scale : SN.scale][1]); }      // the room key, when it is on, wins over the Snake's own
 function snCellTxt(p, v){ return p === 0 ? snNoteName(snNote(v)) : p === 1 ? (v ? 'On' : 'Off') : p >= 3 ? Math.round(v / 1.27) + '%' : String(Math.round(v)); }
 function snSync(){
   var L = SN.lanes[SN.page], mx = [83, 1, 127, 127, 127][SN.page];
@@ -7939,7 +7949,7 @@ function snLabel(c){
   return c.name;
 }
 function snCtl(c){
-  var L = SN.lanes[SN.page], id = c.id, v = c.v;
+  var L = SN.lanes[SN.page], id = c.id, v = c.v; if (id !== (PX + 'mmix')) snMark(id);
   if (c.cell != null){ var mx = [83, 1, 127, 127, 127][SN.page]; L.vals[c.cell] = SN.page === 1 ? (v >= 0.5 ? 1 : 0) : Math.round(v * mx); snSay(SNLN[SN.page] + ' ' + (c.cell + 1), snCellTxt(SN.page, L.vals[c.cell])); }
   else if (id === (PX + 'root')){ SN.root = Math.round(v * 11); snSay('Fundamental', NOTEN[SN.root]); }
   else if (id === (PX + 'steps')){ L.len = 1 + Math.round(v * 15); snSay(SNLN[SN.page] + ' steps', L.len); }
@@ -7988,8 +7998,26 @@ function snRandom(p){ var L = SN.lanes[p]; for (var i = 0; i < 16; i++) L.vals[i
 /* CLEAR empties, it does not go back to the starter jam. A lane's knobs go to 12 o'clock; gates go off. Probability is the one exception:
    12 o'clock there means a step only plays half the time, so it clears to "always". */
 function snClearLane(pg, p){ var mid = [42, 0, 64, 127, 64][p]; SN.pgs[pg][p] = { vals:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map(function(){ return mid; }), dir:0, speed:1, len:16, shift:0, shape:0 }; }
+/* Undo and redo, for this Snake only: up to six steps back. A step is one action: a button, a clear, a paste, or one turn of a knob
+   (a drag counts once). Changes other players make are not steps of yours, but undoing puts the whole Snake back as it was. */
+SN.hist = []; SN.redo = []; SN.hTag = null; SN.hT = 0;
+function snSnap(){ return JSON.stringify({ pgs:SN.pgs, act:SN.act, root:SN.root, scale:SN.scale, swing:SN.swing, out:SN.out, cc:SN.cc || null }); }
+function snMark(tag){ var now = performance.now(); if (tag && tag === SN.hTag && now - SN.hT < 1200){ SN.hT = now; return; } SN.hTag = tag || null; SN.hT = now; SN.hist.push(snSnap()); if (SN.hist.length > 6) SN.hist.shift(); SN.redo = []; }
+function snPut(j){ var s = JSON.parse(j); SN.pgs = s.pgs; SN.act = s.act; SN.root = s.root; SN.scale = s.scale; SN.swing = s.swing; SN.out = s.out; SN.cc = s.cc; SN.copy = null; SN.hTag = null; SN.cv = 0; snLearn(false); snSync(); SN.dirty = true; snSaveSoon(); }
+function undo(){ if (!SN.hist.length){ snSay('UNDO', 'nothing to undo', 1500); return; } SN.redo.push(snSnap()); snPut(SN.hist.pop()); snSay('UNDO', SN.hist.length ? SN.hist.length + ' more' : 'that was the last', 1500); }
+function redo(){ if (!SN.redo.length){ snSay('REDO', 'nothing to redo', 1500); return; } SN.hist.push(snSnap()); snPut(SN.redo.pop()); snSay('REDO', SN.redo.length ? SN.redo.length + ' more' : 'up to date', 1500); }
+var SNCLR = 900;                                               // CLEAR and CLEAR ALL have to be held this long
+function snClrTick(){
+  var h = SN.hold2; if (!h) return; if (h.done) return;
+  var f = (performance.now() - h.t0) / SNCLR; if (f < 1){ var q = Math.max(0.03, Math.round(f * 30) / 30); if (q !== h.bar){ h.bar = q; h.c.repaintFace(undefined, q); } return; }
+  h.done = true; h.c.repaintFace(undefined, 0); snMark();
+  if (h.all){ for (var q2 = 0; q2 < 2; q2++) for (var p2 = 0; p2 < 5; p2++) snClearLane(q2, p2); snSync(); snSay('Sequencer', 'Cleared · A and B'); }
+  else { snClearLane(SN.view, SN.page); if (SN.page === 0) snClearLane(SN.view, 1); snSync(); snSay(SNLN[SN.page], 'Cleared · page ' + 'AB'[SN.view]); }      // clearing the notes also switches the steps off
+  snSaveSoon();
+}
 function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
-function snRelease(c){ var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
+function snRelease(c){ var h2 = SN.hold2; if (h2 && h2.c === c){ SN.hold2 = null; c.repaintFace(undefined, 0); if (!h2.done) snSay('CLEAR', 'keep holding to clear', 1600); return; }
+  var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
 function snHoldTick(){
   var h = SN.hold, b = CT[(PX + 'pg') + 4];
   if (!h || h.done){ if (SN.holdBar){ SN.holdBar = 0; if (b) b.repaintFace(undefined, 0); } return; }          // let go early, or finished: wipe the bar
@@ -8001,26 +8029,26 @@ function snBtnFace(){                                         // the CUSTOM butt
 }
 function snPress(c){
   var id = c.id, L = SN.lanes[SN.page], D = snDef();
-  if (c.gate != null){ var gv = SN.lanes[1].vals; gv[c.gate] = gv[c.gate] ? 0 : 1; c.down = 1; setTimeout(function(){ c.down = 0; }, 120); snSay('Step ' + (c.gate + 1), gv[c.gate] ? 'On' : 'Off'); snSaveSoon(); return; }
+  if (c.gate != null){ snMark(); var gv = SN.lanes[1].vals; gv[c.gate] = gv[c.gate] ? 0 : 1; c.down = 1; setTimeout(function(){ c.down = 0; }, 120); snSay('Step ' + (c.gate + 1), gv[c.gate] ? 'On' : 'Off'); snSaveSoon(); return; }
   if (c.ab != null){ snLearn(false);
     if (SN.copy){ if (SN.copy.src == null){ SN.copy.src = c.ab; SN.view = c.ab; snSync(); snSay('COPY ' + 'AB'[c.ab], 'now press ' + 'AB'[1 - c.ab], 8000); return; }
       var from = SN.copy.src; SN.copy = null; if (from === c.ab){ snSay('COPY', 'cancelled'); return; }
-      SN.pgs[c.ab] = defCopy(SN.pgs[from]); SN.view = c.ab; snSync(); snSay('COPIED', 'AB'[from] + ' to ' + 'AB'[c.ab], 2200); snSaveSoon(); return; }
+      snMark(); SN.pgs[c.ab] = defCopy(SN.pgs[from]); SN.view = c.ab; snSync(); snSay('COPIED', 'AB'[from] + ' to ' + 'AB'[c.ab], 2200); snSaveSoon(); return; }
     SN.view = c.ab; snSync(); snSay('PAGE ' + 'AB'[c.ab], SN.act[c.ab] ? 'on' : 'off', 1600); return; }
   if (id === (PX + 'pcopy')){ SN.copy = SN.copy ? null : { src:null }; snSay('COPY', SN.copy ? 'press the page to copy' : 'cancelled', SN.copy ? 8000 : 1200); return; }
-  if (c.tg != null){ SN.act[c.tg] = SN.act[c.tg] ? 0 : 1; snSay('PAGE ' + 'AB'[c.tg], SN.act[c.tg] ? 'on' : 'off', 1800); SN.dirty = true; snSaveSoon(); return; }
+  if (c.tg != null){ snMark(); SN.act[c.tg] = SN.act[c.tg] ? 0 : 1; snSay('PAGE ' + 'AB'[c.tg], SN.act[c.tg] ? 'on' : 'off', 1800); SN.dirty = true; snSaveSoon(); return; }
   if (id === (PX + 'msolo')){ SN.mon = !SN.mon; snSay('SOLO', SN.mon ? 'only in your ears' : 'off', 1800); return; }
   if (c.pg != null){
     if (c.pg === 4){ if (SN.cc && !SN.learn){ SN.hold = { c:c, t0:performance.now(), done:false }; return; } snCustomClick(); return; }       // with something learned, wait: a short click acts on release, a long hold clears it   // the custom lane: first click with nothing learned, or a second click, listens for a knob
     snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
-  if (c.sw){ SN.out = (c.pos + 1) % 10; c.set(SN.out); SN.cv = 0; snSay('Inst', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
+  if (c.sw){ snMark(); SN.out = (c.pos + 1) % 10; c.set(SN.out); SN.cv = 0; snSay('Inst', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
+  if (id === (PX + 'reset') || id === (PX + 'resetall')){ SN.hold2 = { c:c, t0:performance.now(), all:id === (PX + 'resetall'), done:false, bar:0 }; return; }      // held, not clicked: see snClrTick
+  snMark();
   switch (id){
     case (PX + 'dir'): L.dir = (L.dir + 1) % 5; snSay(SNLN[SN.page] + ' direction', SNDIR[L.dir]); break;
     case (PX + 'speed'): L.speed = (L.speed + 1) % 5; snSay(SNLN[SN.page] + ' speed', SNSPD[L.speed][1]); break;
     case (PX + 'rand'): snRandom(SN.page); snSync(); snSay(SNLN[SN.page], 'Random'); break;
-    case (PX + 'reset'): snClearLane(SN.view, SN.page); if (SN.page === 0) snClearLane(SN.view, 1); snSync(); snSay(SNLN[SN.page], 'Cleared · page ' + 'AB'[SN.view]); break;      // clearing the notes also switches the steps off
     case (PX + 'randall'): for (var p = 0; p < 5; p++) snRandom(p); snSync(); snSay('All lanes', 'Random'); break;
-    case (PX + 'resetall'): for (var q = 0; q < 2; q++) for (var p2 = 0; p2 < 5; p2++) snClearLane(q, p2); snSync(); snSay('Sequencer', 'Cleared · A and B'); break;
   }
   snSaveSoon();
 }
@@ -8040,7 +8068,7 @@ function onStop(){ SN.vis = []; SN.cv = 0; }
 function snPaintDisp(){
   var g = snDispC.getContext('2d'), now = performance.now(), L = SN.lanes[SN.page], a, b;
   g.fillStyle = '#04070A'; g.fillRect(0, 0, 272, 112); g.textBaseline = 'middle'; g.textAlign = 'left';
-  if (now < SN.msgUntil){ a = SN.msgA; b = SN.msgB; } else { a = SNLN[SN.page] + '  ' + SNSPD[L.speed][1]; b = SN.page === 4 ? (SN.learn ? 'move a knob...' : SN.cc ? SN.cc.name : 'nothing learned') : NOTEN[SN.root] + ' ' + SCALES[SN.scale][0]; }
+  if (now < SN.msgUntil){ a = SN.msgA; b = SN.msgB; } else { a = SNLN[SN.page] + '  ' + SNSPD[L.speed][1]; b = SN.page === 4 ? (SN.learn ? 'move a knob...' : SN.cc ? SN.cc.name : 'nothing learned') : RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] + ' · room' : NOTEN[SN.root] + ' ' + SCALES[SN.scale][0]; }
   g.fillStyle = '#' + ('00000' + SNCOL[SN.page].toString(16)).slice(-6); g.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText(a, 8, 24, 126);
   g.fillStyle = SN.act[SN.view] ? '#3BFF6A' : '#5A6068'; g.fillRect(140, 8, 24, 28); g.fillStyle = '#04070A'; g.font = 'bold 24px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.fillText('AB'[SN.view], 152, 23); g.textAlign = 'left';
   g.fillStyle = '#F2F2F2'; g.font = 'bold 30px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText(b, 8, 62, 160);
@@ -8060,7 +8088,7 @@ function update(now, dt){
   CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15;
     if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : M.playing && SN.playPg === c.ab ? 0.5 : 0.1;
     else if (c.id === (PX + 'pcopy')) L = SN.copy ? (Math.floor(now / 160) % 2 ? 1 : 0.15) : 0; else if (c.tg != null){ L = SN.act[c.tg] ? 0.9 : 0; var tt = SN.act[c.tg] ? 'ON' : 'OFF'; if (c.tgT !== tt){ c.tgT = tt; c.repaintFace(tt); } } else if (c.id === (PX + 'msolo')) L = SN.mon ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
-  snHoldTick(); snBtnFace();
+  snHoldTick(); snClrTick(); snBtnFace();
   if (now > SN.msgUntil && SN.msgA){ SN.msgA = ''; SN.dirty = true; }
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
 }
@@ -8069,7 +8097,7 @@ function patterns(def, jam){ var d0 = snDef(); SN.view = 0; SN.act = [1, 0]; SN.
   var jx = jam && DEF && DEF.snakes && DEF.snakes[K]; if (jx && typeof jx.out === 'number'){ SN.out = clamp(jx.out | 0, 0, 9); SN.cv = 0; }      // a saved jam also says which synth each Snake plays
   if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
-return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update };
+return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update, undo:undo, redo:redo };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8], [MCPOS, 7], [SCPOS, 9]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });
@@ -8144,7 +8172,7 @@ var SCOPECH = { mf:1, bs:2, mb:3, am:4, tp:5, sh:6, mc:7, sc:8, zk:9 };
 })();
 function scopeAn(ch){
   if (SCOPE.an[ch]) return SCOPE.an[ch]; if (!ac || !AU.ready || !AU.ch || !AU.ch[ch]) return null;
-  var a = ac.createAnalyser(); a.fftSize = 2048; a.smoothingTimeConstant = 0; AU.ch[ch].fad.connect(a); SCOPE.an[ch] = a; if (!SCOPE.buf) SCOPE.buf = new Float32Array(2048); return a;
+  var a = ac.createAnalyser(); a.fftSize = 2048; a.smoothingTimeConstant = 0; AU.ch[ch].duck.connect(a); SCOPE.an[ch] = a; if (!SCOPE.buf) SCOPE.buf = new Float32Array(2048); return a;
 }
 function scopeDraw(o, ch, data, peak){
   var g = o.g, W = SCOPE.W, H = SCOPE.H, col = ch >= 0 ? MXCOL[ch] : '#5A6A66', i;
@@ -8200,6 +8228,12 @@ function wallPanel(P){                                       // called by vidBoo
   FACE = { bg:'#3A6FD8', fg:'#FFFFFF' }; b = button('wallexp' + n, -58, 86, 100, 44, 'EXPORT\nJAM', 'Save the whole room to a file: patterns, sounds and settings', 0x7AB8FF); b.wk = 'exp'; WALLBTN.push(b);
   FACE = { bg:'#8A3FD0', fg:'#FFFFFF' }; b = button('wallload' + n, 58, 86, 100, 44, 'LOAD\nJAM', 'Load a saved jam', 0xC08AFF); b.wk = 'load'; WALLBTN.push(b);
   WALLBTN.slice(-4).forEach(function(x){ x.mat.color.setHex(0x8A8A8A); });
+  // the room key, on its own small plate beside the jam buttons
+  var c2 = mk(260, 360), g2 = c2.getContext('2d'); g2.fillStyle = '#1B1D22'; g2.fillRect(0, 0, 260, 360); g2.strokeStyle = '#3BFF6A'; g2.lineWidth = 6; g2.strokeRect(7, 7, 246, 346); g2.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g2.fillStyle = '#D8D8D8'; g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText('ROOM KEY', 130, 40);
+  var t2 = smoothTex(c2), box2 = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.04, 0.36), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t2, emissive:0xffffff, emissiveMap:t2, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x1B1D22 }); }));
+  box2.position.set(0.4, -0.02, 0.06); box2.userData.noShadow = true; G.add(box2);
+  FACE = { bg:'#2A2D33', fg:'#FFFFFF' }; b = button('wallkey' + n, 200, 14, 108, 62, 'OFF', 'Room key', 0x3BFF6A); b.wk = 'key'; WALLBTN.push(b);
+  FACE = { bg:'#C9C7C0', fg:'#0B0B0D' }; b = button('wallnote' + n, 171, 86, 50, 44, 'C', 'Room key note', 0xFFFFFF); b.wk = 'note'; WALLBTN.push(b); b = button('wallscale' + n, 228, 86, 56, 44, 'Minor', 'Room key scale', 0xFFFFFF); b.wk = 'scale'; WALLBTN.push(b);
   HOST = o.H; LX = o.X; LZ = o.Z; DEV = o.D; FACE = o.F;
 }
 /* everything a pattern is, on every machine, as one small file (the Tape's loop is audio and stays out) */
@@ -8223,7 +8257,8 @@ RESTORE[SAVE_KEY] = function(){                                // the drum machi
 };
 function roomLoad(st){
   var keys = Object.keys(st).filter(function(k){ return k.indexOf('jambutek-studio-') === 0 && RESTORE[k] && !JAMSKIP[k] && typeof st[k] === 'string' && st[k].length < 600000; }), n = 0;
-  SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });                                 // a loaded jam opens on page A of every Snake
+  SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });
+  if (typeof st[RKKEY] !== 'string' && RK.on){ RK.on = 0; rkShow(); rkSave(); }                    // a jam made without a room key plays in its own keys                                 // a loaded jam opens on page A of every Snake
   keys.sort(function(a, b){ return (a === SAVE_KEY ? 0 : 1) - (b === SAVE_KEY ? 0 : 1); });         // the drum machine first: it carries the tempo
   keys.forEach(function(k){ REMOTE[k] = st[k]; try { RESTORE[k](); n++; } catch (e) {} finally { delete REMOTE[k]; } store(k, st[k]); });      // apply it here, then keep it and pass it to everyone in the room
   return n;
@@ -8276,13 +8311,25 @@ function allPatterns(def, jam){
   var L = TP.loop; if (TP.rec){ try { TP.rec.stop(); } catch (e) {} TP.rec = null; } if (L.src){ try { L.src.stop(); L.src.disconnect(); } catch (e) {} L.src = null; } L.st = 0; L.buf = null; L.rev = null;
   toast(jam ? jam + ' loaded on every machine' : def ? 'Default patterns restored on every machine' : 'All patterns cleared on every machine', 2600);
 }
-function wallLabel(c){ return c.name + (c.wk === 'exp' || c.wk === 'load' ? ' · click' : ' · press and hold'); }
-function wallPress(c){ unlock(); c.down = 1; if (c.wk === 'exp'){ patternExport(); return; } if (c.wk === 'load'){ jamOpen(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
+/* The room key: one note and scale for every Snake at once, so nobody drifts out of key. Off by default, and a jam that was saved
+   without it switches it off when loaded, so jams play as they were made. Shared with the room like any other setting. */
+var RKKEY = 'jambutek-studio-key-v1';
+function rkShow(){ SNAKES.forEach(function(s){ s.SN.dirty = true; }); }
+function rkSave(){ store(RKKEY, JSON.stringify({ v:1, on:RK.on, root:RK.root, scale:RK.scale })); }
+function rkLoad(){ var on = 0, root = 0, scale = 2; try { var s = JSON.parse(store(RKKEY) || 'null'); if (s && s.v === 1){ on = s.on ? 1 : 0; root = clamp(s.root | 0, 0, 11); scale = clamp(s.scale | 0, 0, SCALES.length - 1); } } catch (e) {} RK.on = on; RK.root = root; RK.scale = scale; rkShow(); }
+rkLoad(); RESTORE[RKKEY] = rkLoad; SAVENOW.push(rkSave);
+function wallLabel(c){ if (c.wk === 'key') return 'Room key is ' + (RK.on ? 'on: every sequencer plays in ' + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'off: each sequencer keeps its own key') + ' · click';
+  if (c.wk === 'note') return 'Room key note: ' + NOTEN[RK.root] + ' · click for the next'; if (c.wk === 'scale') return 'Room key scale: ' + SCALES[RK.scale][0] + ' · click for the next';
+  return c.name + (c.wk === 'exp' || c.wk === 'load' ? ' · click' : ' · press and hold'); }
+function wallPress(c){ unlock(); c.down = 1;
+  if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ if (c.wk === 'key') RK.on = RK.on ? 0 : 1; else if (c.wk === 'note') RK.root = (RK.root + 1) % 12; else RK.scale = (RK.scale + 1) % SCALES.length;
+    rkShow(); rkSave(); toast('Room key ' + (RK.on ? 'on · ' : 'off · ') + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0], 2200); return; } if (c.wk === 'exp'){ patternExport(); return; } if (c.wk === 'load'){ jamOpen(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
 function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the starter jam')); WALL.c = null; } }
 DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
 function wallUpdate(now){
   WALLBTN.forEach(function(c){
     var L = c.down ? 1 : 0.15;
+    if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ var tx = c.wk === 'key' ? (RK.on ? 'ON' : 'OFF') : c.wk === 'note' ? NOTEN[RK.root] : SCALES[RK.scale][0]; if (c.rkT !== tx){ c.rkT = tx; c.repaintFace(tx); } if (c.wk === 'key') L = RK.on ? 0.95 : 0.08; }
     if (c.wk === 'clear' || c.wk === 'def'){ L = 0.12;
       if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else allPatterns(c.wk === 'def'); } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
     if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.004 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
@@ -9109,12 +9156,14 @@ var MP = (function(){
   var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 1.78, RIG.z]];
     return L.map(function(c, k){ var dx = RIG.x - c[1], dz = RIG.z - c[3], dy = 1.0 - c[2]; return { name:c[0], x:c[1], y:c[2], z:c[3], yaw:k === 4 ? 0 : Math.atan2(-dx, -dz), pitch:k === 4 ? -0.08 : Math.atan2(dy, Math.hypot(dx, dz)) }; }); })();
   var specEl = null;
-  var SPK = {}, specSpin = false;
-  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : 'mouse looks round'); }
+  var SPK = {}, specSpin = false, specAuto = false, specBar = -1;      // auto edit: the room cuts between cameras 1 to 5 by itself, every four bars
+  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : 'mouse looks round'); }
   function specCam(i, quiet){
     if (i === 5){ SPEC.i = 5; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera 6 · free: WASD to fly, Space and C for up and down'); specHudText(); return; }      // the free camera starts wherever the last one was
     var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); specHudText(); }
   Q.specTick = function(dt){                                 // camera 6 flies; camera 5 can turn by itself
+    if (specAuto){ var bar = M.playing && typeof SEQ.visN === 'number' ? Math.floor(SEQ.visN / 64) : Math.floor(performance.now() / 8000);      // four bars with the drums running, eight seconds without
+      if (bar !== specBar){ var first = specBar === -1; specBar = bar; if (!first){ var nx = (SPEC.i + 1 + ((Math.random() * 4) | 0)) % 5; specCam(nx, true); } } }
     if (SPEC.i === 4 && specSpin) cam.ty += dt * 0.16;
     if (SPEC.i !== 5) return; var f = (SPK.w || SPK.arrowup ? 1 : 0) - (SPK.s || SPK.arrowdown ? 1 : 0), r = (SPK.d ? 1 : 0) - (SPK.a ? 1 : 0), u = (SPK[' '] ? 1 : 0) - (SPK.c ? 1 : 0); if (!f && !r && !u){ SPEC.v = 0; return; }
     SPEC.v = lerp(SPEC.v || 0, SPK.shift ? 4.2 : 1.6, 1 - Math.exp(-dt * 5)); var sp = SPEC.v * dt, cp = Math.cos(cam.pitch), sy = Math.sin(cam.yaw), cy = Math.cos(cam.yaw);      // eases up to speed so moves start softly
@@ -9129,7 +9178,8 @@ var MP = (function(){
   }
   document.addEventListener('keydown', function(e){          // while watching, the keyboard only changes camera
     if (!SPEC.on || Q.lobbyOpen || e.key === 'F2' || e.key === 'Escape' || e.ctrlKey || e.metaKey || e.altKey) return;
-    var i = '123456'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat) specCam(i); else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
+    var i = '123456'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat){ specAuto = false; specCam(i); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i === 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
+    else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
     SPK[k] = true; SPK.shift = e.shiftKey; e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
   }, true);
 
@@ -9422,11 +9472,12 @@ document.addEventListener('keydown', function(e){
     return;
   }
   if (mode === 'tr'){
-    if ((k === 'e' && !e.repeat) || e.key === 'Escape' || 'wasd'.indexOf(k) >= 0 && k.length === 1){ leaveTR(); return; }
+    if (!(e.ctrlKey || e.metaKey) && ((k === 'e' && !e.repeat) || 'wasd'.indexOf(k) >= 0 && k.length === 1) || e.key === 'Escape'){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
     if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat){ if (hasSeq(LEAN)) swapLean(); else if (k === 'q'){ LOOKUP.on = true; LOOKUP.yaw = 0; LOOKUP.pitch = 0; } } return; }
     if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi); } return; }      // 1-10 mute, with Shift solo
     if (LEAN.key && LEAN.key.indexOf('sn') === 0){                     // a Snake: 1-8 switch gates 1-8, with Shift gates 9-16
+      if ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'r')){ e.preventDefault(); if (!e.repeat) for (var ui = 0; ui < SNAKES.length; ui++) if (SNAKES[ui].key === LEAN.key){ if (k === 'z' && !e.shiftKey) SNAKES[ui].undo(); else SNAKES[ui].redo(); } return; }      // Ctrl+Z undo, Ctrl+R redo, this Snake only
       var gi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8'].indexOf(e.code); if (gi < 0 && !e.shiftKey) gi = '12345678'.indexOf(e.key);
       if (gi >= 0 && !e.repeat){ var gc = CT[LEAN.key + '_g' + (gi + (e.shiftKey ? 8 : 0))]; if (gc){ press(gc); release(gc); } } return; }
     if (LEAN === DEVS.tr){                                             // on the drum machine the number keys follow its mode
@@ -9470,7 +9521,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.66 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.67 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -9585,7 +9636,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { RK:RK, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>

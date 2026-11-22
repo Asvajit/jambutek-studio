@@ -21,7 +21,7 @@ var SCOPECH = { mf:1, bs:2, mb:3, am:4, tp:5, sh:6, mc:7, sc:8, zk:9 };
 })();
 function scopeAn(ch){
   if (SCOPE.an[ch]) return SCOPE.an[ch]; if (!ac || !AU.ready || !AU.ch || !AU.ch[ch]) return null;
-  var a = ac.createAnalyser(); a.fftSize = 2048; a.smoothingTimeConstant = 0; AU.ch[ch].fad.connect(a); SCOPE.an[ch] = a; if (!SCOPE.buf) SCOPE.buf = new Float32Array(2048); return a;
+  var a = ac.createAnalyser(); a.fftSize = 2048; a.smoothingTimeConstant = 0; AU.ch[ch].duck.connect(a); SCOPE.an[ch] = a; if (!SCOPE.buf) SCOPE.buf = new Float32Array(2048); return a;
 }
 function scopeDraw(o, ch, data, peak){
   var g = o.g, W = SCOPE.W, H = SCOPE.H, col = ch >= 0 ? MXCOL[ch] : '#5A6A66', i;

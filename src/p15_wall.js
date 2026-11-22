@@ -19,6 +19,12 @@ function wallPanel(P){                                       // called by vidBoo
   FACE = { bg:'#3A6FD8', fg:'#FFFFFF' }; b = button('wallexp' + n, -58, 86, 100, 44, 'EXPORT\nJAM', 'Save the whole room to a file: patterns, sounds and settings', 0x7AB8FF); b.wk = 'exp'; WALLBTN.push(b);
   FACE = { bg:'#8A3FD0', fg:'#FFFFFF' }; b = button('wallload' + n, 58, 86, 100, 44, 'LOAD\nJAM', 'Load a saved jam', 0xC08AFF); b.wk = 'load'; WALLBTN.push(b);
   WALLBTN.slice(-4).forEach(function(x){ x.mat.color.setHex(0x8A8A8A); });
+  // the room key, on its own small plate beside the jam buttons
+  var c2 = mk(260, 360), g2 = c2.getContext('2d'); g2.fillStyle = '#1B1D22'; g2.fillRect(0, 0, 260, 360); g2.strokeStyle = '#3BFF6A'; g2.lineWidth = 6; g2.strokeRect(7, 7, 246, 346); g2.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g2.fillStyle = '#D8D8D8'; g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText('ROOM KEY', 130, 40);
+  var t2 = smoothTex(c2), box2 = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.04, 0.36), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t2, emissive:0xffffff, emissiveMap:t2, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x1B1D22 }); }));
+  box2.position.set(0.4, -0.02, 0.06); box2.userData.noShadow = true; G.add(box2);
+  FACE = { bg:'#2A2D33', fg:'#FFFFFF' }; b = button('wallkey' + n, 200, 14, 108, 62, 'OFF', 'Room key', 0x3BFF6A); b.wk = 'key'; WALLBTN.push(b);
+  FACE = { bg:'#C9C7C0', fg:'#0B0B0D' }; b = button('wallnote' + n, 171, 86, 50, 44, 'C', 'Room key note', 0xFFFFFF); b.wk = 'note'; WALLBTN.push(b); b = button('wallscale' + n, 228, 86, 56, 44, 'Minor', 'Room key scale', 0xFFFFFF); b.wk = 'scale'; WALLBTN.push(b);
   HOST = o.H; LX = o.X; LZ = o.Z; DEV = o.D; FACE = o.F;
 }
 /* everything a pattern is, on every machine, as one small file (the Tape's loop is audio and stays out) */
@@ -42,7 +48,8 @@ RESTORE[SAVE_KEY] = function(){                                // the drum machi
 };
 function roomLoad(st){
   var keys = Object.keys(st).filter(function(k){ return k.indexOf('jambutek-studio-') === 0 && RESTORE[k] && !JAMSKIP[k] && typeof st[k] === 'string' && st[k].length < 600000; }), n = 0;
-  SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });                                 // a loaded jam opens on page A of every Snake
+  SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });
+  if (typeof st[RKKEY] !== 'string' && RK.on){ RK.on = 0; rkShow(); rkSave(); }                    // a jam made without a room key plays in its own keys                                 // a loaded jam opens on page A of every Snake
   keys.sort(function(a, b){ return (a === SAVE_KEY ? 0 : 1) - (b === SAVE_KEY ? 0 : 1); });         // the drum machine first: it carries the tempo
   keys.forEach(function(k){ REMOTE[k] = st[k]; try { RESTORE[k](); n++; } catch (e) {} finally { delete REMOTE[k]; } store(k, st[k]); });      // apply it here, then keep it and pass it to everyone in the room
   return n;
@@ -95,13 +102,25 @@ function allPatterns(def, jam){
   var L = TP.loop; if (TP.rec){ try { TP.rec.stop(); } catch (e) {} TP.rec = null; } if (L.src){ try { L.src.stop(); L.src.disconnect(); } catch (e) {} L.src = null; } L.st = 0; L.buf = null; L.rev = null;
   toast(jam ? jam + ' loaded on every machine' : def ? 'Default patterns restored on every machine' : 'All patterns cleared on every machine', 2600);
 }
-function wallLabel(c){ return c.name + (c.wk === 'exp' || c.wk === 'load' ? ' · click' : ' · press and hold'); }
-function wallPress(c){ unlock(); c.down = 1; if (c.wk === 'exp'){ patternExport(); return; } if (c.wk === 'load'){ jamOpen(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
+/* The room key: one note and scale for every Snake at once, so nobody drifts out of key. Off by default, and a jam that was saved
+   without it switches it off when loaded, so jams play as they were made. Shared with the room like any other setting. */
+var RKKEY = 'jambutek-studio-key-v1';
+function rkShow(){ SNAKES.forEach(function(s){ s.SN.dirty = true; }); }
+function rkSave(){ store(RKKEY, JSON.stringify({ v:1, on:RK.on, root:RK.root, scale:RK.scale })); }
+function rkLoad(){ var on = 0, root = 0, scale = 2; try { var s = JSON.parse(store(RKKEY) || 'null'); if (s && s.v === 1){ on = s.on ? 1 : 0; root = clamp(s.root | 0, 0, 11); scale = clamp(s.scale | 0, 0, SCALES.length - 1); } } catch (e) {} RK.on = on; RK.root = root; RK.scale = scale; rkShow(); }
+rkLoad(); RESTORE[RKKEY] = rkLoad; SAVENOW.push(rkSave);
+function wallLabel(c){ if (c.wk === 'key') return 'Room key is ' + (RK.on ? 'on: every sequencer plays in ' + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'off: each sequencer keeps its own key') + ' · click';
+  if (c.wk === 'note') return 'Room key note: ' + NOTEN[RK.root] + ' · click for the next'; if (c.wk === 'scale') return 'Room key scale: ' + SCALES[RK.scale][0] + ' · click for the next';
+  return c.name + (c.wk === 'exp' || c.wk === 'load' ? ' · click' : ' · press and hold'); }
+function wallPress(c){ unlock(); c.down = 1;
+  if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ if (c.wk === 'key') RK.on = RK.on ? 0 : 1; else if (c.wk === 'note') RK.root = (RK.root + 1) % 12; else RK.scale = (RK.scale + 1) % SCALES.length;
+    rkShow(); rkSave(); toast('Room key ' + (RK.on ? 'on · ' : 'off · ') + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0], 2200); return; } if (c.wk === 'exp'){ patternExport(); return; } if (c.wk === 'load'){ jamOpen(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
 function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the starter jam')); WALL.c = null; } }
 DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
 function wallUpdate(now){
   WALLBTN.forEach(function(c){
     var L = c.down ? 1 : 0.15;
+    if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ var tx = c.wk === 'key' ? (RK.on ? 'ON' : 'OFF') : c.wk === 'note' ? NOTEN[RK.root] : SCALES[RK.scale][0]; if (c.rkT !== tx){ c.rkT = tx; c.repaintFace(tx); } if (c.wk === 'key') L = RK.on ? 0.95 : 0.08; }
     if (c.wk === 'clear' || c.wk === 'def'){ L = 0.12;
       if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else allPatterns(c.wk === 'def'); } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
     if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.004 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;

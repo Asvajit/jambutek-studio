@@ -12,6 +12,7 @@ var DEF = window.JB_DEFAULTS || null;
 function defCopy(x){ return JSON.parse(JSON.stringify(x)); }
 var MPQUIET = false;            // set while a Snake's custom lane is turning a knob, so it is not sent to the room as if a hand did it
 var SNLEARN = null;             // the Snake waiting to learn which knob its custom lane should turn
+var RK = { on:0, root:0, scale:2 };                           // the room key: when on, every Snake plays in this key instead of its own
 var SPEC = { on:false, i:0, x:0, y:0, z:0 };                  // spectator view: the eye is pinned to one of five fixed cameras
 var MPON = false, MPHOST = true, REMOTE = {}, storeHook = null, RESTORE = {}, SAVENOW = [];
 function saveMs(d){ return MPON ? 250 : d; }

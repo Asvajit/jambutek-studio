@@ -419,12 +419,14 @@ var MP = (function(){
   var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 1.78, RIG.z]];
     return L.map(function(c, k){ var dx = RIG.x - c[1], dz = RIG.z - c[3], dy = 1.0 - c[2]; return { name:c[0], x:c[1], y:c[2], z:c[3], yaw:k === 4 ? 0 : Math.atan2(-dx, -dz), pitch:k === 4 ? -0.08 : Math.atan2(dy, Math.hypot(dx, dz)) }; }); })();
   var specEl = null;
-  var SPK = {}, specSpin = false;
-  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : 'mouse looks round'); }
+  var SPK = {}, specSpin = false, specAuto = false, specBar = -1;      // auto edit: the room cuts between cameras 1 to 5 by itself, every four bars
+  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : 'mouse looks round'); }
   function specCam(i, quiet){
     if (i === 5){ SPEC.i = 5; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera 6 · free: WASD to fly, Space and C for up and down'); specHudText(); return; }      // the free camera starts wherever the last one was
     var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); specHudText(); }
   Q.specTick = function(dt){                                 // camera 6 flies; camera 5 can turn by itself
+    if (specAuto){ var bar = M.playing && typeof SEQ.visN === 'number' ? Math.floor(SEQ.visN / 64) : Math.floor(performance.now() / 8000);      // four bars with the drums running, eight seconds without
+      if (bar !== specBar){ var first = specBar === -1; specBar = bar; if (!first){ var nx = (SPEC.i + 1 + ((Math.random() * 4) | 0)) % 5; specCam(nx, true); } } }
     if (SPEC.i === 4 && specSpin) cam.ty += dt * 0.16;
     if (SPEC.i !== 5) return; var f = (SPK.w || SPK.arrowup ? 1 : 0) - (SPK.s || SPK.arrowdown ? 1 : 0), r = (SPK.d ? 1 : 0) - (SPK.a ? 1 : 0), u = (SPK[' '] ? 1 : 0) - (SPK.c ? 1 : 0); if (!f && !r && !u){ SPEC.v = 0; return; }
     SPEC.v = lerp(SPEC.v || 0, SPK.shift ? 4.2 : 1.6, 1 - Math.exp(-dt * 5)); var sp = SPEC.v * dt, cp = Math.cos(cam.pitch), sy = Math.sin(cam.yaw), cy = Math.cos(cam.yaw);      // eases up to speed so moves start softly
@@ -439,7 +441,8 @@ var MP = (function(){
   }
   document.addEventListener('keydown', function(e){          // while watching, the keyboard only changes camera
     if (!SPEC.on || Q.lobbyOpen || e.key === 'F2' || e.key === 'Escape' || e.ctrlKey || e.metaKey || e.altKey) return;
-    var i = '123456'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat) specCam(i); else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
+    var i = '123456'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat){ specAuto = false; specCam(i); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i === 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
+    else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
     SPK[k] = true; SPK.shift = e.shiftKey; e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
   }, true);
 
