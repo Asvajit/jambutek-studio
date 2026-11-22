@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jambutek · Character Creator</title>
+<style>
+:root{ --bg:#0B0C10; --panel:#14161B; --line:rgba(216,216,216,.16); --bone:#D8D8D8; --dim:rgba(216,216,216,.55); --gold:#FFE15A; --green:#3BFF6A }
+*{ box-sizing:border-box }
+html, body{ height:100%; margin:0; background:var(--bg); color:var(--bone); font:13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow:hidden }
+button, input, select{ font:inherit; color:inherit }
+header{ height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; border-bottom:1px solid var(--line); background:var(--panel) }
+header h1{ font-size:12px; letter-spacing:.2em; text-transform:uppercase; margin:0 8px 0 0; font-weight:600; white-space:nowrap }
+header h1 b{ color:var(--gold); font-weight:600 }
+header .sp{ flex:1 }
+#name{ width:190px; background:#0B0C10; border:1px solid var(--line); border-radius:6px; padding:7px 9px }
+.btn, select{ background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:6px; padding:7px 11px; cursor:pointer; white-space:nowrap }
+.btn:hover, select:hover{ border-color:var(--gold) }
+.btn.go{ background:var(--gold); color:#141005; border-color:var(--gold); font-weight:600 }
+select option{ background:#14161B }
+main{ display:grid; grid-template-columns:212px minmax(0, 1fr) minmax(0, 1fr); height:calc(100% - 52px) }
+#tools{ border-right:1px solid var(--line); background:var(--panel); padding:12px; overflow-y:auto }
+#tools h2{ font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); margin:14px 0 6px; font-weight:600 }
+#tools h2:first-child{ margin-top:0 }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:6px }
+.tool{ text-align:left; padding:8px 9px }
+.tool.on{ border-color:var(--gold); color:var(--gold); background:rgba(255,225,90,.09) }
+.tool kbd{ float:right; color:var(--dim); font:inherit }
+label.row{ display:block; margin:8px 0 2px; color:var(--dim); font-size:11px }
+label.row output{ float:right; color:var(--bone) }
+input[type=range]{ width:100%; accent-color:var(--gold) }
+#col{ width:100%; height:38px; padding:0; border:1px solid var(--line); border-radius:6px; background:none; cursor:pointer }
+#sw{ display:grid; grid-template-columns:repeat(8, 1fr); gap:4px; margin-top:8px }
+#sw button{ aspect-ratio:1; border:1px solid rgba(255,255,255,.25); border-radius:4px; padding:0; cursor:pointer }
+label.chk{ display:flex; gap:8px; align-items:center; margin:7px 0; cursor:pointer }
+label.chk input{ accent-color:var(--gold) }
+.pane{ position:relative; min-width:0; min-height:0; border-right:1px solid var(--line) }
+.pane > canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none }
+.pane .cap{ position:absolute; left:12px; top:10px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); pointer-events:none }
+.pane .tip{ position:absolute; left:12px; bottom:10px; right:12px; font-size:11px; color:var(--dim); pointer-events:none }
+#poses{ position:absolute; right:10px; top:8px; display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; max-width:70% }
+#poses .btn{ padding:5px 8px; font-size:11px }
+#poses .btn.on{ border-color:var(--green); color:var(--green) }
+#toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:rgba(8,10,14,.95); border:1px solid var(--line); border-radius:8px; padding:9px 14px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:9 }
+#toast.on{ opacity:1 }
+#drop{ position:fixed; inset:0; background:rgba(8,10,14,.86); display:none; align-items:center; justify-content:center; font-size:16px; letter-spacing:.14em; text-transform:uppercase; z-index:8; border:3px dashed var(--gold) }
+#drop.on{ display:flex }
+p.note{ color:var(--dim); font-size:11px; margin:10px 0 0 }
+</style>
+</head>
+<body>
+<header>
+  <h1><b>Jambutek</b> · Character Creator</h1>
+  <input id="name" maxlength="24" placeholder="Character name" aria-label="Character name">
+  <select id="start" aria-label="Start from"><option value="">Start from…</option></select>
+  <span class="sp"></span>
+  <button class="btn" id="open" title="Open a saved character file, or any image to use as the sheet">Open</button>
+  <button class="btn" id="tpl" title="Download a labelled sheet to paint in your own app">Template</button>
+  <button class="btn" id="png" title="Download the flat sheet as an image">Sheet PNG</button>
+  <button class="btn go" id="exp" title="Download the character file for the games">Export character</button>
+  <input type="file" id="file" accept=".json,image/*" hidden>
+</header>
+<main>
+  <aside id="tools">
+    <h2>Tool</h2>
+    <div class="grid2">
+      <button class="btn tool on" data-tool="brush">Brush <kbd>B</kbd></button>
+      <button class="btn tool" data-tool="fill">Fill <kbd>G</kbd></button>
+      <button class="btn tool" data-tool="pick">Pick <kbd>I</kbd></button>
+      <button class="btn tool" data-tool="move">Move <kbd>V</kbd></button>
+    </div>
+    <h2>Colour</h2>
+    <input type="color" id="col" value="#e2332b" aria-label="Colour">
+    <div id="sw"></div>
+    <h2>Brush</h2>
+    <label class="row">Size <output id="szO"></output></label><input type="range" id="sz" min="2" max="120" value="18">
+    <label class="row">Softness <output id="sfO"></output></label><input type="range" id="sf" min="0" max="100" value="35">
+    <label class="row">Strength <output id="opO"></output></label><input type="range" id="op" min="5" max="100" value="100">
+    <h2>Options</h2>
+    <label class="chk"><input type="checkbox" id="mir" checked> Mirror left and right</label>
+    <label class="chk"><input type="checkbox" id="whole"> Fill whole part</label>
+    <label class="chk"><input type="checkbox" id="guides" checked> Show guides on sheet</label>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn" id="undo">Undo</button>
+      <button class="btn" id="redo">Redo</button>
+    </div>
+    <p class="note">Drag on the figure or the sheet to paint. Drag empty space to turn the figure. Scroll to zoom. Hold Alt to pick a colour. Ctrl+Z undoes. Drop an image anywhere to use it as the sheet.</p>
+    <p class="note">Your work is kept in this browser as you go. Export makes the file to send for the games.</p>
+  </aside>
+  <section class="pane" id="p3">
+    <canvas id="c3"></canvas>
+    <div class="cap">Figure</div>
+    <div id="poses"></div>
+  </section>
+  <section class="pane" id="p2">
+    <canvas id="c2"></canvas>
+    <div class="cap">Sheet</div>
+    <div class="tip" id="tip2"></div>
+  </section>
+</main>
+<div id="toast"></div>
+<div id="drop">Drop to use as the sheet</div>
+<script>/*__THREE__*/</script>
+<script>
+'use strict';
+/* ================= Jambutek character creator =================
+   A character is one 1024 x 1024 painted sheet wrapped onto the blocky figure the games use: eleven boxes, six faces each.
+   SKINR (shared with the games, filled in by build.py) says where each face sits on the sheet. This page paints that sheet,
+   either on the figure or flat, previews it moving, and exports it as a small file the games can load. */
+var SKINR = /*__SKINR__*/;
+var SKINS = /*__SKINS__*/;
+var S = 1024, PARTS = Object.keys(SKINR), FN = ['their left side', 'their right side', 'top', 'bottom', 'front', 'back'];
+var PN = { head:'Head', hat:'Hat', torso:'Body', armL:'Arm', armR:'Arm', legL:'Thigh', legR:'Thigh', shinL:'Shin', shinR:'Shin', shoeL:'Shoe', shoeR:'Shoe' };
+function clamp(v, a, b){ return v < a ? a : v > b ? b : v; }
+function lerp(a, b, t){ return a + (b - a) * t; }
+function smooth(t){ return t * t * (3 - 2 * t); }
+var M = { bpm:120 };
+function $(id){ return document.getElementById(id); }
+function toast(t){ var e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function(){ e.classList.remove('on'); }, 2600); }
+
+/* ---- the sheet ---- */
+var TEX = document.createElement('canvas'); TEX.width = TEX.height = S; var tg = TEX.getContext('2d', { willReadFrequently:true });
+var FACES = []; PARTS.forEach(function(p){ SKINR[p].forEach(function(r, f){ FACES.push({ part:p, f:f, x0:r[0] * S, y0:r[1] * S, x1:r[2] * S, y1:r[3] * S }); }); });
+var BLEED = 1.2;                                               // paint a touch past each face so no seam shows; the faces sit 2.5 px apart on the sheet
+function faceAt(x, y){ for (var i = 0; i < FACES.length; i++){ var F = FACES[i]; if (x >= F.x0 - BLEED && x <= F.x1 + BLEED && y >= F.y0 - BLEED && y <= F.y1 + BLEED) return F; } return null; }
+function faceOf(part, f){ for (var i = 0; i < FACES.length; i++) if (FACES[i].part === part && FACES[i].f === f) return FACES[i]; return null; }
+function twin(F){                                              // the same face on the other side of the body
+  var p = F.part, q = /L$/.test(p) ? p.slice(0, -1) + 'R' : /R$/.test(p) ? p.slice(0, -1) + 'L' : p; return faceOf(q, F.f === 0 ? 1 : F.f === 1 ? 0 : F.f);
+}
+function clipFace(g, F){ g.beginPath(); g.rect(F.x0 - BLEED, F.y0 - BLEED, F.x1 - F.x0 + BLEED * 2, F.y1 - F.y0 + BLEED * 2); g.clip(); }
+function blank(){
+  var base = { head:'#E0A982', hat:'#2B2D33', torso:'#C9C7C0', armL:'#C9C7C0', armR:'#C9C7C0', legL:'#3B4A7C', legR:'#3B4A7C', shinL:'#3B4A7C', shinR:'#3B4A7C', shoeL:'#1D1E22', shoeR:'#1D1E22' };
+  tg.fillStyle = '#000'; tg.fillRect(0, 0, S, S); FACES.forEach(function(F){ tg.fillStyle = base[F.part]; tg.fillRect(F.x0 - BLEED, F.y0 - BLEED, F.x1 - F.x0 + BLEED * 2, F.y1 - F.y0 + BLEED * 2); });
+}
+var dirty = true, saveT = null;
+function changed(){ dirty = true; clearTimeout(saveT); saveT = setTimeout(autosave, 1500); }
+function autosave(){ try { localStorage.setItem('jambutek-creator-v1', JSON.stringify({ name:$('name').value, sheet:TEX.toDataURL('image/png') })); } catch (e) {} }
+function setSheet(src, done){ var im = new Image(); im.onload = function(){ tg.fillStyle = '#000'; tg.fillRect(0, 0, S, S); tg.drawImage(im, 0, 0, S, S); changed(); if (done) done(); }; im.onerror = function(){ toast('That image could not be read'); }; im.src = src; }
+
+/* ---- undo ---- */
+var UNDO = [], REDO = [];
+function mark(){ UNDO.push(tg.getImageData(0, 0, S, S)); if (UNDO.length > 14) UNDO.shift(); REDO = []; }
+function undo(){ if (!UNDO.length){ toast('Nothing to undo'); return; } REDO.push(tg.getImageData(0, 0, S, S)); tg.putImageData(UNDO.pop(), 0, 0); changed(); }
+function redo(){ if (!REDO.length){ toast('Nothing to redo'); return; } UNDO.push(tg.getImageData(0, 0, S, S)); tg.putImageData(REDO.pop(), 0, 0); changed(); }
+
+/* ---- tools ---- */
+var TOOL = 'brush', COL = '#e2332b', SW = ['#111318', '#F4F1EA', '#E0A982', '#8A5A3C', '#E2332B', '#F08A2A', '#FFE15A', '#3BFF6A', '#2E9E55', '#30A8F0', '#3B4A7C', '#8A3FD0', '#FF6AB0', '#7A7F8A', '#C9C7C0', '#5A3A22'];
+function setTool(t){ TOOL = t; [].forEach.call(document.querySelectorAll('.tool'), function(b){ b.classList.toggle('on', b.dataset.tool === t); }); }
+function setCol(c){ COL = c; $('col').value = c; }
+[].forEach.call(document.querySelectorAll('.tool'), function(b){ b.addEventListener('click', function(){ setTool(b.dataset.tool); }); });
+$('col').addEventListener('input', function(){ COL = $('col').value; });
+SW.forEach(function(c){ var b = document.createElement('button'); b.style.background = c; b.title = c; b.addEventListener('click', function(){ setCol(c.toLowerCase()); }); $('sw').appendChild(b); });
+function outs(){ $('szO').textContent = $('sz').value + ' px'; $('sfO').textContent = $('sf').value + '%'; $('opO').textContent = $('op').value + '%'; }
+['sz', 'sf', 'op'].forEach(function(k){ $(k).addEventListener('input', outs); }); outs();
+function hex(r, g, b){ return '#' + [r, g, b].map(function(v){ return ('0' + v.toString(16)).slice(-2); }).join(''); }
+function pick(x, y){ var d = tg.getImageData(clamp(x | 0, 0, S - 1), clamp(y | 0, 0, S - 1), 1, 1).data; setCol(hex(d[0], d[1], d[2])); toast('Picked ' + COL); }
+function dab(F, x, y){
+  var r = +$('sz').value / 2, soft = +$('sf').value / 100, a = +$('op').value / 100;
+  tg.save(); clipFace(tg, F);
+  if (soft < 0.02){ tg.globalAlpha = a; tg.fillStyle = COL; tg.beginPath(); tg.arc(x, y, r, 0, 7); tg.fill(); }
+  else { var gr = tg.createRadialGradient(x, y, r * (1 - soft), x, y, r), n = parseInt(COL.slice(1), 16), rgb = (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+    gr.addColorStop(0, 'rgba(' + rgb + ',' + a + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)'); tg.fillStyle = gr; tg.fillRect(x - r, y - r, r * 2, r * 2); }
+  tg.restore();
+}
+function stamp(F, x, y){ dab(F, x, y); if ($('mir').checked){ var T = twin(F); if (T){ var mx = T.x0 + (F.x1 - x), my = T.y0 + (y - F.y0); if (T !== F || Math.abs(mx - x) > 0.5) dab(T, mx, my); } } }
+var STROKE = null;                                             // { F, x, y } while the button is down
+function strokeTo(F, x, y){
+  if (!F) { STROKE = null; return; }
+  if (STROKE && STROKE.F === F){ var dx = x - STROKE.x, dy = y - STROKE.y, d = Math.hypot(dx, dy), step = Math.max(1, +$('sz').value * 0.18), n = Math.ceil(d / step); for (var i = 1; i <= n; i++) stamp(F, STROKE.x + dx * i / n, STROKE.y + dy * i / n); }
+  else stamp(F, x, y);
+  STROKE = { F:F, x:x, y:y }; changed();
+}
+function fillAt(F){
+  var list = $('whole').checked ? FACES.filter(function(q){ return q.part === F.part; }) : [F]; if ($('mir').checked) list.slice().forEach(function(q){ var T = twin(q); if (T && list.indexOf(T) < 0) list.push(T); });
+  tg.save(); tg.globalAlpha = +$('op').value / 100; tg.fillStyle = COL; list.forEach(function(q){ tg.fillRect(q.x0 - BLEED, q.y0 - BLEED, q.x1 - q.x0 + BLEED * 2, q.y1 - q.y0 + BLEED * 2); }); tg.restore(); changed();
+}
+function useTool(F, x, y, first, alt){                         // one pointer sample, in sheet pixels
+  if (alt || TOOL === 'pick'){ if (first) pick(x, y); return; }
+  if (!F) { STROKE = null; return; }
+  if (TOOL === 'fill'){ if (first){ mark(); fillAt(F); } return; }
+  if (TOOL === 'brush'){ if (first){ mark(); STROKE = null; } strokeTo(F, x, y); }
+}
+
+/* ---- the figure ---- */
+var c3 = $('c3'), ren = new THREE.WebGLRenderer({ canvas:c3, antialias:true }), scene = new THREE.Scene(), cam3 = new THREE.PerspectiveCamera(38, 1, 0.05, 50);
+ren.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); scene.background = new THREE.Color(0x0B0C10);
+scene.add(new THREE.AmbientLight(0xffffff, 0.78)); var sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(2, 4, 3); scene.add(sun);
+var floor = new THREE.Mesh(new THREE.CircleGeometry(1.1, 48), new THREE.MeshBasicMaterial({ color:0x15171C })); floor.rotation.x = -Math.PI / 2; scene.add(floor);
+var tex3 = new THREE.CanvasTexture(TEX); tex3.magFilter = THREE.LinearFilter; tex3.anisotropy = 4; var mat3 = new THREE.MeshLambertMaterial({ map:tex3 });
+function skinGeo(w, h, d, key){
+  var geo = new THREE.BoxGeometry(w, h, d), uv = geo.attributes.uv, rr = SKINR[key];
+  for (var f = 0; f < 6; f++){ var r = rr[f]; for (var k = 0; k < 4; k++){ var i = f * 4 + k, u = uv.getX(i), v = uv.getY(i); uv.setXY(i, r[0] + u * (r[2] - r[0]), 1 - (r[1] + (1 - v) * (r[3] - r[1]))); } }
+  uv.needsUpdate = true; return geo;
+}
+var P = (function(){                                           // the same eleven boxes, at the same sizes, as the games build
+  var g = new THREE.Group(), meshes = [];
+  function sbox(w, h, d, key, x, y, z, par){ var b = new THREE.Mesh(skinGeo(w, h, d, key), mat3); b.position.set(x, y, z); b.userData.part = key; (par || g).add(b); meshes.push(b); return b; }
+  function leg(x){ var sd = x < 0 ? 'L' : 'R', hip = new THREE.Group(); hip.position.set(x, 0.78, 0); g.add(hip); sbox(0.13, 0.39, 0.15, 'leg' + sd, 0, -0.195, 0, hip);
+    var knee = new THREE.Group(); knee.position.y = -0.39; hip.add(knee); sbox(0.13, 0.39, 0.15, 'shin' + sd, 0, -0.195, 0, knee); sbox(0.15, 0.07, 0.24, 'shoe' + sd, 0, -0.355, 0.03, knee); hip.userData.knee = knee; return hip; }
+  var legL = leg(-0.08), legR = leg(0.08), torso = new THREE.Group(); torso.position.y = 0.78; g.add(torso); sbox(0.38, 0.56, 0.22, 'torso', 0, 0.28, 0, torso);
+  function arm(x){ var sh = new THREE.Group(); sh.position.set(x, 0.52, 0); torso.add(sh); sbox(0.1, 0.52, 0.12, x < 0 ? 'armL' : 'armR', 0, -0.26, 0, sh); return sh; }
+  var armL = arm(-0.25), armR = arm(0.25), head = new THREE.Group(); head.position.y = 0.6; torso.add(head);
+  sbox(0.24, 0.26, 0.24, 'head', 0, 0.13, 0, head); sbox(0.27, 0.07, 0.27, 'hat', 0, 0.27, 0, head);
+  scene.add(g); return { g:g, torso:torso, head:head, armL:armL, armR:armR, legL:legL, legR:legR, meshes:meshes, pitch:0 };
+})();
+/*__EMOTE__*/
+var POSE = 0, POSES = ['Stand', 'Walk', 'Wave', 'Point', 'Hands up', 'Split', 'Headbang', 'Dance'], poseT = 0, poseK = 0, walkT = 0;
+POSES.forEach(function(n, i){ var b = document.createElement('button'); b.className = 'btn' + (i ? '' : ' on'); b.textContent = n; b.addEventListener('click', function(){ POSE = i; poseT = 0; [].forEach.call($('poses').children, function(q, j){ q.classList.toggle('on', j === i); }); }); $('poses').appendChild(b); });
+function pose(dt, now){
+  var w = POSE === 1 ? 1 : 0; walkT += dt * 5.5 * 1.6; var sw = Math.sin(walkT) * 0.6 * w;
+  P.g.position.set(0, 0, 0); P.g.rotation.set(0, 0, 0); P.torso.position.y = 0.78; P.torso.rotation.set(0, 0, 0); P.head.rotation.set(0, 0, 0);
+  P.legL.rotation.set(sw, 0, 0); P.legR.rotation.set(-sw, 0, 0); P.legL.userData.knee.rotation.set(Math.max(0, -sw) * 0.6, 0, 0); P.legR.userData.knee.rotation.set(Math.max(0, sw) * 0.6, 0, 0);
+  P.armL.rotation.set(-sw * 0.8, 0, 0); P.armR.rotation.set(sw * 0.8, 0, 0);
+  poseK = lerp(poseK, POSE >= 2 ? 1 : 0, 1 - Math.exp(-dt * 7)); poseT += dt; if (POSE >= 2) pose.last = POSE - 1; if (poseK > 0.004 && pose.last) emote(P, pose.last, poseT, poseK, now);
+}
+var ORB = { yaw:0.55, pitch:0.12, d:3.5, ty:0.95 };
+function place3(){ var cp = Math.cos(ORB.pitch); cam3.position.set(Math.sin(ORB.yaw) * cp * ORB.d, ORB.ty + Math.sin(ORB.pitch) * ORB.d, Math.cos(ORB.yaw) * cp * ORB.d); cam3.lookAt(0, ORB.ty, 0); }
+var ray = new THREE.Raycaster(), nd = new THREE.Vector2();
+function hit3(e){ var r = c3.getBoundingClientRect(); nd.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height * 2 - 1)); ray.setFromCamera(nd, cam3); var h = ray.intersectObjects(P.meshes, false)[0]; if (!h || !h.uv) return null; var x = h.uv.x * S, y = (1 - h.uv.y) * S; return { F:faceAt(x, y), x:x, y:y }; }
+var D3 = null;
+c3.addEventListener('pointerdown', function(e){
+  c3.setPointerCapture(e.pointerId); var h = e.button === 0 && TOOL !== 'move' ? hit3(e) : null;
+  if (h){ D3 = { paint:true }; useTool(h.F, h.x, h.y, true, e.altKey); } else D3 = { paint:false, x:e.clientX, y:e.clientY };
+});
+c3.addEventListener('pointermove', function(e){
+  if (!D3) return;
+  if (D3.paint){ var h = hit3(e); if (h) useTool(h.F, h.x, h.y, false, e.altKey); else STROKE = null; }
+  else { ORB.yaw -= (e.clientX - D3.x) * 0.008; ORB.pitch = clamp(ORB.pitch + (e.clientY - D3.y) * 0.006, -1.2, 1.35); D3.x = e.clientX; D3.y = e.clientY; }
+});
+function up3(){ D3 = null; STROKE = null; }
+c3.addEventListener('pointerup', up3); c3.addEventListener('pointercancel', up3); c3.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+c3.addEventListener('wheel', function(e){ e.preventDefault(); ORB.d = clamp(ORB.d * Math.exp(e.deltaY * 0.0012), 1.1, 7); }, { passive:false });
+
+/* ---- the flat sheet ---- */
+var c2 = $('c2'), g2 = c2.getContext('2d'), V = { z:0.5, x:0, y:0, fit:false }, M2 = { x:-1, y:-1, in:false };
+function fit2(){ var w = c2.clientWidth, h = c2.clientHeight; V.z = Math.min(w, h) / S * 0.94; V.x = (w - S * V.z) / 2; V.y = (h - S * V.z) / 2; V.fit = true; }
+function sheetXY(e){ var r = c2.getBoundingClientRect(); return { x:(e.clientX - r.left - V.x) / V.z, y:(e.clientY - r.top - V.y) / V.z, cx:e.clientX - r.left, cy:e.clientY - r.top }; }
+var D2 = null;
+c2.addEventListener('pointerdown', function(e){
+  c2.setPointerCapture(e.pointerId); var q = sheetXY(e), F = faceAt(q.x, q.y);
+  if (e.button !== 0 || TOOL === 'move' || (!F && !e.altKey && TOOL !== 'pick')){ D2 = { pan:true, x:e.clientX, y:e.clientY }; return; }
+  D2 = { pan:false, F:F }; useTool(F, q.x, q.y, true, e.altKey);
+});
+c2.addEventListener('pointermove', function(e){
+  var q = sheetXY(e); M2.x = q.x; M2.y = q.y; M2.in = true;
+  var F = faceAt(q.x, q.y); $('tip2').textContent = F ? PN[F.part] + (/L$/.test(F.part) ? ' (their right)' : /R$/.test(F.part) ? ' (their left)' : '') + ' · ' + FN[F.f] : '';
+  if (!D2) return;
+  if (D2.pan){ V.x += e.clientX - D2.x; V.y += e.clientY - D2.y; D2.x = e.clientX; D2.y = e.clientY; return; }
+  if (TOOL === 'brush' && !e.altKey){ if (F === D2.F) useTool(D2.F, q.x, q.y, false, false); else if (D2.F) useTool(D2.F, q.x, q.y, false, false); }      // a stroke stays on the face it began on
+});
+function up2(){ D2 = null; STROKE = null; }
+c2.addEventListener('pointerup', up2); c2.addEventListener('pointercancel', up2); c2.addEventListener('pointerleave', function(){ M2.in = false; }); c2.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+c2.addEventListener('wheel', function(e){ e.preventDefault(); var q = sheetXY(e), z = clamp(V.z * Math.exp(-e.deltaY * 0.0015), 0.15, 12); V.x = q.cx - q.x * z; V.y = q.cy - q.y * z; V.z = z; }, { passive:false });
+function draw2(){
+  var dpr = Math.min(2, window.devicePixelRatio || 1), w = c2.clientWidth, h = c2.clientHeight; if (c2.width !== Math.round(w * dpr) || c2.height !== Math.round(h * dpr)){ c2.width = Math.round(w * dpr); c2.height = Math.round(h * dpr); if (!V.fit || true) fit2(); }
+  g2.setTransform(dpr, 0, 0, dpr, 0, 0); g2.fillStyle = '#0B0C10'; g2.fillRect(0, 0, w, h);
+  g2.imageSmoothingEnabled = V.z < 3; g2.drawImage(TEX, V.x, V.y, S * V.z, S * V.z); g2.strokeStyle = 'rgba(216,216,216,.25)'; g2.lineWidth = 1; g2.strokeRect(V.x - 0.5, V.y - 0.5, S * V.z + 1, S * V.z + 1);
+  if ($('guides').checked){
+    g2.lineWidth = 1; g2.font = '10px ui-monospace, Menlo, Consolas, monospace'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+    FACES.forEach(function(F){ var x = V.x + F.x0 * V.z, y = V.y + F.y0 * V.z, fw = (F.x1 - F.x0) * V.z, fh = (F.y1 - F.y0) * V.z; g2.strokeStyle = F.f === 4 ? 'rgba(255,225,90,.9)' : 'rgba(255,255,255,.4)'; g2.strokeRect(x + 0.5, y + 0.5, fw, fh);
+      if (fw > 46 && fh > 16){ var t = F.f === 4 ? 'FRONT' : F.f === 5 ? 'BACK' : F.f === 2 ? 'TOP' : F.f === 3 ? 'BOTTOM' : 'SIDE'; g2.fillStyle = 'rgba(0,0,0,.55)'; g2.fillRect(x + fw / 2 - 22, y + fh / 2 - 7, 44, 14); g2.fillStyle = F.f === 4 ? '#FFE15A' : '#fff'; g2.fillText(t, x + fw / 2, y + fh / 2 + 0.5); } });
+    g2.textAlign = 'left'; g2.font = 'bold 11px ui-monospace, Menlo, Consolas, monospace'; g2.fillStyle = 'rgba(255,255,255,.75)';
+    PARTS.forEach(function(p){ var F = faceOf(p, 2); g2.fillText(PN[p].toUpperCase() + (/L$/.test(p) ? ' · THEIR RIGHT' : /R$/.test(p) ? ' · THEIR LEFT' : ''), V.x + Math.max(8, F.x0 - 62) * V.z, V.y + (F.y0 - 14) * V.z); });
+  }
+  if (M2.in && TOOL === 'brush'){ g2.strokeStyle = '#fff'; g2.lineWidth = 1; g2.beginPath(); g2.arc(V.x + M2.x * V.z, V.y + M2.y * V.z, Math.max(1.5, +$('sz').value / 2 * V.z), 0, 7); g2.stroke(); }
+}
+
+/* ---- files ---- */
+function slug(){ return ($('name').value.trim() || 'character').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'character'; }
+function download(name, url){ var a = document.createElement('a'); a.download = name; a.href = url; document.body.appendChild(a); a.click(); a.remove(); }
+$('png').addEventListener('click', function(){ download(slug() + '-sheet.png', TEX.toDataURL('image/png')); toast('Sheet saved as ' + slug() + '-sheet.png'); });
+$('exp').addEventListener('click', function(){
+  var nm = $('name').value.trim(); if (!nm){ toast('Give the character a name first'); $('name').focus(); return; }
+  var J = { app:'jambutek-character', v:1, name:nm, layout:'box11-v1', size:S, made:new Date().toISOString(), sheet:TEX.toDataURL('image/png') };      // lossless, so a character can be opened and reworked any number of times
+  var u = URL.createObjectURL(new Blob([JSON.stringify(J)], { type:'application/json' })); download(slug() + '.jambu-character.json', u); setTimeout(function(){ URL.revokeObjectURL(u); }, 4000); toast('Exported ' + slug() + '.jambu-character.json');
+});
+$('tpl').addEventListener('click', function(){
+  var c = document.createElement('canvas'); c.width = c.height = S; var g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, S, S); g.textAlign = 'center'; g.textBaseline = 'middle';
+  FACES.forEach(function(F){ var w = F.x1 - F.x0, h = F.y1 - F.y0; g.fillStyle = F.f === 4 ? '#D9D2B0' : '#BDBDBD'; g.fillRect(F.x0 - BLEED, F.y0 - BLEED, w + BLEED * 2, h + BLEED * 2); g.strokeStyle = '#555'; g.lineWidth = 1; g.strokeRect(F.x0 + 0.5, F.y0 + 0.5, w - 1, h - 1);
+    var t = F.f === 4 ? 'FRONT' : F.f === 5 ? 'BACK' : F.f === 2 ? 'TOP' : F.f === 3 ? 'BOTTOM' : 'SIDE'; g.fillStyle = '#222'; g.font = 'bold ' + (Math.min(w / 5, h / 2, 13) | 0) + 'px Helvetica, Arial, sans-serif'; if (w > 20 && h > 9) g.fillText(t, (F.x0 + F.x1) / 2, (F.y0 + F.y1) / 2); });
+  g.textAlign = 'left'; g.font = 'bold 15px Helvetica, Arial, sans-serif'; g.fillStyle = '#fff'; PARTS.forEach(function(p){ var F = faceOf(p, 2); g.fillText(PN[p].toUpperCase() + (/L$/.test(p) ? ' (their right)' : /R$/.test(p) ? ' (their left)' : ''), Math.max(10, F.x0 - 62), F.y0 - 18); });
+  g.font = '13px Helvetica, Arial, sans-serif'; g.fillStyle = '#9A9A9A'; g.fillText('Jambutek character sheet · 1024 x 1024 · paint over the grey shapes, a few pixels past their edges · keep this size', 24, S - 22);
+  download('jambutek-character-template.png', c.toDataURL('image/png')); toast('Template saved · paint it, then drop it back here');
+});
+function openFile(f){
+  if (!f) return;
+  if (/\.json$/i.test(f.name) || f.type === 'application/json'){ var r = new FileReader(); r.onload = function(){ try { var J = JSON.parse(r.result); if (J.app !== 'jambutek-character' || typeof J.sheet !== 'string' || J.sheet.indexOf('data:image/') !== 0) throw 0; mark(); setSheet(J.sheet, function(){ $('name').value = String(J.name || '').slice(0, 24); toast('Opened ' + (J.name || f.name)); }); } catch (e) { toast('That is not a Jambutek character file'); } }; r.readAsText(f); return; }
+  if (/^image\//.test(f.type)){ var u = URL.createObjectURL(f); mark(); setSheet(u, function(){ URL.revokeObjectURL(u); toast('Sheet replaced with ' + f.name + ' · Ctrl+Z brings the old one back'); }); return; }
+  toast('Open a character file or an image');
+}
+$('open').addEventListener('click', function(){ $('file').value = ''; $('file').click(); }); $('file').addEventListener('change', function(){ openFile($('file').files[0]); });
+var dragN = 0;
+window.addEventListener('dragenter', function(e){ e.preventDefault(); dragN++; $('drop').classList.add('on'); }); window.addEventListener('dragleave', function(){ if (--dragN <= 0){ dragN = 0; $('drop').classList.remove('on'); } });
+window.addEventListener('dragover', function(e){ e.preventDefault(); }); window.addEventListener('drop', function(e){ e.preventDefault(); dragN = 0; $('drop').classList.remove('on'); openFile(e.dataTransfer.files[0]); });
+var sel = $('start'); [['blank', 'Blank figure']].concat(Object.keys(SKINS).map(function(k){ return [k, k]; })).forEach(function(a){ var o = document.createElement('option'); o.value = a[0]; o.textContent = a[1]; sel.appendChild(o); });
+sel.addEventListener('change', function(){ var k = sel.value; sel.value = ''; if (!k) return; mark(); if (k === 'blank'){ blank(); changed(); toast('Blank figure · Ctrl+Z brings the old one back'); } else setSheet(SKINS[k], function(){ toast('Started from ' + k + ' · Ctrl+Z brings the old one back'); }); });
+$('name').addEventListener('input', function(){ clearTimeout(saveT); saveT = setTimeout(autosave, 800); });
+$('undo').addEventListener('click', undo); $('redo').addEventListener('click', redo);
+window.addEventListener('keydown', function(e){
+  if (e.target === $('name')) return; var k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z'){ e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; } if ((e.ctrlKey || e.metaKey) && k === 'y'){ e.preventDefault(); redo(); return; } if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (k === 'b') setTool('brush'); else if (k === 'g') setTool('fill'); else if (k === 'i') setTool('pick'); else if (k === 'v') setTool('move');
+  else if (k === '[') { $('sz').value = Math.max(2, +$('sz').value - 4); outs(); } else if (k === ']') { $('sz').value = Math.min(120, +$('sz').value + 4); outs(); }
+});
+
+/* ---- go ---- */
+blank();
+try { var sv = JSON.parse(localStorage.getItem('jambutek-creator-v1') || 'null'); if (sv && typeof sv.sheet === 'string' && sv.sheet.indexOf('data:image/') === 0){ $('name').value = sv.name || ''; var im0 = new Image(); im0.onload = function(){ tg.drawImage(im0, 0, 0, S, S); dirty = true; }; im0.src = sv.sheet; } } catch (e) {}
+var last = performance.now();
+function frame(now){
+  var dt = Math.min(0.05, (now - last) / 1000); last = now;
+  var w = c3.clientWidth, h = c3.clientHeight; if (c3.width !== Math.round(w * ren.getPixelRatio()) || c3.height !== Math.round(h * ren.getPixelRatio())){ ren.setSize(w, h, false); cam3.aspect = w / h; cam3.updateProjectionMatrix(); }
+  if (dirty){ tex3.needsUpdate = true; dirty = false; }
+  pose(dt, now); place3(); ren.render(scene, cam3); draw2(); requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__creator = { TEX:TEX, tg:tg, FACES:FACES, faceOf:faceOf, twin:twin, P:P, ORB:ORB, stamp:stamp, mark:mark, undo:undo, V:V };
+</script>
+</body>
+</html>

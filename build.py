@@ -15,3 +15,18 @@ out = (rd('src', 'head.html') + '\n' + rd('vendor', 'three-header.html').rstrip(
        + '\n</script>\n<script>\nwindow.JB_ASSETS=' + json.dumps(json.loads(rd('vendor', 'assets.json'))) + ';\nwindow.JB_JAMS=' + json.dumps(jams, separators=(',', ':')) + ';\nwindow.JB_DEFAULTS=window.JB_JAMS[0]||null;\nwindow.JB_SPEAKER=' + rd('vendor', 'speaker.json') + ';\nwindow.JB_STAGELIGHT=' + rd('vendor', 'stagelight.json') + ';\n' + rd('vendor', 'patternflow-patterns.js') + '</script>\n<script>\n' + js + '\n</script>\n</html>\n')
 open(os.path.join(here, 'public', 'index.html'), 'w', encoding='utf-8').write(out)
 print('public/index.html', len(out), 'bytes')
+
+
+# ---- the character creator: its own page, sharing the figure's layout and emotes with the room ----
+mp = rd('src', 'p16_mp.js')
+skinr = re.search(r'var SKINR = (\{.*?\});\n', mp, re.S).group(1)
+names = re.findall(r"\{ n:'([^']+)', a:'(sk\d+)' \}", mp)
+assets = json.loads(rd('vendor', 'assets.json'))
+a = mp.index('  function emote(P, id, t, k, now){'); b = mp.index('\n  function emoteSet(', a)
+page = rd('src', 'creator.html')
+for key, val in (('/*__THREE__*/', rd('vendor', 'three-header.html').rstrip('\n').replace('<script>', '', 1) + '\n' + rd('vendor', 'three.min.js').rstrip('\n')), ('/*__SKINR__*/', skinr), ('/*__SKINS__*/', json.dumps({n: assets[k] for n, k in names}, separators=(',', ':'))), ('/*__EMOTE__*/', mp[a:b].strip())):
+    assert page.count(key) == 1, key
+    page = page.replace(key, val)
+with open(os.path.join(here, 'public', 'creator.html'), 'w', encoding='utf-8') as f:
+    f.write(page)
+print('built public/creator.html', len(page) // 1024, 'KB')

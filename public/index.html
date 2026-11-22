@@ -148,7 +148,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.69</span>
+    <span id="verFps">studio v1.70</span>
   </div>
 </div>
 
@@ -160,7 +160,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <p>Make a room and send the code to up to 5 friends, or type a friend's code to join them, or to <b>Spectate</b>: watch and listen from six cameras without taking a seat. The first one in brings their patterns; the room resets when everyone leaves.</p>
     <label for="mpName">Your name</label>
     <input id="mpName" maxlength="16" autocomplete="nickname" placeholder="e.g. Roo">
-    <label>Pick your look</label>
+    <label>Pick your look <a href="creator.html" target="_blank" rel="noopener" style="float:right; color:#FFE15A; text-transform:none; letter-spacing:0">Character creator &#8599;</a></label>
     <div id="mpSkins"></div>
     <button type="button" id="mpCreate">Make a new room</button>
     <div class="or">or join a friend</div>
@@ -9530,7 +9530,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.69 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.70 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
