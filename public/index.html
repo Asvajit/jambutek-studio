@@ -222,7 +222,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.83</span>
+    <span id="verFps">studio v1.84</span>
   </div>
 </div>
 
@@ -255,7 +255,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.83</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.84</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -9271,7 +9271,7 @@ var MP = (function(){
   }
   function uiOver(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiHover) uiPlay(uiHover, 0.6); else uiBlip(1500, 2100, 0.05, 0.05, 'triangle');
+    if (uiHover) uiPlay(uiHover, 0.42); else uiBlip(1500, 2100, 0.05, 0.05, 'triangle');
   }
   function uiBlip(f0, f1, dur, vol, type){
     if (!uiAC || muted || uiAC.state !== 'running') return;
@@ -9736,7 +9736,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.83 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.84 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

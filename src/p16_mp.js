@@ -375,7 +375,7 @@ var MP = (function(){
   }
   function uiOver(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (uiHover) uiPlay(uiHover, 0.6); else uiBlip(1500, 2100, 0.05, 0.05, 'triangle');
+    if (uiHover) uiPlay(uiHover, 0.42); else uiBlip(1500, 2100, 0.05, 0.05, 'triangle');
   }
   function uiBlip(f0, f1, dur, vol, type){
     if (!uiAC || muted || uiAC.state !== 'running') return;
