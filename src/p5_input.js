@@ -315,7 +315,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.72 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.73 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -365,7 +365,8 @@ function frame(now){
   LOOKUP.k = lerp(LOOKUP.k, LOOKUP.on && mode === 'tr' ? 1 : 0, 1 - Math.exp(-dt * 7)); if (mode !== 'tr') LOOKUP.on = false;
   if (LOOKUP.k > 0.002){ var uy = LEAN.yaw + LOOKUP.yaw, up = -0.05 + LOOKUP.pitch, uk = smooth(LOOKUP.k), ud = 0.8;      // the eye stays over the machine; only where it looks changes
     lx2 = lerp(lx2, ex - Math.sin(uy) * Math.cos(up) * ud, uk); ly2 = lerp(ly2, ey + Math.sin(up) * ud, uk); lz2 = lerp(lz2, ez - Math.cos(uy) * Math.cos(up) * ud, uk); }
-  if (SPEC.on){ var sy = SPEC.y - ey; ey += sy; ly2 += sy; }      // a spectator camera: same look, fixed height
+  if (SPEC.on){ var sy = SPEC.y - ey; ey += sy; ly2 += sy; }
+  if (MP.lobbyOpen){ var oa = now * 0.000045, orr = 3.3; ex = RIG.x + Math.sin(oa) * orr; ez = RIG.z + Math.cos(oa) * orr; ey = 2.3; lx2 = RIG.x; ly2 = 1.0; lz2 = RIG.z; }      // behind the lobby the view circles the rig slowly      // a spectator camera: same look, fixed height
   var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
   var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back
   if (k3 > 0){

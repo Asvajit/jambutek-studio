@@ -4,7 +4,7 @@
    and wipes itself when everyone leaves. */
 const MAX_PLAYERS = 6;
 const MAX_WATCHERS = 24;        // spectators: they see and hear the room, are not in it, and do not count towards the six
-const SKINS = 6;                 // one of each look per room
+const SKINS = 12;                 // one of each look per room
 const COLORS = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
 
 export class Room {

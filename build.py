@@ -19,7 +19,7 @@ print('public/index.html', len(out), 'bytes')
 
 # ---- the character creator: its own page, sharing the figure's layout and emotes with the room ----
 mp = rd('src', 'p16_mp.js')
-skinr = re.search(r'var SKINR = (\{.*?\});\n', mp, re.S).group(1)
+skinr = re.search(r'var SKINR = (\{.*?\]\]\})', mp, re.S).group(1)
 names = re.findall(r"\{ n:'([^']+)', a:'(sk\d+)' \}", mp)
 assets = json.loads(rd('vendor', 'assets.json'))
 a = mp.index('  function emote(P, id, t, k, now){'); b = mp.index('\n  function emoteSet(', a)
