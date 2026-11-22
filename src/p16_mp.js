@@ -355,13 +355,19 @@ var MP = (function(){
   var menuA = null, menuFade = null;
   function menuTry(){ if (!menuA || !Q.lobbyOpen) return; menuA.muted = muted; var p = menuA.play(); if (p && p.catch) p.catch(function(){}); }
   function menuOn(){
-    if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; lobby.addEventListener('pointerdown', menuTry); lobby.addEventListener('keydown', menuTry); }
-    clearInterval(menuFade); menuA.volume = 0.55; menuTry();
+    if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; document.addEventListener('pointerdown', menuTry); document.addEventListener('keydown', menuTry); }
+    clearInterval(menuFade); menuA.volume = 0.85; menuTry();
   }
   function menuOff(){ if (!menuA) return; clearInterval(menuFade); menuFade = setInterval(function(){ var v = menuA.volume - 0.04; if (v <= 0.02){ clearInterval(menuFade); menuA.pause(); menuA.volume = 0; } else menuA.volume = v; }, 60); }
   Q.menuAudio = function(){ return menuA; };
+  /* the credits sheet, opened from the line under the lobby card */
+  var cred = document.getElementById('mpCredits');
+  document.getElementById('mpCred').addEventListener('click', function(){ cred.hidden = false; });
+  document.getElementById('mpCredX').addEventListener('click', function(){ cred.hidden = true; });
+  cred.addEventListener('click', function(e){ if (e.target === cred) cred.hidden = true; });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !cred.hidden){ cred.hidden = true; e.stopPropagation(); } }, true);
   function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
-  function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); }
+  function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); cred.hidden = true; }
   document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
   document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
