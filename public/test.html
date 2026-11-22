@@ -165,7 +165,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.75</span>
+    <span id="verFps">studio v1.76</span>
   </div>
 </div>
 
@@ -185,7 +185,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">v1.75</div>
+  <div class="ver">v1.76</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -9405,8 +9405,18 @@ var MP = (function(){
     Q.name = nm; Q.code = code; Q.on = true; err.textContent = ''; unlock(); hideLobby(); connect();
   }
   (function(){ var a = document.getElementById('mpLogoA'), b = document.getElementById('mpLogoB'); if (a && A.lobbyLogo){ a.src = A.lobbyLogo; b.src = A.lobbyNeon; } })();      // the logo: a dimmed base and the yellow script, which flickers on top
-  function showLobby(msg){ Q.lobbyOpen = true; lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
-  function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); }
+  /* ---- menu music: loops while the lobby is up, fades away when you go in. Browsers only let sound start after a click or a key,
+     so it begins on the first one if it could not start by itself. It obeys the room's mute. ---- */
+  var menuA = null, menuFade = null;
+  function menuTry(){ if (!menuA || !Q.lobbyOpen) return; menuA.muted = muted; var p = menuA.play(); if (p && p.catch) p.catch(function(){}); }
+  function menuOn(){
+    if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; lobby.addEventListener('pointerdown', menuTry); lobby.addEventListener('keydown', menuTry); }
+    clearInterval(menuFade); menuA.volume = 0.55; menuTry();
+  }
+  function menuOff(){ if (!menuA) return; clearInterval(menuFade); menuFade = setInterval(function(){ var v = menuA.volume - 0.04; if (v <= 0.02){ clearInterval(menuFade); menuA.pause(); menuA.volume = 0; } else menuA.volume = v; }, 60); }
+  Q.menuAudio = function(){ return menuA; };
+  function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
+  function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); }
   document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
   document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
@@ -9843,7 +9853,7 @@ document.addEventListener('keyup', function(e){
 /* sound toggle */
 var btnMute = document.getElementById('mute');
 function paintMute(){ btnMute.setAttribute('aria-pressed', String(muted)); btnMute.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound'); }
-btnMute.addEventListener('click', function(){ unlock(); muted = !muted; if (AU.out) AU.out.gain.value = muted ? 0 : 1; store('jambutek-muted', muted ? '1' : '0'); paintMute(); });
+btnMute.addEventListener('click', function(){ unlock(); muted = !muted; if (AU.out) AU.out.gain.value = muted ? 0 : 1; store('jambutek-muted', muted ? '1' : '0'); paintMute(); var ma = MP.menuAudio && MP.menuAudio(); if (ma) ma.muted = muted; });
 paintMute();
 
 /* ================= frame loop ================= */
@@ -9852,7 +9862,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.75 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.76 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

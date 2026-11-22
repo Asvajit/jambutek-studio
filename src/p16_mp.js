@@ -350,8 +350,18 @@ var MP = (function(){
     Q.name = nm; Q.code = code; Q.on = true; err.textContent = ''; unlock(); hideLobby(); connect();
   }
   (function(){ var a = document.getElementById('mpLogoA'), b = document.getElementById('mpLogoB'); if (a && A.lobbyLogo){ a.src = A.lobbyLogo; b.src = A.lobbyNeon; } })();      // the logo: a dimmed base and the yellow script, which flickers on top
-  function showLobby(msg){ Q.lobbyOpen = true; lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
-  function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); }
+  /* ---- menu music: loops while the lobby is up, fades away when you go in. Browsers only let sound start after a click or a key,
+     so it begins on the first one if it could not start by itself. It obeys the room's mute. ---- */
+  var menuA = null, menuFade = null;
+  function menuTry(){ if (!menuA || !Q.lobbyOpen) return; menuA.muted = muted; var p = menuA.play(); if (p && p.catch) p.catch(function(){}); }
+  function menuOn(){
+    if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; lobby.addEventListener('pointerdown', menuTry); lobby.addEventListener('keydown', menuTry); }
+    clearInterval(menuFade); menuA.volume = 0.55; menuTry();
+  }
+  function menuOff(){ if (!menuA) return; clearInterval(menuFade); menuFade = setInterval(function(){ var v = menuA.volume - 0.04; if (v <= 0.02){ clearInterval(menuFade); menuA.pause(); menuA.volume = 0; } else menuA.volume = v; }, 60); }
+  Q.menuAudio = function(){ return menuA; };
+  function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
+  function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); }
   document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
   document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
   document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
