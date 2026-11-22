@@ -66,6 +66,7 @@ function mxApply(){
     C.fad.gain.setTargetAtTime(c.mute || (anySolo && !c.solo) ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3, t, 0.02); });
   AU.master.gain.setTargetAtTime(Math.pow(MX.master, 1.7) * 1.46, t, 0.02);
 }
+function mxSolo(i){ var c = MX.ch[i]; c.solo = c.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.solo ? ' solo' : ' solo off')); }
 function mxMute(i){ var c = MX.ch[i]; c.mute = c.mute ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.mute ? ' muted' : ' on')); }
 function mxCtl(c){
   var id = c.id, v = c.v;

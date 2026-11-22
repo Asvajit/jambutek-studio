@@ -84,12 +84,18 @@ function enterTR(dev){
 }
 function switchLean(dev){                                      // hop straight from one instrument to another without stepping back
   var D = typeof dev === 'string' ? DEVS[dev] : dev; if (!D) return false; if (mode !== 'tr'){ enterTR(D); return mode === 'tr'; } if (D === LEAN) return true;
-  endCtl(true); setHover(null);
+  endCtl(true); setHover(null); LOOKUP.on = false;
   Object.keys(MF.kb).forEach(mfKbUp); Object.keys(BS.kb).forEach(bsKbUp); Object.keys(AM.kb).forEach(amKbUp); Object.keys(TP.kb).forEach(tpKbUp); Object.keys(MB.kb).forEach(mbKbUp); Object.keys(MC.kb).forEach(mcKbUp); Object.keys(SH.kb).forEach(shKbUp); Object.keys(ZK.kb).forEach(zkKbUp);
   LEAN = D; cam.x = D.stand.x; cam.z = D.stand.z; cam.yaw = cam.ty = D.yaw; cam.pitch = cam.tp = D.pitch; trBlend = 0.35; keys = {};
   ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc', 'hudBz', 'hudZk'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
   resize(); return true;
 }
+/* Q held at a machine that has no sequencer (drum machine, mixer, echo and reverb, video synths): the view lifts off the panel to look
+   across the room at the other players. You stay leaned in; the mouse turns the view while Q is down; letting go drops back to the panel. */
+var LOOKUP = { on:false, k:0, yaw:0, pitch:0 };
+function hasSeq(D){ return !!D && !!D.key && (D.key.indexOf('sn') === 0 || SNDEV.indexOf(D.key) > 0); }
+document.addEventListener('keyup', function(e){ if (e.key && e.key.toLowerCase() === 'q') LOOKUP.on = false; }); window.addEventListener('blur', function(){ LOOKUP.on = false; });
+document.addEventListener('mousemove', function(e){ if (!LOOKUP.on || mode !== 'tr') return; LOOKUP.yaw -= (e.movementX || 0) * 0.0026; LOOKUP.pitch = clamp(LOOKUP.pitch - (e.movementY || 0) * 0.0026, -0.75, 0.7); });
 var LASTSN = {};                                               // per synth, the sequencer you last came from
 function swapLean(){                                           // Q: between a synth and the sequencer that plays it
   var i, S;
@@ -261,8 +267,8 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr'){
     if ((k === 'e' && !e.repeat) || e.key === 'Escape' || 'wasd'.indexOf(k) >= 0 && k.length === 1){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
-    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat) swapLean(); return; }
-    if (LEAN === DEVS.mx){ var mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat) mxMute(mi); return; }
+    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat){ if (hasSeq(LEAN)) swapLean(); else if (k === 'q'){ LOOKUP.on = true; LOOKUP.yaw = 0; LOOKUP.pitch = 0; } } return; }
+    if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi); } return; }      // 1-10 mute, with Shift solo
     if (LEAN === DEVS.tr){                                             // on the drum machine the number keys follow its mode
       if (e.code === 'Backquote' || e.key === '`' || e.key === '\u00AC'){ e.preventDefault(); if (!e.repeat){ M.kbHalf = M.kbHalf ? 0 : 1; say('KEYS 1-8  STEPS ' + (M.kbHalf ? '9-16' : '1-8'), 1600); } return; }
       var ti = '1234567890-'.indexOf(e.key); if (ti < 0 || e.repeat) return;
@@ -304,7 +310,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.63 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.64 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -351,6 +357,9 @@ function frame(now){
     ex = lerp(ex, eyeV.x, tk); ey = lerp(ey, eyeV.y, tk); ez = lerp(ez, eyeV.z, tk);
     lx2 = lerp(lx2, lookV.x, tk); ly2 = lerp(ly2, lookV.y, tk); lz2 = lerp(lz2, lookV.z, tk);
   }
+  LOOKUP.k = lerp(LOOKUP.k, LOOKUP.on && mode === 'tr' ? 1 : 0, 1 - Math.exp(-dt * 7)); if (mode !== 'tr') LOOKUP.on = false;
+  if (LOOKUP.k > 0.002){ var uy = LEAN.yaw + LOOKUP.yaw, up = -0.05 + LOOKUP.pitch, uk = smooth(LOOKUP.k), ud = 0.8;      // the eye stays over the machine; only where it looks changes
+    lx2 = lerp(lx2, ex - Math.sin(uy) * Math.cos(up) * ud, uk); ly2 = lerp(ly2, ey + Math.sin(up) * ud, uk); lz2 = lerp(lz2, ez - Math.cos(uy) * Math.cos(up) * ud, uk); }
   if (SPEC.on){ var sy = SPEC.y - ey; ey += sy; ly2 += sy; }      // a spectator camera: same look, fixed height
   var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
   var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back

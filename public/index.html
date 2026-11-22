@@ -70,6 +70,10 @@ body{
   display:grid; gap:8px; justify-items:center; width:min(760px, calc(100% - 32px)); pointer-events:none }
 #trhud .keys{ font-size:11px; color:rgba(216,216,216,.78); text-align:center; text-shadow:0 1px 0 #000, 0 0 6px #000; line-height:1.7 }
 #trhud .keys b{ color:#FFE15A; font-weight:500 }
+#trhud .keys.cols{ display:flex; gap:44px; justify-content:center; text-align:left }
+#trhud .keys.cols[hidden]{ display:none }
+#trhud .keys.cols i{ display:block; font-style:normal; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#fff; margin-bottom:2px }
+#trhud .keys.cols span{ color:rgba(216,216,216,.5) }
 #trhud .leave{ pointer-events:auto; font:inherit; font-size:11px; padding:6px 12px; color:var(--bone); background:rgba(8,10,14,.7);
   border:1px solid rgba(216,216,216,.3); border-radius:5px; cursor:pointer }
 #trhud .leave:hover{ border-color:var(--mint); color:#fff }
@@ -144,7 +148,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.63</span>
+    <span id="verFps">studio v1.64</span>
   </div>
 </div>
 
@@ -171,18 +175,18 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 <div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
 
 <div id="trhud" hidden>
-  <div class="keys desk" id="hudTr"><b>Click</b> buttons and pads &middot; <b>scroll</b> or <b>drag up/down</b> on knobs and faders &middot; <b>double-click</b> a knob to reset it<br><b>Enter</b> start / stop &middot; in <b>TR-REC</b> keys <b>1</b>&ndash;<b>8</b> switch steps and <b>`</b> swaps between steps 1&ndash;8 and 9&ndash;16 (green bar) &middot; in <b>INST PLAY</b> <b>1</b>&ndash;<b>9</b>, <b>0</b>, <b>-</b> play the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudTr"><b>Click</b> buttons and pads &middot; <b>scroll</b> or <b>drag up/down</b> on knobs and faders &middot; <b>double-click</b> a knob to reset it<br><b>Enter</b> start / stop &middot; in <b>TR-REC</b> keys <b>1</b>&ndash;<b>8</b> switch steps and <b>`</b> swaps between steps 1&ndash;8 and 9&ndash;16 (green bar) &middot; in <b>INST PLAY</b> <b>1</b>&ndash;<b>9</b>, <b>0</b>, <b>-</b> play the drums &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudMx" hidden><b>1</b>&ndash;<b>9</b>, <b>0</b> mute drums, synth, bass, Blip, Ambi, Tape, Shru, Chord, Scratch, Kit &middot; <b>scroll</b> or <b>drag</b> faders, EQ and send knobs &middot; <b>SOLO</b> plays only that channel &middot; <b>SEND A</b> feeds the echo, <b>SEND B</b> the reverb &middot; <b>double-click</b> to reset<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk cols" id="hudMx" hidden><div><i>Mixer controls</i><b>Scroll</b> or <b>drag</b> knobs and faders<br><b>Double-click</b> a knob or fader to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>10</b>: mute <span>(0 is 10)</span><br><b>Shift</b> + <b>1</b>&ndash;<b>10</b>: solo<br><b>Space</b>: start / stop sequence<br><b>Q</b>: look up <span>(hold)</span><br><b>E</b> / <b>Esc</b>: step away</div></div>
   <div class="keys desk" id="hudSn" hidden>Each step has a knob and a button: <b>click</b> the button to switch the step on or off, <b>scroll</b> or <b>drag</b> the knob for its note &middot; the lanes on the left swap the knobs to velocity, probability (the chance the step plays) or <b>Custom</b>: click it and you are taken to the connected synth, click any knob or fader there and the lane turns it for you; the button then shows its name, and <b>holding</b> it forgets it<br><b>A</b> and <b>B</b> are two pages: <b>Active</b> switches the one you are on in or out, and with both in it plays a bar of A then a bar of B &middot; <b>Copy</b>, then the page to copy, then the page to paste to<br><b>OUT</b> sends it to any instrument &middot; <b>Q</b> hops between this and its synth &middot; it runs with the drum machine (<b>Enter</b>) &middot; <b>E</b> or <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudEc" hidden>The echo (top) is fed by <b>SEND A</b> on the mixer, the reverb (bottom) by <b>SEND B</b> &middot; reverb: low <b>DENSITY</b> gives repeats, high a wash; <b>MODE</b> picks the space &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudBz" hidden>Video synth B, after Fosfora: it moves to the music and the drum machine&rsquo;s kick and snare &middot; the ten buttons pick the effect &middot; pots <b>A B C</b> shape it, <b>HUE</b> picks its one colour, <b>SPEED</b> sets its pace &middot; the big button freezes it<br>Its own screen shows the picture even when it is not on the roof &middot; the box on the right picks what the roof shows: <b>A</b>, <b>B</b> or <b>OFF</b> &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudEc" hidden>The echo (top) is fed by <b>SEND A</b> on the mixer, the reverb (bottom) by <b>SEND B</b> &middot; reverb: low <b>DENSITY</b> gives repeats, high a wash; <b>MODE</b> picks the space &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>Enter</b> start / stop &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudBz" hidden>Video synth B, after Fosfora: it moves to the music and the drum machine&rsquo;s kick and snare &middot; the ten buttons pick the effect &middot; pots <b>A B C</b> shape it, <b>HUE</b> picks its one colour, <b>SPEED</b> sets its pace &middot; the big button freezes it<br>Its own screen shows the picture even when it is not on the roof &middot; the box on the right picks what the roof shows: <b>A</b>, <b>B</b> or <b>OFF</b> &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudZk" hidden>Four voices through one filter &middot; play it with <b>A W S E D F T G Y H U J K</b>, <b>Z</b> / <b>X</b> octave, or the four pads &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> the switches: LP / BP, POLY / ACID, THIN / FAT<br><b>WAVE</b>, <b>OCTAVE</b> and <b>HOLD</b> are the three buttons on the left &middot; <b>Q</b> hops to its sequencer &middot; <b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Snake on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMc" hidden>One key plays a whole chord &middot; keys <b>A W S E D F T G Y H U J</b> pick the root &middot; <b>Z X C V</b> dim / min / maj / sus &middot; <b>B N M ,</b> add 6 / m7 / M7 / 9 &middot; the big <b>CHORD VOICE</b> dial turns it through its inversions<br><b>Click</b> or hold and <b>slide</b> along the strip between the speaker grilles to strum the chord, or keys <b>1</b>&ndash;<b>=</b> &middot; <b>SOUND</b> next preset &middot; <b>PERFORM</b> hold &middot; <b>Q</b> hops to its sequencer &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudSc" hidden><b>Hold</b> the platter and <b>drag</b> up and down to scratch, or <b>scroll</b> on it &middot; the fader at the back cuts the sound &middot; corner buttons: sample &minus; / +, play, cue<br><b>X</b> cuts while held &middot; <b>C</b> cue &middot; <b>Space</b> starts the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudPf" hidden><b>Scroll</b> or <b>drag</b> the four knobs to play the light &middot; <b>click</b> a knob to reset it &middot; the arrows step through the patterns &middot; LIGHT blanks it<br>The box on the right picks what the roof shows: <b>A</b> (this), <b>B</b> or <b>OFF</b> &middot; Flashing patterns: look away or turn it off if it bothers you &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudPf" hidden><b>Scroll</b> or <b>drag</b> the four knobs to play the light &middot; <b>click</b> a knob to reset it &middot; the arrows step through the patterns &middot; LIGHT blanks it<br>The box on the right picks what the roof shows: <b>A</b> (this), <b>B</b> or <b>OFF</b> &middot; Flashing patterns: look away or turn it off if it bothers you &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudSh" hidden>The six buttons pick a page, the four pots edit what the display shows &middot; <b>scroll</b> EDIT to step pages, or patches after <b>MEMORY</b><br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudAm" hidden><b>S1</b>&ndash;<b>S8</b> pick a page (press again for its second half) &middot; the eight pots edit what the display shows &middot; <b>scroll</b> the encoder to fine-tune, <b>click</b> it for a C4<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudTp" hidden><b>Click</b> keys to play the sample &middot; <b>scroll</b> or <b>drag</b> a knob, <b>click</b> it for its second page &middot; <b>LOOP</b> records, then overdubs &middot; <b>CHOMP</b> + white keys 1&ndash;8 pick a sample, <b>CHOMP + LOOP</b> samples the mixer<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> loop play &middot; <b>Shift</b> = Chomp &middot; <b>Esc</b> steps back</div>
@@ -6428,6 +6432,7 @@ function mxApply(){
     C.fad.gain.setTargetAtTime(c.mute || (anySolo && !c.solo) ? 0 : Math.pow(c.vol, 1.7) * 1.63, t, 0.012); C.sa.gain.setTargetAtTime(c.sa * c.sa * 1.3, t, 0.02); C.sb.gain.setTargetAtTime(c.sb * c.sb * 1.3, t, 0.02); });
   AU.master.gain.setTargetAtTime(Math.pow(MX.master, 1.7) * 1.46, t, 0.02);
 }
+function mxSolo(i){ var c = MX.ch[i]; c.solo = c.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.solo ? ' solo' : ' solo off')); }
 function mxMute(i){ var c = MX.ch[i]; c.mute = c.mute ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.mute ? ' muted' : ' on')); }
 function mxCtl(c){
   var id = c.id, v = c.v;
@@ -9215,12 +9220,18 @@ function enterTR(dev){
 }
 function switchLean(dev){                                      // hop straight from one instrument to another without stepping back
   var D = typeof dev === 'string' ? DEVS[dev] : dev; if (!D) return false; if (mode !== 'tr'){ enterTR(D); return mode === 'tr'; } if (D === LEAN) return true;
-  endCtl(true); setHover(null);
+  endCtl(true); setHover(null); LOOKUP.on = false;
   Object.keys(MF.kb).forEach(mfKbUp); Object.keys(BS.kb).forEach(bsKbUp); Object.keys(AM.kb).forEach(amKbUp); Object.keys(TP.kb).forEach(tpKbUp); Object.keys(MB.kb).forEach(mbKbUp); Object.keys(MC.kb).forEach(mcKbUp); Object.keys(SH.kb).forEach(shKbUp); Object.keys(ZK.kb).forEach(zkKbUp);
   LEAN = D; cam.x = D.stand.x; cam.z = D.stand.z; cam.yaw = cam.ty = D.yaw; cam.pitch = cam.tp = D.pitch; trBlend = 0.35; keys = {};
   ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc', 'hudBz', 'hudZk'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
   resize(); return true;
 }
+/* Q held at a machine that has no sequencer (drum machine, mixer, echo and reverb, video synths): the view lifts off the panel to look
+   across the room at the other players. You stay leaned in; the mouse turns the view while Q is down; letting go drops back to the panel. */
+var LOOKUP = { on:false, k:0, yaw:0, pitch:0 };
+function hasSeq(D){ return !!D && !!D.key && (D.key.indexOf('sn') === 0 || SNDEV.indexOf(D.key) > 0); }
+document.addEventListener('keyup', function(e){ if (e.key && e.key.toLowerCase() === 'q') LOOKUP.on = false; }); window.addEventListener('blur', function(){ LOOKUP.on = false; });
+document.addEventListener('mousemove', function(e){ if (!LOOKUP.on || mode !== 'tr') return; LOOKUP.yaw -= (e.movementX || 0) * 0.0026; LOOKUP.pitch = clamp(LOOKUP.pitch - (e.movementY || 0) * 0.0026, -0.75, 0.7); });
 var LASTSN = {};                                               // per synth, the sequencer you last came from
 function swapLean(){                                           // Q: between a synth and the sequencer that plays it
   var i, S;
@@ -9392,8 +9403,8 @@ document.addEventListener('keydown', function(e){
   if (mode === 'tr'){
     if ((k === 'e' && !e.repeat) || e.key === 'Escape' || 'wasd'.indexOf(k) >= 0 && k.length === 1){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
-    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat) swapLean(); return; }
-    if (LEAN === DEVS.mx){ var mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat) mxMute(mi); return; }
+    if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat){ if (hasSeq(LEAN)) swapLean(); else if (k === 'q'){ LOOKUP.on = true; LOOKUP.yaw = 0; LOOKUP.pitch = 0; } } return; }
+    if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi); } return; }      // 1-10 mute, with Shift solo
     if (LEAN === DEVS.tr){                                             // on the drum machine the number keys follow its mode
       if (e.code === 'Backquote' || e.key === '`' || e.key === '\u00AC'){ e.preventDefault(); if (!e.repeat){ M.kbHalf = M.kbHalf ? 0 : 1; say('KEYS 1-8  STEPS ' + (M.kbHalf ? '9-16' : '1-8'), 1600); } return; }
       var ti = '1234567890-'.indexOf(e.key); if (ti < 0 || e.repeat) return;
@@ -9435,7 +9446,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.63 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.64 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -9482,6 +9493,9 @@ function frame(now){
     ex = lerp(ex, eyeV.x, tk); ey = lerp(ey, eyeV.y, tk); ez = lerp(ez, eyeV.z, tk);
     lx2 = lerp(lx2, lookV.x, tk); ly2 = lerp(ly2, lookV.y, tk); lz2 = lerp(lz2, lookV.z, tk);
   }
+  LOOKUP.k = lerp(LOOKUP.k, LOOKUP.on && mode === 'tr' ? 1 : 0, 1 - Math.exp(-dt * 7)); if (mode !== 'tr') LOOKUP.on = false;
+  if (LOOKUP.k > 0.002){ var uy = LEAN.yaw + LOOKUP.yaw, up = -0.05 + LOOKUP.pitch, uk = smooth(LOOKUP.k), ud = 0.8;      // the eye stays over the machine; only where it looks changes
+    lx2 = lerp(lx2, ex - Math.sin(uy) * Math.cos(up) * ud, uk); ly2 = lerp(ly2, ey + Math.sin(up) * ud, uk); lz2 = lerp(lz2, ez - Math.cos(uy) * Math.cos(up) * ud, uk); }
   if (SPEC.on){ var sy = SPEC.y - ey; ey += sy; ly2 += sy; }      // a spectator camera: same look, fixed height
   var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
   var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back
