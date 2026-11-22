@@ -418,15 +418,24 @@ var MP = (function(){
      the rig just above the sequencers that can look all the way round. The mouse still turns the view. ---- */
   var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 1.78, RIG.z]];
     return L.map(function(c, k){ var dx = RIG.x - c[1], dz = RIG.z - c[3], dy = 1.0 - c[2]; return { name:c[0], x:c[1], y:c[2], z:c[3], yaw:k === 4 ? 0 : Math.atan2(-dx, -dz), pitch:k === 4 ? -0.08 : Math.atan2(dy, Math.hypot(dx, dz)) }; }); })();
+  /* The four corner cameras slide up and down their corner on the scroll wheel, from near the floor to the ceiling, still aimed at the
+     rig. Each keeps the height it was left at for the rest of the session (and across a reload in the same tab). */
+  function specAim(c, y){ return Math.atan2(1.0 - y, Math.hypot(RIG.x - c.x, RIG.z - c.z)); }
+  try { var sh = JSON.parse(sessionStorage.getItem('jambutek-studio-camh') || 'null'); if (Array.isArray(sh)) sh.forEach(function(y, i){ if (i < 4 && typeof y === 'number') SPECCAMS[i].y = clamp(y, 0.22, ROOM.h - 0.3); }); } catch (e) {}
+  window.addEventListener('wheel', function(e){
+    if (!SPEC.on || SPEC.i > 3 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; var c = SPECCAMS[SPEC.i]; c.y = clamp(c.y - e.deltaY * 0.0013, 0.22, ROOM.h - 0.3);
+    try { sessionStorage.setItem('jambutek-studio-camh', JSON.stringify(SPECCAMS.slice(0, 4).map(function(q){ return +q.y.toFixed(3); }))); } catch (e2) {}
+  }, { passive:true });
   var specEl = null;
   var SPK = {}, specSpin = false, specAuto = false, specBar = -1;      // auto edit: the room cuts between cameras 1 to 5 by itself, every four bars
-  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : 'mouse looks round'); }
+  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : '<b>scroll</b> sets height &middot; mouse looks round'); }
   function specCam(i, quiet){
     if (i === 5){ SPEC.i = 5; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera 6 · free: WASD to fly, Space and C for up and down'); specHudText(); return; }      // the free camera starts wherever the last one was
-    var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); specHudText(); }
+    var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = i < 4 ? specAim(c, c.y) : c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); specHudText(); }
   Q.specTick = function(dt){                                 // camera 6 flies; camera 5 can turn by itself
     if (specAuto){ var bar = M.playing && typeof SEQ.visN === 'number' ? Math.floor(SEQ.visN / 64) : Math.floor(performance.now() / 8000);      // four bars with the drums running, eight seconds without
       if (bar !== specBar){ var first = specBar === -1; specBar = bar; if (!first){ var nx = (SPEC.i + 1 + ((Math.random() * 4) | 0)) % 5; specCam(nx, true); } } }
+    if (SPEC.i < 4){ var cc = SPECCAMS[SPEC.i]; if (Math.abs(cc.y - SPEC.y) > 0.0005){ var ny = lerp(SPEC.y, cc.y, 1 - Math.exp(-dt * 9)), dp = specAim(cc, ny) - specAim(cc, SPEC.y); SPEC.y = ny; cam.tp = clamp(cam.tp + dp, -1.35, 1.25); cam.pitch = clamp(cam.pitch + dp, -1.35, 1.25); } }      // glide to the new height, keeping the rig in frame
     if (SPEC.i === 4 && specSpin) cam.ty += dt * 0.16;
     if (SPEC.i !== 5) return; var f = (SPK.w || SPK.arrowup ? 1 : 0) - (SPK.s || SPK.arrowdown ? 1 : 0), r = (SPK.d ? 1 : 0) - (SPK.a ? 1 : 0), u = (SPK[' '] ? 1 : 0) - (SPK.c ? 1 : 0); if (!f && !r && !u){ SPEC.v = 0; return; }
     SPEC.v = lerp(SPEC.v || 0, SPK.shift ? 4.2 : 1.6, 1 - Math.exp(-dt * 5)); var sp = SPEC.v * dt, cp = Math.cos(cam.pitch), sy = Math.sin(cam.yaw), cy = Math.cos(cam.yaw);      // eases up to speed so moves start softly
