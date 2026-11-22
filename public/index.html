@@ -222,7 +222,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.81</span>
+    <span id="verFps">studio v1.82</span>
   </div>
 </div>
 
@@ -255,7 +255,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.81</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.82</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -9258,15 +9258,20 @@ var MP = (function(){
   Q.menuAudio = function(){ return menuA; };
   /* ---- menu sounds: a tick when the pointer comes onto a button, a two-note blip on a click. They have their own little audio
      context (the room's is not built until you go in), started by the first click or key, and they obey the mute button. ---- */
-  var uiAC = null, uiLast = null, uiClick = null;
+  var uiAC = null, uiLast = null, uiClick = null, uiHover = null;
   function uiStart(){
     if (uiAC || !Q.lobbyOpen) return; try { uiAC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){ return; }
-    fetch('click.mp3').then(function(r){ return r.arrayBuffer(); }).then(function(b){ uiAC.decodeAudioData(b, function(buf){ uiClick = buf; }, function(){}); }).catch(function(){});   // the press sound (a dub clank)
+    function get(url, put){ fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(b){ uiAC.decodeAudioData(b, put, function(){}); }).catch(function(){}); }
+    get('click.mp3', function(buf){ uiClick = buf; }); get('hover.mp3', function(buf){ uiHover = buf; });      // the press sound (a dub clank) and the hover tick
   }
+  function uiPlay(buf, vol){ var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = buf; g.gain.value = vol; n.connect(g); g.connect(uiAC.destination); n.start(); }
   function uiPress(){
     if (!uiAC || muted || uiAC.state !== 'running') return;
-    if (!uiClick){ uiBlip(520, 780, 0.07, 0.09, 'square'); return; }                        // not loaded yet: the old blip
-    var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = uiClick; g.gain.value = 0.7; n.connect(g); g.connect(uiAC.destination); n.start();
+    if (uiClick) uiPlay(uiClick, 0.7); else uiBlip(520, 780, 0.07, 0.09, 'square');          // not loaded yet: the old blip
+  }
+  function uiOver(){
+    if (!uiAC || muted || uiAC.state !== 'running') return;
+    if (uiHover) uiPlay(uiHover, 0.6); else uiBlip(1500, 2100, 0.05, 0.05, 'triangle');
   }
   function uiBlip(f0, f1, dur, vol, type){
     if (!uiAC || muted || uiAC.state !== 'running') return;
@@ -9277,9 +9282,9 @@ var MP = (function(){
   }
   function uiBtn(e){ var b = e.target && e.target.closest ? e.target.closest('button') : null; return b && !b.classList.contains('taken') && (lobby.contains(b) || cred.contains(b)) ? b : null; }
   document.addEventListener('pointerdown', uiStart, true); document.addEventListener('keydown', uiStart, true);
-  document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiBlip(1500, 2100, 0.05, 0.05, 'triangle'); });
+  document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiOver(); });
   document.addEventListener('click', function(e){ if (!Q.lobbyOpen || !uiBtn(e)) return; uiPress(); }, true);
-  Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') : null; };
+  Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') + (uiHover ? ' hover ' + uiHover.duration.toFixed(2) + 's' : '') : null; };
   /* the credits sheet, opened from the line under the lobby card */
   var cred = document.getElementById('mpCredits');
   document.getElementById('mpCred').addEventListener('click', function(){ cred.hidden = false; });
@@ -9731,7 +9736,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.81 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.82 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
