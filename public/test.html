@@ -58,6 +58,15 @@ body{
   width:40px; height:40px; display:grid; place-items:center;
   border:1px solid rgba(216,216,216,.22); border-radius:50%; background:rgba(11,13,18,.6); color:var(--bone); cursor:pointer; opacity:.6;
 }
+#now{ position:fixed; z-index:5; top:calc(12px + env(safe-area-inset-top, 0px)); right:calc(64px + env(safe-area-inset-right, 0px)); height:40px; display:flex; align-items:center; gap:14px; padding:0 14px; max-width:calc(100% - 420px); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:rgba(216,216,216,.6); background:rgba(8,10,14,.6); border:1px solid rgba(216,216,216,.16); border-radius:10px; pointer-events:none; white-space:nowrap }
+#now b{ color:var(--bone); font-weight:500 }
+#now .it{ overflow:hidden; text-overflow:ellipsis }
+#now .it.dim b{ color:rgba(216,216,216,.45) }
+#now .beat{ display:flex; gap:4px; flex:none }
+#now .beat i{ width:7px; height:7px; border-radius:50%; background:rgba(216,216,216,.2); transition:transform .08s }
+#now.run .beat i.on{ background:#3BFF6A; transform:scale(1.5); box-shadow:0 0 8px #3BFF6A }
+#now.run .beat i:first-child.on{ background:#FFE15A; box-shadow:0 0 8px #FFE15A }
+@media (max-width:760px){ #now .it:nth-of-type(n+3){ display:none } #now{ max-width:calc(100% - 90px) } }
 #mute:hover,#mute:focus-visible{ opacity:1; border-color:var(--mint) }
 #mute svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round }
 #mute .off{ display:none } #mute[aria-pressed="true"] .on{ display:none } #mute[aria-pressed="true"] .off{ display:inline }
@@ -148,7 +157,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.71</span>
+    <span id="verFps">studio v1.72</span>
   </div>
 </div>
 
@@ -193,6 +202,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <button type="button" class="leave" id="trLeave">Step back</button>
 </div>
 
+<div id="now" aria-live="off"><span class="beat" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="it"><b class="jam"></b></span><span class="it">Key <b class="key"></b></span><span class="it"><b class="bpm"></b></span></div>
 <button id="mute" type="button" aria-pressed="false" aria-label="Mute sound">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <g class="on"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></g>
@@ -8502,10 +8512,22 @@ function patternExport(){
 }
 /* saved jams */
 var JAMS = Array.isArray(window.JB_JAMS) ? window.JB_JAMS : [];             // the first one is the starter: it is also DEF, what the room opens with
+/* ---- the strip beside the mute button: which jam is loaded, the room key, the tempo, and four dots that step with the beat ---- */
+var JAMKEY = 'jambutek-studio-jam-v1', JAMNAME = '', nowEl = document.getElementById('now'), nowSig = '', nowBeat = -2;
+function jamNameLoad(){ var n = ''; try { var s = JSON.parse(store(JAMKEY) || 'null'); if (s && typeof s.name === 'string') n = s.name.slice(0, 40); } catch (e) {}
+  if (!n){ var mine = null; try { mine = localStorage.getItem(SAVE_KEY); } catch (e) {} n = mine ? 'Your jam' : (DEF && DEF.name) || 'New jam'; } JAMNAME = n; }      // nothing recorded: a first visit is the starter, anything else is your own work
+function jamNamed(n){ JAMNAME = String(n || 'Jam').replace(/\.json$/i, '').slice(0, 40); store(JAMKEY, JSON.stringify({ v:1, name:JAMNAME })); }
+jamNameLoad(); RESTORE[JAMKEY] = jamNameLoad;
+function nowUpdate(){
+  if (!nowEl) return; var key = RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'off', sig = JAMNAME + '|' + key + '|' + M.bpm;
+  if (sig !== nowSig){ nowSig = sig; nowEl.querySelector('.jam').textContent = JAMNAME; nowEl.querySelector('.key').textContent = key; nowEl.querySelector('.key').parentNode.classList.toggle('dim', !RK.on); nowEl.querySelector('.bpm').textContent = (Math.round(M.bpm * 10) / 10) + ' BPM'; }
+  var b = M.playing && typeof SEQ.visStep === 'number' && SEQ.visStep >= 0 ? (SEQ.visStep >> 2) & 3 : -1;
+  if (b !== nowBeat){ nowBeat = b; var d = nowEl.querySelectorAll('.beat i'); for (var i = 0; i < d.length; i++) d[i].className = i === b ? 'on' : ''; nowEl.classList.toggle('run', b >= 0); }
+}
 function loadJam(J, name){                                       // a jam is the same shape as the factory set, so it goes in the same way
   if (!J || typeof J !== 'object' || !Array.isArray(J.drums) || J.drums.length !== 16){ toast('That file is not a Jambutek Studio jam'); return false; }
-  if (J.state && typeof J.state === 'object'){ var got = 0; try { got = roomLoad(J.state); } catch (e) {} if (got){ toast((name || 'Jam') + ' loaded · patterns, sounds and settings', 3200); return true; } }      // a full jam: everything comes back
-  var keep = DEF; DEF = J; try { allPatterns(true, name || 'Jam'); } catch (e) { DEF = keep; toast('Could not load that jam'); return false; } DEF = keep; return true;
+  if (J.state && typeof J.state === 'object'){ var got = 0; try { got = roomLoad(J.state); } catch (e) {} if (got){ jamNamed(name || J.name); toast((name || 'Jam') + ' loaded · patterns, sounds and settings', 3200); return true; } }      // a full jam: everything comes back
+  var keep = DEF; DEF = J; try { allPatterns(true, name || 'Jam'); } catch (e) { DEF = keep; toast('Could not load that jam'); return false; } DEF = keep; jamNamed(name || J.name); return true;
 }
 var jamEl = null;
 function jamClose(){ if (jamEl){ jamEl.remove(); jamEl = null; } }
@@ -8556,11 +8578,12 @@ function wallPress(c){ unlock(); c.down = 1;
 function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the starter jam')); WALL.c = null; } }
 DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
 function wallUpdate(now){
+  nowUpdate();
   WALLBTN.forEach(function(c){
     var L = c.down ? 1 : 0.15;
     if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ var tx = c.wk === 'key' ? (RK.on ? 'ON' : 'OFF') : c.wk === 'note' ? NOTEN[RK.root] : SCALES[RK.scale][0]; if (c.rkT !== tx){ c.rkT = tx; c.repaintFace(tx); } if (c.wk === 'key') L = RK.on ? 0.95 : 0.08; }
     if (c.wk === 'clear' || c.wk === 'def'){ L = 0.12;
-      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else allPatterns(c.wk === 'def'); } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
+      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(c.wk === 'def'); jamNamed(c.wk === 'def' ? (DEF && DEF.name) || 'Default jam' : 'New jam'); } } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
     if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.004 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
   });
 }
@@ -9792,7 +9815,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.71 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.72 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

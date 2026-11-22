@@ -64,10 +64,22 @@ function patternExport(){
 }
 /* saved jams */
 var JAMS = Array.isArray(window.JB_JAMS) ? window.JB_JAMS : [];             // the first one is the starter: it is also DEF, what the room opens with
+/* ---- the strip beside the mute button: which jam is loaded, the room key, the tempo, and four dots that step with the beat ---- */
+var JAMKEY = 'jambutek-studio-jam-v1', JAMNAME = '', nowEl = document.getElementById('now'), nowSig = '', nowBeat = -2;
+function jamNameLoad(){ var n = ''; try { var s = JSON.parse(store(JAMKEY) || 'null'); if (s && typeof s.name === 'string') n = s.name.slice(0, 40); } catch (e) {}
+  if (!n){ var mine = null; try { mine = localStorage.getItem(SAVE_KEY); } catch (e) {} n = mine ? 'Your jam' : (DEF && DEF.name) || 'New jam'; } JAMNAME = n; }      // nothing recorded: a first visit is the starter, anything else is your own work
+function jamNamed(n){ JAMNAME = String(n || 'Jam').replace(/\.json$/i, '').slice(0, 40); store(JAMKEY, JSON.stringify({ v:1, name:JAMNAME })); }
+jamNameLoad(); RESTORE[JAMKEY] = jamNameLoad;
+function nowUpdate(){
+  if (!nowEl) return; var key = RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'off', sig = JAMNAME + '|' + key + '|' + M.bpm;
+  if (sig !== nowSig){ nowSig = sig; nowEl.querySelector('.jam').textContent = JAMNAME; nowEl.querySelector('.key').textContent = key; nowEl.querySelector('.key').parentNode.classList.toggle('dim', !RK.on); nowEl.querySelector('.bpm').textContent = (Math.round(M.bpm * 10) / 10) + ' BPM'; }
+  var b = M.playing && typeof SEQ.visStep === 'number' && SEQ.visStep >= 0 ? (SEQ.visStep >> 2) & 3 : -1;
+  if (b !== nowBeat){ nowBeat = b; var d = nowEl.querySelectorAll('.beat i'); for (var i = 0; i < d.length; i++) d[i].className = i === b ? 'on' : ''; nowEl.classList.toggle('run', b >= 0); }
+}
 function loadJam(J, name){                                       // a jam is the same shape as the factory set, so it goes in the same way
   if (!J || typeof J !== 'object' || !Array.isArray(J.drums) || J.drums.length !== 16){ toast('That file is not a Jambutek Studio jam'); return false; }
-  if (J.state && typeof J.state === 'object'){ var got = 0; try { got = roomLoad(J.state); } catch (e) {} if (got){ toast((name || 'Jam') + ' loaded · patterns, sounds and settings', 3200); return true; } }      // a full jam: everything comes back
-  var keep = DEF; DEF = J; try { allPatterns(true, name || 'Jam'); } catch (e) { DEF = keep; toast('Could not load that jam'); return false; } DEF = keep; return true;
+  if (J.state && typeof J.state === 'object'){ var got = 0; try { got = roomLoad(J.state); } catch (e) {} if (got){ jamNamed(name || J.name); toast((name || 'Jam') + ' loaded · patterns, sounds and settings', 3200); return true; } }      // a full jam: everything comes back
+  var keep = DEF; DEF = J; try { allPatterns(true, name || 'Jam'); } catch (e) { DEF = keep; toast('Could not load that jam'); return false; } DEF = keep; jamNamed(name || J.name); return true;
 }
 var jamEl = null;
 function jamClose(){ if (jamEl){ jamEl.remove(); jamEl = null; } }
@@ -118,11 +130,12 @@ function wallPress(c){ unlock(); c.down = 1;
 function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the starter jam')); WALL.c = null; } }
 DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
 function wallUpdate(now){
+  nowUpdate();
   WALLBTN.forEach(function(c){
     var L = c.down ? 1 : 0.15;
     if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ var tx = c.wk === 'key' ? (RK.on ? 'ON' : 'OFF') : c.wk === 'note' ? NOTEN[RK.root] : SCALES[RK.scale][0]; if (c.rkT !== tx){ c.rkT = tx; c.repaintFace(tx); } if (c.wk === 'key') L = RK.on ? 0.95 : 0.08; }
     if (c.wk === 'clear' || c.wk === 'def'){ L = 0.12;
-      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else allPatterns(c.wk === 'def'); } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
+      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (c.wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(c.wk === 'def'); jamNamed(c.wk === 'def' ? (DEF && DEF.name) || 'Default jam' : 'New jam'); } } L = WALL.done ? 1 : 0.25 + 0.6 * clamp(k, 0, 1) * (Math.floor(now / 90) % 2 ? 1 : 0.7); } }
     if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.004 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
   });
 }
