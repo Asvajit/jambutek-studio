@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <title>Jambutek Studio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Yellowtail&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
 <style>
 /* Same shell as the Jambutek Arcade: one full-bleed 3D view, a thin HUD in the corners, a crosshair dead centre */
 :root{
@@ -161,7 +161,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpChat .tip{ margin-top:6px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:rgba(216,216,216,.55); text-shadow:0 1px 0 #000 }
 #mpChat.open .tip{ display:none }
 @font-face{ font-family:'Anton'; src:url(fonts/anton.woff2) format('woff2'); font-display:swap }
-@font-face{ font-family:'Yellowtail'; src:url(fonts/yellowtail.woff2) format('woff2'); font-display:swap }
+@font-face{ font-family:'Kaushan Script'; src:url(fonts/kaushan.woff2) format('woff2'); font-display:swap }
 /* ---- lobby look 2 (arcade): everything here hangs off the class "v2" on #mpLobby; take the class away and the old look is back ---- */
 #mpLobby.v2{ --metal:#20232E; --metalD:#3A3F4E; --edge:0 0 0 2px #14161D, 0 3px 0 2px #05060A; --disp:'Anton', Impact, 'Arial Narrow', sans-serif; }
 #mpLobby.v2 .card{ position:relative; background:linear-gradient(#171A24, #0A0B10); border:0; padding:16px 18px 18px; border-radius:4px; filter:url(#psx) }
@@ -200,7 +200,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpLobby.v2 button.alt.watch{ background:#7430C4 }
 #mpLobby.v2 button.ghost{ font-size:28px; padding:5px 14px 7px; margin-top:6px; color:#fff; background:#2C303D }
 #mpLobby.v2 .row{ gap:10px; align-items:stretch } #mpLobby.v2 .row input{ margin:0 }
-#mpLobby.v2 .or{ display:flex; align-items:center; gap:14px; margin:12px 6px 10px; font-family:'Yellowtail', 'Brush Script MT', cursive; font-size:32px; letter-spacing:.03em; line-height:1; text-transform:none; color:#FFE11E;
+#mpLobby.v2 .or{ display:flex; align-items:center; gap:14px; margin:12px 6px 10px; font-family:'Kaushan Script', 'Brush Script MT', cursive; font-size:29px; letter-spacing:.02em; line-height:1; text-transform:none; color:#FFE11E;
   text-shadow:0 0 6px rgba(255,236,60,.9), 0 0 18px rgba(255,220,0,.55), 0 0 34px rgba(255,200,0,.3); animation:neonFlicker 5.3s linear infinite; animation-delay:-2.1s }
 #mpLobby.v2 .or::before, #mpLobby.v2 .or::after{ content:''; flex:1; height:2px; border-radius:2px; background:#D8DCE6; box-shadow:0 0 6px rgba(255,255,255,.35) }
 #mpLobby.v2 .err{ min-height:14px; margin-top:8px }
@@ -222,7 +222,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.92</span>
+    <span id="verFps">studio v1.93</span>
   </div>
 </div>
 
@@ -257,7 +257,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.92</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.93</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -312,7 +312,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <li><b>Push buttons</b> &middot; &ldquo;Button&rdquo; by DrakonSlayer, CC BY 4.0</li>
   </ul>
   <h3>Code</h3>
-  <ul><li><b>three.js</b> r128 &middot; the three.js authors, MIT</li><li><b>Fonts</b> &middot; Anton by Vernon Adams (OFL 1.1), Yellowtail by Astigmatic (Apache 2.0)</li></ul>
+  <ul><li><b>three.js</b> r128 &middot; the three.js authors, MIT</li><li><b>Fonts</b> &middot; Anton by Vernon Adams (OFL 1.1), Kaushan Script by Pablo Impallari (OFL 1.1)</li></ul>
   <p class="small">The instruments are written for this room from the published designs; names are given as credit only and belong to their makers.</p>
   <button type="button" class="ghost" id="mpCredX">Close</button>
 </div></div>
