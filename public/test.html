@@ -163,7 +163,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 @font-face{ font-family:'Anton'; src:url(fonts/anton.woff2) format('woff2'); font-display:swap }
 @font-face{ font-family:'Yellowtail'; src:url(fonts/yellowtail.woff2) format('woff2'); font-display:swap }
 /* ---- lobby look 2 (arcade): everything here hangs off the class "v2" on #mpLobby; take the class away and the old look is back ---- */
-#mpLobby.v2{ --metal:#A9B1C4; --metalD:#3A3F4E; --edge:0 0 0 2px #14161D, 0 3px 0 2px #05060A; --disp:'Anton', Impact, 'Arial Narrow', sans-serif; }
+#mpLobby.v2{ --metal:#20232E; --metalD:#3A3F4E; --edge:0 0 0 2px #14161D, 0 3px 0 2px #05060A; --disp:'Anton', Impact, 'Arial Narrow', sans-serif; }
 #mpLobby.v2 .card{ position:relative; background:linear-gradient(#171A24, #0A0B10); border:0; padding:16px 18px 18px; border-radius:4px; filter:url(#psx) }
 /* the PSX pass: the whole card is drawn in 2-pixel blocks mixed 40/60 with the sharp picture so the lettering stays readable, with few colour steps (the filter #psx), under a faint checker that turns the
    smooth gradients into dither, and scanlines */
@@ -177,28 +177,28 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpLobby.v2 input{ font-family:var(--disp); font-size:21px; letter-spacing:.06em; padding:8px 14px; margin:0 0 12px; background:linear-gradient(#07080C, #10121A); border:3px solid var(--metal); border-radius:7px;
   box-shadow:var(--edge), inset 0 0 0 2px #05060A, inset 0 4px 10px rgba(0,0,0,.9); outline:0; transition:border-color .12s, box-shadow .12s }
 #mpLobby.v2 input::placeholder{ color:rgba(216,216,216,.28) }
-#mpLobby.v2 input:hover{ border-color:#D5DBE8 }
+#mpLobby.v2 input:hover{ border-color:#3A4052 }
 #mpLobby.v2 input:focus{ border-color:#FFE15A; box-shadow:var(--edge), inset 0 0 0 2px #05060A, inset 0 4px 10px rgba(0,0,0,.9), 0 0 16px rgba(255,225,90,.35) }
 #mpLobby.v2 input.code{ letter-spacing:.14em }
 #mpLobby.v2 #mpSkins{ gap:9px; margin-bottom:16px }
 #mpLobby.v2 #mpSkins button{ background:linear-gradient(#05060A, #0D0F15); border:3px solid var(--metal); border-radius:8px; box-shadow:var(--edge), inset 0 0 0 2px #05060A; padding:8px 2px 6px;
   transition:transform .14s cubic-bezier(.3,1.6,.5,1), border-color .12s, box-shadow .12s, filter .12s }
 #mpLobby.v2 #mpSkins button canvas{ transition:transform .16s cubic-bezier(.3,1.6,.5,1) }
-#mpLobby.v2 #mpSkins button:hover:not(.taken){ transform:translateY(-4px); border-color:#fff; box-shadow:var(--edge), inset 0 0 0 2px #05060A, 0 8px 16px rgba(0,0,0,.6) }
+#mpLobby.v2 #mpSkins button:hover:not(.taken){ transform:translateY(-4px); border-color:#4A5166; box-shadow:var(--edge), inset 0 0 0 2px #05060A, 0 8px 16px rgba(0,0,0,.6) }
 #mpLobby.v2 #mpSkins button:hover:not(.taken) canvas{ transform:scale(1.08) }
 #mpLobby.v2 #mpSkins button.on{ background:linear-gradient(#141204, #0D0F15); border-color:#FFE11E; box-shadow:var(--edge), inset 0 0 0 2px #05060A, 0 0 20px rgba(255,225,30,.6) }      /* steady, not pulsing: anything moving inside the card makes the PSX filter redraw the whole card every frame */
 @keyframes v2Pick{ 50%{ box-shadow:0 0 0 2px #14161D, 0 3px 0 2px #05060A, inset 0 0 0 2px #05060A, 0 0 26px rgba(255,225,30,.75) } }
-#mpLobby.v2 .card > button, #mpLobby.v2 .row button{ position:relative; overflow:hidden; font-family:var(--disp); letter-spacing:.06em; color:#fff; border:3px solid var(--metal); border-radius:8px; box-shadow:var(--edge), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -4px 0 rgba(0,0,0,.28);
+#mpLobby.v2 .card > button, #mpLobby.v2 .row button{ position:relative; z-index:6; overflow:hidden; border-color:rgba(0,0,0,.45) !important; font-family:var(--disp); letter-spacing:.06em; color:#fff; border:3px solid var(--metal); border-radius:8px; box-shadow:var(--edge), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -4px 0 rgba(0,0,0,.28);
   text-shadow:0 2px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 4px 0 rgba(0,0,0,.4); transition:transform .12s cubic-bezier(.3,1.6,.5,1), filter .12s, border-color .12s }
 #mpLobby.v2 .card > button::after, #mpLobby.v2 .row button::after{ content:''; position:absolute; top:0; bottom:0; left:-60%; width:40%; background:linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); transform:skewX(-20deg); pointer-events:none }
 #mpLobby.v2 .card > button:hover::after, #mpLobby.v2 .row button:hover::after{ animation:v2Sheen .55s ease-out }
 @keyframes v2Sheen{ to{ left:130% } }
-#mpLobby.v2 .card > button:hover, #mpLobby.v2 .row button:hover{ transform:translateY(-2px) scale(1.015); filter:brightness(1.15) saturate(1.1); border-color:#fff }
+#mpLobby.v2 .card > button:hover, #mpLobby.v2 .row button:hover{ transform:translateY(-2px) scale(1.015); filter:brightness(1.15) saturate(1.1) }
 #mpLobby.v2 .card > button:active, #mpLobby.v2 .row button:active{ transform:translateY(2px) scale(.985); filter:brightness(.9); box-shadow:0 0 0 2px #14161D, inset 0 3px 6px rgba(0,0,0,.5) }
-#mpLobby.v2 #mpCreate{ font-size:30px; padding:5px 14px 7px; background:linear-gradient(#6CF07A, #2BC548 48%, #1C9A35 52%, #22B03E) }
-#mpLobby.v2 button.alt{ font-size:22px; padding:6px 14px 8px; background:linear-gradient(#58B4FF, #1E78E0 48%, #1558B4 52%, #1A68CC) }
-#mpLobby.v2 button.alt.watch{ background:linear-gradient(#B773F5, #7C34CE 48%, #5F22A8 52%, #6E2ABE) }
-#mpLobby.v2 button.ghost{ font-size:28px; padding:5px 14px 7px; margin-top:6px; color:#fff; background:linear-gradient(#4A4F62, #2B2F3D 48%, #1E2029 52%, #262935) }
+#mpLobby.v2 #mpCreate{ font-size:30px; padding:5px 14px 7px; background:#27B844 }
+#mpLobby.v2 button.alt{ font-size:22px; padding:6px 14px 8px; background:#1C6FD6 }
+#mpLobby.v2 button.alt.watch{ background:#7430C4 }
+#mpLobby.v2 button.ghost{ font-size:28px; padding:5px 14px 7px; margin-top:6px; color:#fff; background:#2C303D }
 #mpLobby.v2 .row{ gap:10px; align-items:stretch } #mpLobby.v2 .row input{ margin:0 }
 #mpLobby.v2 .or{ display:flex; align-items:center; gap:14px; margin:12px 6px 10px; font-family:'Yellowtail', 'Brush Script MT', cursive; font-size:32px; letter-spacing:.03em; line-height:1; text-transform:none; color:#FFE11E;
   text-shadow:0 0 6px rgba(255,236,60,.9), 0 0 18px rgba(255,220,0,.55), 0 0 34px rgba(255,200,0,.3); animation:neonFlicker 5.3s linear infinite; animation-delay:-2.1s }
@@ -222,7 +222,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.91</span>
+    <span id="verFps">studio v1.92</span>
   </div>
 </div>
 
@@ -257,7 +257,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.91</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.92</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -10091,7 +10091,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.91 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v1.92 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
