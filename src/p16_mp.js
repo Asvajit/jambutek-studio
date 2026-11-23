@@ -509,9 +509,9 @@ var MP = (function(){
     SPEC.i = 6 + side; SPEC.x = x; SPEC.y = y; SPEC.z = z; cam.x = x; cam.z = z; cam.yaw = cam.ty = Math.atan2(-dx, -dz); cam.pitch = cam.tp = Math.atan2(ty - y, Math.hypot(dx, dz)); cam.walkTo = null; cam.homing = false;
     if (!quiet) toast('Camera ' + (side === 3 ? 0 : 7 + side) + ' · over the shoulder, ' + OTSNAME[side] + ' side · ' + D.name); specHudText(); return true;
   }
-  Q.dofNow = function(){ return SPEC.on && SPEC.i >= 6 && DOF.on && !Q.lobbyOpen ? DOF : null; };
+  Q.dofNow = function(){ return SPEC.on && SPEC.i >= 6 && SPEC.i <= 9 && DOF.on && !Q.lobbyOpen ? DOF : null;      // the four shoulder cameras only, never the top one };
   window.addEventListener('wheel', function(e){
-    if (!SPEC.on || SPEC.i < 6 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; var st = e.deltaY > 0 ? -1 : 1;
+    if (!SPEC.on || SPEC.i < 6 || SPEC.i > 9 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; var st = e.deltaY > 0 ? -1 : 1;
     if (e.shiftKey) DOF.a = clamp(Math.round((DOF.a + st * 0.05) * 100) / 100, 0.05, 1); else DOF.f = clamp(DOF.f * (st > 0 ? 1.06 : 1 / 1.06), 0.25, 9);
     DOF.on = true; dofSave(); specHudText();
   }, { passive:true });
@@ -549,8 +549,8 @@ var MP = (function(){
   document.addEventListener('keydown', function(e){          // while watching, the keyboard only changes camera
     if (!SPEC.on || Q.lobbyOpen || e.key === 'F2' || e.key === 'Escape' || e.ctrlKey || e.metaKey || e.altKey) return;
     var i = '1234567890-'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat){ specAuto = false; specCam(i); }
-    else if (SPEC.i >= 6 && !e.repeat && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){ var sdI = SPEC.i - 6, Ls = otsSides()[sdI]; OTSAT[sdI] = (OTSAT[sdI] + (e.key === 'ArrowRight' ? 1 : Ls.length - 1)) % Ls.length; otsPlace(sdI); e.preventDefault(); }
-    else if (SPEC.i >= 6 && !e.repeat && k === 'f'){ DOF.on = !DOF.on; dofSave(); toast(DOF.on ? 'Depth of field on' : 'Depth of field off'); specHudText(); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i >= 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
+    else if (SPEC.i >= 6 && SPEC.i <= 9 && !e.repeat && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){ var sdI = SPEC.i - 6, Ls = otsSides()[sdI]; OTSAT[sdI] = (OTSAT[sdI] + (e.key === 'ArrowRight' ? 1 : Ls.length - 1)) % Ls.length; otsPlace(sdI); e.preventDefault(); }
+    else if (SPEC.i >= 6 && SPEC.i <= 9 && !e.repeat && k === 'f'){ DOF.on = !DOF.on; dofSave(); toast(DOF.on ? 'Depth of field on' : 'Depth of field off'); specHudText(); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i >= 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
     else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
     SPK[k] = true; SPK.shift = e.shiftKey; e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
   }, true);
