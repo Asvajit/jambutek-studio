@@ -509,7 +509,7 @@ var MP = (function(){
     SPEC.i = 6 + side; SPEC.x = x; SPEC.y = y; SPEC.z = z; cam.x = x; cam.z = z; cam.yaw = cam.ty = Math.atan2(-dx, -dz); cam.pitch = cam.tp = Math.atan2(ty - y, Math.hypot(dx, dz)); cam.walkTo = null; cam.homing = false;
     if (!quiet) toast('Camera ' + (side === 3 ? 0 : 7 + side) + ' · over the shoulder, ' + OTSNAME[side] + ' side · ' + D.name); specHudText(); return true;
   }
-  Q.dofNow = function(){ return SPEC.on && SPEC.i >= 6 && SPEC.i <= 9 && DOF.on && !Q.lobbyOpen ? DOF : null;      // the four shoulder cameras only, never the top one };
+  Q.dofNow = function(){ return SPEC.on && SPEC.i >= 6 && SPEC.i <= 9 && DOF.on && !Q.lobbyOpen ? DOF : null; /* the four shoulder cameras only, never the top one */ };
   window.addEventListener('wheel', function(e){
     if (!SPEC.on || SPEC.i < 6 || SPEC.i > 9 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; var st = e.deltaY > 0 ? -1 : 1;
     if (e.shiftKey) DOF.a = clamp(Math.round((DOF.a + st * 0.05) * 100) / 100, 0.05, 1); else DOF.f = clamp(DOF.f * (st > 0 ? 1.06 : 1 / 1.06), 0.25, 9);
