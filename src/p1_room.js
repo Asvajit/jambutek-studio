@@ -29,18 +29,33 @@ var LINES_OPTS = [600, 420, 300, 220], linesIdx = 0, nearSharp = false;   // sta
 var rt = new THREE.WebGLRenderTarget(4, 4, { minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter });
 rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
 var post = new THREE.ShaderMaterial({
-  uniforms:{ tDiffuse:{value:rt.texture}, res:{value:new THREE.Vector2(4,4)}, time:{value:0}, levels:{value:26}, flash:{value:0}, grain:{value:0.045}, fxScale:{value:1} },
+  uniforms:{ tDiffuse:{value:rt.texture}, res:{value:new THREE.Vector2(4,4)}, time:{value:0}, levels:{value:26}, flash:{value:0}, grain:{value:0.045}, fxScale:{value:1}, tDepth:{value:rt.depthTexture}, aper:{value:0}, focus:{value:1.2} },
   vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }',
   fragmentShader:[
-    'uniform sampler2D tDiffuse; uniform vec2 res; uniform float time; uniform float levels; uniform float flash; uniform float grain; uniform float fxScale;',
+    'uniform sampler2D tDiffuse; uniform vec2 res; uniform float time; uniform float levels; uniform float flash; uniform float grain; uniform float fxScale; uniform sampler2D tDepth; uniform float aper; uniform float focus;',
     'varying vec2 vUv;',
     'float m2(vec2 q){ return mod(2.*q.x + 3.*q.y, 4.); }',
     'float bayer(vec2 a){ a = mod(floor(a), 4.); return (4.*m2(mod(a, 2.)) + m2(floor(a*.5))) / 16.; }',
     'float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }',
+    /* depth of field for the over-the-shoulder spectator cameras: aper is the size of the blur (0 = off), focus the sharp distance in metres.
+       Each pixel gathers 28 neighbours on a spiral; a neighbour counts when its own blur reaches this far, and a far one never smears over a nearer sharp one. */
+    'float lin(vec2 u){ float z = texture2D(tDepth, u).x * 2. - 1.; return 3. / (30.05 - z * 29.95); }',
+    'float coc(float d){ return min(aper * abs(1./focus - 1./d) * res.y * .034, res.y * .03); }',
+    'vec3 dofAt(vec2 uv){',
+    '  float d0 = lin(uv), c0 = coc(d0); vec3 acc = texture2D(tDiffuse, uv).rgb; float wt = 1.; float R = res.y * .03;',
+    '  for (int i = 1; i <= 28; i++){',
+    '    float fi = float(i), rr = sqrt(fi / 28.) * R, a = fi * 2.39996;',
+    '    vec2 u = (floor(uv * res + vec2(cos(a), sin(a)) * rr) + .5) / res;',
+    '    float d = lin(u), cs = coc(d); if (d > d0) cs = min(cs, c0 * 1.6);',
+    '    float w = smoothstep(rr - 1., rr + .5, cs);',
+    '    acc += texture2D(tDiffuse, u).rgb * w; wt += w;',
+    '  }',
+    '  return acc / wt;',
+    '}',
     'void main(){',
     '  vec2 px = floor(vUv*res);',
     '  vec2 uv = (px+.5)/res;',
-    '  vec3 c = texture2D(tDiffuse, uv).rgb;',
+    '  vec3 c = aper > 0.001 ? dofAt(uv) : texture2D(tDiffuse, uv).rgb;',
     '  c += vec3(flash*.9, flash, flash*.85);',
     '  vec2 fp = floor(px / fxScale);',
     '  float b = bayer(fp) - .5;',

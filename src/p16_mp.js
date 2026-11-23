@@ -473,7 +473,7 @@ var MP = (function(){
   };
   /* ---- spectating: cameras on keys 1 to 6. Five are fixed, the sixth flies. One in each ceiling corner where the stage lights hang, and one in the middle of
      the rig just above the sequencers that can look all the way round. The mouse still turns the view. ---- */
-  var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 1.78, RIG.z]];
+  var SPECCAMS = (function(){ var i = 0.62, y = ROOM.h - 0.42, L = [['north-west corner', ROOM.x0 + i, y, ROOM.z0 + i], ['north-east corner', ROOM.x1 - i, y, ROOM.z0 + i], ['south-west corner', ROOM.x0 + i, y, ROOM.z1 - i], ['south-east corner', ROOM.x1 - i, y, ROOM.z1 - i], ['centre, look all round', RIG.x, 2.08, RIG.z]];
     return L.map(function(c, k){ var dx = RIG.x - c[1], dz = RIG.z - c[3], dy = 1.0 - c[2]; return { name:c[0], x:c[1], y:c[2], z:c[3], yaw:k === 4 ? 0 : Math.atan2(-dx, -dz), pitch:k === 4 ? -0.08 : Math.atan2(dy, Math.hypot(dx, dz)) }; }); })();
   /* The four corner cameras slide up and down their corner on the scroll wheel, from near the floor to the ceiling, still aimed at the
      rig. Each keeps the height it was left at for the rest of the session (and across a reload in the same tab). */
@@ -484,9 +484,50 @@ var MP = (function(){
     try { sessionStorage.setItem('jambutek-studio-camh', JSON.stringify(SPECCAMS.slice(0, 4).map(function(q){ return +q.y.toFixed(3); }))); } catch (e2) {}
   }, { passive:true });
   var specEl = null;
+  /* ---- over-the-shoulder cameras, keys 7 8 9 0: one for each side of the rig. Each sits just behind and beside whoever stands at a
+     machine on that side, looking over their shoulder at the panel. It picks a machine somebody is at (else the middle one); the left
+     and right arrows step along the side. These four have depth of field: F switches it, the wheel sets the sharp distance, Shift and
+     the wheel the size of the blur. ---- */
+  var OTSKEYS = ['tr', 'mf', 'bs', 'zk', 'mb', 'sh', 'am', 'tp', 'mx', 'mc', 'ec', 'sc'], OTSNAME = ['north', 'east', 'south', 'west'], OTS = null, OTSAT = [-1, -1, -1, -1];
+  var DOF = { on:true, f:1.3, a:0.6 };
+  try { var sd = JSON.parse(sessionStorage.getItem('jambutek-studio-dof') || 'null'); if (sd && typeof sd.f === 'number'){ DOF.on = !!sd.on; DOF.f = clamp(sd.f, 0.25, 9); DOF.a = clamp(sd.a, 0.05, 1); } } catch (e) {}
+  function dofSave(){ try { sessionStorage.setItem('jambutek-studio-dof', JSON.stringify(DOF)); } catch (e) {} }
+  function otsSides(){
+    if (OTS) return OTS; OTS = [[], [], [], []];
+    OTSKEYS.forEach(function(k){ var D = DEVS[k]; if (!D) return; var dx = D.stand.x - RIG.x, dz = D.stand.z - RIG.z, side = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 0 : 2) : (dx > 0 ? 1 : 3);
+      OTS[side].push({ k:k, D:D, u:side === 0 || side === 2 ? D.stand.x : D.stand.z }); });
+    OTS.forEach(function(L){ L.sort(function(a, b){ return a.u - b.u; }); }); return OTS;
+  }
+  function otsBusy(L){                                       // the machine on this side that somebody is standing at, if any
+    var best = -1, bd = 0.7; L.forEach(function(m, j){ Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id], d = Math.hypot(P.x - m.D.stand.x, P.z - m.D.stand.z); if (d < bd){ bd = d; best = j; } }); }); return best;
+  }
+  function otsPlace(side, quiet){
+    var L = otsSides()[side]; if (!L.length) return false; if (OTSAT[side] < 0 || OTSAT[side] >= L.length){ var b = otsBusy(L); OTSAT[side] = b >= 0 ? b : (L.length - 1) >> 1; }
+    var m = L[OTSAT[side]], D = m.D, yaw = D.yaw || 0, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+    var x = clamp(D.stand.x - fx * 0.66 + rx * 0.6, ROOM.x0 + 0.25, ROOM.x1 - 0.25), z = clamp(D.stand.z - fz * 0.66 + rz * 0.6, ROOM.z0 + 0.25, ROOM.z1 - 0.25), y = 1.8;
+    var tx = D.stand.x + fx * 0.6 + rx * 0.3, tz = D.stand.z + fz * 0.6 + rz * 0.3, ty = 1.0, dx = tx - x, dz = tz - z;
+    SPEC.i = 6 + side; SPEC.x = x; SPEC.y = y; SPEC.z = z; cam.x = x; cam.z = z; cam.yaw = cam.ty = Math.atan2(-dx, -dz); cam.pitch = cam.tp = Math.atan2(ty - y, Math.hypot(dx, dz)); cam.walkTo = null; cam.homing = false;
+    if (!quiet) toast('Camera ' + (side === 3 ? 0 : 7 + side) + ' · over the shoulder, ' + OTSNAME[side] + ' side · ' + D.name); specHudText(); return true;
+  }
+  Q.dofNow = function(){ return SPEC.on && SPEC.i >= 6 && DOF.on && !Q.lobbyOpen ? DOF : null; };
+  window.addEventListener('wheel', function(e){
+    if (!SPEC.on || SPEC.i < 6 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; var st = e.deltaY > 0 ? -1 : 1;
+    if (e.shiftKey) DOF.a = clamp(Math.round((DOF.a + st * 0.05) * 100) / 100, 0.05, 1); else DOF.f = clamp(DOF.f * (st > 0 ? 1.06 : 1 / 1.06), 0.25, 9);
+    DOF.on = true; dofSave(); specHudText();
+  }, { passive:true });
   var SPK = {}, specSpin = false, specAuto = false, specBar = -1;      // auto edit: the room cuts between cameras 1 to 5 by itself, every four bars
-  function specHudText(){ if (!specEl) return; var i = SPEC.i; specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>6</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : '<b>scroll</b> sets height &middot; mouse looks round'); }
+  function specHudText(){ if (!specEl) return; var i = SPEC.i;
+    if (i === 10){ specEl.innerHTML = '<b>TOP CAMERA</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; <b>scroll</b> zooms &middot; mouse turns and tilts'; return; }
+    if (i >= 6){ specEl.innerHTML = '<b>CAMERA ' + (i === 9 ? 0 : i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; <b>&larr; &rarr;</b> next machine &middot; <b>F</b> depth of field ' + (DOF.on ? '<b>on</b> &middot; <b>scroll</b> focus <b>' + DOF.f.toFixed(2) + ' m</b> &middot; <b>Shift + scroll</b> aperture <b>' + Math.round(DOF.a * 100) + '%</b>' : 'off'); return; }
+    specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : '<b>scroll</b> sets height &middot; mouse looks round'); }
+  /* the top-down camera, on the minus key: in the ceiling over the middle of the rig, looking straight down through a wide lens.
+     The mouse turns (and tilts) it, the wheel zooms. */
+  var TOP = { fov:100 };
+  Q.specFov = function(){ return SPEC.on && SPEC.i === 10 ? TOP.fov : 0; };
+  window.addEventListener('wheel', function(e){ if (!SPEC.on || SPEC.i !== 10 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; TOP.fov = clamp(TOP.fov + (e.deltaY > 0 ? 4 : -4), 40, 118); specHudText(); }, { passive:true });
   function specCam(i, quiet){
+    if (i === 10){ SPEC.i = 10; SPEC.x = RIG.x; SPEC.y = ROOM.h - 0.14; SPEC.z = RIG.z; cam.x = SPEC.x; cam.z = SPEC.z; cam.yaw = cam.ty = 0; cam.pitch = cam.tp = -1.5; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Top camera · straight down on the rig'); specHudText(); return; }
+    if (i >= 6){ OTSAT[i - 6] = -1; if (!otsPlace(i - 6, quiet)) return; return; }
     if (i === 5){ SPEC.i = 5; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera 6 · free: WASD to fly, Space and C for up and down'); specHudText(); return; }      // the free camera starts wherever the last one was
     var c = SPECCAMS[i]; if (!c) return; SPEC.i = i; SPEC.x = c.x; SPEC.y = c.y; SPEC.z = c.z; cam.x = c.x; cam.z = c.z; cam.yaw = cam.ty = c.yaw; cam.pitch = cam.tp = i < 4 ? specAim(c, c.y) : c.pitch; cam.walkTo = null; cam.homing = false; if (!quiet) toast('Camera ' + (i + 1) + ' · ' + c.name); specHudText(); }
   Q.specTick = function(dt){                                 // camera 6 flies; camera 5 can turn by itself
@@ -503,11 +544,13 @@ var MP = (function(){
     emoteSet(0); SPEC.on = on; document.body.classList.toggle('spec', on);
     if (!specEl){ specEl = document.createElement('div'); specEl.id = 'specHud'; document.body.appendChild(specEl); }
     specEl.hidden = !on;
-    if (on) specCam(SPEC.i === 5 ? 0 : SPEC.i || 0, true); else { cam.x = HOME.x; cam.z = HOME.z; cam.yaw = cam.ty = HOME.yaw; cam.pitch = cam.tp = HOME.pitch; }
+    if (on) specCam(SPEC.i >= 5 ? 0 : SPEC.i || 0, true); else { cam.x = HOME.x; cam.z = HOME.z; cam.yaw = cam.ty = HOME.yaw; cam.pitch = cam.tp = HOME.pitch; }
   }
   document.addEventListener('keydown', function(e){          // while watching, the keyboard only changes camera
     if (!SPEC.on || Q.lobbyOpen || e.key === 'F2' || e.key === 'Escape' || e.ctrlKey || e.metaKey || e.altKey) return;
-    var i = '123456'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat){ specAuto = false; specCam(i); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i === 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
+    var i = '1234567890-'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat){ specAuto = false; specCam(i); }
+    else if (SPEC.i >= 6 && !e.repeat && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){ var sdI = SPEC.i - 6, Ls = otsSides()[sdI]; OTSAT[sdI] = (OTSAT[sdI] + (e.key === 'ArrowRight' ? 1 : Ls.length - 1)) % Ls.length; otsPlace(sdI); e.preventDefault(); }
+    else if (SPEC.i >= 6 && !e.repeat && k === 'f'){ DOF.on = !DOF.on; dofSave(); toast(DOF.on ? 'Depth of field on' : 'Depth of field off'); specHudText(); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i >= 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
     else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
     SPK[k] = true; SPK.shift = e.shiftKey; e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
   }, true);
@@ -522,7 +565,7 @@ var MP = (function(){
     DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1, 0]; P.x = x; P.z = z; P.yaw = yaw; });
     if (Q.ws) paintHud();
   }
-  function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–6)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
+  function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–0 and −)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
   function dbgMenu(){
     if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgS"></button><p>In a room, test players switched on by a player show for everyone, spectators too. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
       dbgEl.querySelector('#dbgP').addEventListener('click', function(){ dbgPlayers(!Q.dbg); dbgPaint(); });
@@ -530,7 +573,7 @@ var MP = (function(){
     dbgEl.hidden = !dbgEl.hidden; if (!dbgEl.hidden){ dbgPaint(); releaseLock(); }
   }
   document.addEventListener('keydown', function(e){ if (e.key === 'F2'){ e.preventDefault(); e.stopPropagation(); if (!Q.lobbyOpen) dbgMenu(); } else if (e.key === 'Escape' && dbgEl && !dbgEl.hidden) dbgEl.hidden = true; }, true);
-  Q.debug = { players:dbgPlayers, spec:specOn, cam:specCam, cams:SPECCAMS };
+  Q.debug = { players:dbgPlayers, spec:specOn, cam:specCam, cams:SPECCAMS, ots:otsSides, dof:DOF };
   Q.serverNow = serverNow;
   return Q;
 })();

@@ -315,7 +315,7 @@ var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.ge
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.88 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.89 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -375,6 +375,7 @@ function frame(now){
     var cx3 = clamp(tx3 + bx * d3, ROOM.x0 + 0.25, ROOM.x1 - 0.25), cy3 = clamp(ty3 + by * d3, 0.35, ROOM.h - 0.3), cz3 = clamp(tz3 + bz * d3, ROOM.z0 + 0.25, ROOM.z1 - 0.25), s3 = smooth(k3);
     ex = lerp(ex, cx3, s3); ey = lerp(ey, cy3, s3); ez = lerp(ez, cz3, s3); lx2 = lerp(lx2, tx3, s3); ly2 = lerp(ly2, ty3, s3); lz2 = lerp(lz2, tz3, s3);
   }
+  var wf = MP.specFov() || baseFov; if (Math.abs(camera.fov - wf) > 0.01){ camera.fov = Math.abs(camera.fov - wf) < 0.3 ? wf : lerp(camera.fov, wf, 1 - Math.exp(-dt * 12)); camera.updateProjectionMatrix(); }      // the top camera has its own, wider lens
   camera.position.set(ex, ey, ez); camera.lookAt(lx2, ly2, lz2); camera.updateMatrixWorld(); lodUpdate();
 
   /* what the crosshair (or mouse) is on */
@@ -402,6 +403,7 @@ function frame(now){
   logo.face.emissiveIntensity = (0.12 + 0.48 * lp) * (1 + kp * 0.9); logo.side.emissiveIntensity = (0.1 + 1.2 * lp) * (1 + kp * 1.1); logoGlow.intensity = (0.15 + 1.1 * lp) * (1 + kp * 1.6); logoHalo.material.opacity = Math.min(0.95, (0.05 + 0.32 * lp) * (1 + kp * 1.5)); logoHalo.scale.setScalar(1 + kp * 0.22); logo.mesh.scale.setScalar(0.82 * (1 + kp * 0.035));
 
   post.uniforms.time.value = tsec;
+  var dofN = MP.dofNow(); post.uniforms.aper.value = lerp(post.uniforms.aper.value, dofN ? dofN.a : 0, 1 - Math.exp(-dt * 10)); if (dofN) post.uniforms.focus.value = lerp(post.uniforms.focus.value, dofN.f, 1 - Math.exp(-dt * 12));
   post.uniforms.fxScale.value = lerp(1, Math.max(1, post.uniforms.res.value.y / 300), mode === 'tr' ? 1 : 0);
   
   renderer.setRenderTarget(rt); renderer.render(scene, camera);
