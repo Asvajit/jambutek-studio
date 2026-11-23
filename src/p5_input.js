@@ -1,6 +1,6 @@
 
 /* ================= camera: a person standing in the room (same eye height, speed and feel as the arcade) ================= */
-var HOME = { x:-3.3, z:-0.5, yaw:-2.38, pitch:-0.12 };       // in the corner by the pattern buttons, looking across the rig
+var HOME = { x:0, z:-1.05, yaw:Math.PI, pitch:-0.16 };          // by the north wall, facing the table with the mixer and the drum machine, the rig behind it
 var cam = { x:HOME.x, z:HOME.z, yaw:HOME.yaw, pitch:HOME.pitch, ty:HOME.yaw, tp:HOME.pitch, homing:false, walkTo:null };
 var running = false, EYE = 1.5, keys = {}, crouch = { on:false, k:0 }, JUMP = { y:0, v:0 };
 function collide(){
@@ -313,9 +313,34 @@ paintMute();
 var last = performance.now(), verFps = document.getElementById('verFps'), fpsN = 0, fpsAt = 0;
 var eyeV = new THREE.Vector3(), lookV = new THREE.Vector3(), xhEl3 = document.getElementById('xh');
 function smooth(u){ u = clamp(u, 0, 1); return u * u * (3 - 2 * u); }
+/* ---- the "press play" pointer: a bright arrow hanging in the air over the drum machine's Start pad with a ring round the pad, drawn
+   over everything like a game marker. It shows until the sequence has run once (whoever started it), then never again this visit. ---- */
+var HINT = { g:null, ring:null, done:false, p:new THREE.Vector3() };
+function hintBuild(){
+  var g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ color:0x4DFF7A, depthTest:false, depthWrite:false, transparent:true, opacity:0.95 });
+  var head = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 4), mat); head.rotation.x = Math.PI; head.position.y = 0.05;
+  var shaft = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.11, 0.032), mat); shaft.position.y = 0.155;
+  var c = document.createElement('canvas'); c.width = 512; c.height = 160; var x = c.getContext('2d');
+  x.fillStyle = 'rgba(6,10,8,.82)'; x.fillRect(0, 0, 512, 160); x.strokeStyle = '#4DFF7A'; x.lineWidth = 8; x.strokeRect(4, 4, 504, 152);
+  x.fillStyle = '#4DFF7A'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = "bold 84px 'Anton', Impact, 'Arial Narrow', sans-serif"; x.fillText('PRESS PLAY', 256, 86);
+  var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
+  var tag = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false, depthWrite:false })); tag.scale.set(0.4, 0.125, 1); tag.position.y = 0.3;
+  [head, shaft, tag].forEach(function(o){ o.renderOrder = 60; g.add(o); });
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.038, 24), new THREE.MeshBasicMaterial({ color:0x4DFF7A, depthTest:false, depthWrite:false, transparent:true, side:THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.renderOrder = 60;
+  g.visible = ring.visible = false; scene.add(g); scene.add(ring); HINT.g = g; HINT.ring = ring;
+}
+function hintUpdate(now){
+  if (HINT.done) return; if (M.playing){ HINT.done = true; if (HINT.g){ HINT.g.visible = HINT.ring.visible = false; } return; }
+  var show = !MP.lobbyOpen && !SPEC.on && CT.start && CT.start.m; if (!show){ if (HINT.g) HINT.g.visible = HINT.ring.visible = false; return; }
+  if (!HINT.g) hintBuild();
+  CT.start.m.getWorldPosition(HINT.p); var d = Math.hypot(HINT.p.x - cam.x, HINT.p.z - cam.z), s = clamp(0.55 + d * 0.5, 0.7, 1.9), b = Math.sin(now * 0.005);
+  HINT.g.visible = HINT.ring.visible = true; HINT.g.position.set(HINT.p.x, HINT.p.y + 0.035 + (0.03 + b * 0.022) * s, HINT.p.z); HINT.g.scale.setScalar(s); HINT.g.children[0].rotation.y = HINT.g.children[1].rotation.y = now * 0.003;
+  var rp = (now * 0.0012) % 1; HINT.ring.position.set(HINT.p.x, HINT.p.y + 0.012, HINT.p.z); HINT.ring.scale.setScalar(0.7 + rp * 1.8); HINT.ring.material.opacity = 1 - rp;
+}
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.94 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.95 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -375,6 +400,7 @@ function frame(now){
     var cx3 = clamp(tx3 + bx * d3, ROOM.x0 + 0.25, ROOM.x1 - 0.25), cy3 = clamp(ty3 + by * d3, 0.35, ROOM.h - 0.3), cz3 = clamp(tz3 + bz * d3, ROOM.z0 + 0.25, ROOM.z1 - 0.25), s3 = smooth(k3);
     ex = lerp(ex, cx3, s3); ey = lerp(ey, cy3, s3); ez = lerp(ez, cz3, s3); lx2 = lerp(lx2, tx3, s3); ly2 = lerp(ly2, ty3, s3); lz2 = lerp(lz2, tz3, s3);
   }
+  hintUpdate(now);
   var wf = MP.specFov() || baseFov; if (Math.abs(camera.fov - wf) > 0.01){ camera.fov = Math.abs(camera.fov - wf) < 0.3 ? wf : lerp(camera.fov, wf, 1 - Math.exp(-dt * 12)); camera.updateProjectionMatrix(); }      // the top camera has its own, wider lens
   camera.position.set(ex, ey, ez); camera.lookAt(lx2, ly2, lz2); camera.updateMatrixWorld(); lodUpdate();
 

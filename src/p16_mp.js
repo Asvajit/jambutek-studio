@@ -314,7 +314,7 @@ var MP = (function(){
       } else if (m.t === 'welcome'){
         Q.watch = m.watching | 0; var hadDbg2 = Q.dbg; Q.dbg = false;
         var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
-        if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 1.1 : 0.5; }
+        if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 0.55 : 0; }
         Object.keys(Q.peers).forEach(removePeer);
         m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
         MPON = true; MPHOST = !m.players.length; hud.hidden = false; chat.hidden = false; paintHud();
