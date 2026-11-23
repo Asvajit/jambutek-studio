@@ -11,7 +11,7 @@ document.addEventListener('visibilitychange', function(){ if (!document.hidden) 
 function unlock(){
   if (ac){ if (ac.state === 'suspended') ac.resume(); return; }
   try {
-    ac = new (window.AudioContext || window.webkitAudioContext)({ latencyHint:'interactive' });
+    ac = new (window.AudioContext || window.webkitAudioContext)({ latencyHint:'balanced' });      // a slightly deeper buffer than the smallest one: far fewer dropouts for a few thousandths of a second
     var out = ac.createGain(); out.gain.value = muted ? 0 : 1; out.connect(ac.destination); AU.out = out;
     var comp = ac.createDynamicsCompressor(); comp.threshold.value = -9; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.12;
     var vol = ac.createGain(); AU.vol = vol;
@@ -41,7 +41,7 @@ function unlock(){
     }
     var nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), nd = nb.getChannelData(0); for (var j = 0; j < nd.length; j++) nd[j] = Math.random() * 2 - 1;
     AU.noise = nb;
-    var sh = new Float32Array(1024); for (var s = 0; s < 1024; s++){ var x = s / 512 - 1; sh[s] = Math.tanh(x * 2.2) / Math.tanh(2.2); } AU.shape = sh;
+    var sh = new Float32Array(1025); for (var s = 0; s < 1025; s++){ var x = s / 512 - 1; sh[s] = Math.tanh(x * 2.2) / Math.tanh(2.2); } AU.shape = sh;      // an odd count, so silence in gives exact silence out (see vBD)
     AU.ready = true; applyMix(); mxApply();
   } catch (e) { ac = null; }
 }
@@ -57,9 +57,28 @@ function filt(type, f, q){ var b = ac.createBiquadFilter(); b.type = type; b.fre
 function semis(v, range){ return Math.pow(2, (v - 0.5) * 2 * range / 12); }
 
 var V808 = [205.3, 304.4, 369.6, 522.7, 540, 800], V606 = [245, 306, 365, 415, 437, 619], VJB = [263, 400, 421, 474, 587, 845];
+/* The metal of the hats and cymbals is six square waves at fixed odd pitches. It used to build six oscillators for every single hit
+   (hundreds of them every few bars, with a dozen or more running at once), which was the biggest single load on the sound engine.
+   Now the six are added up once into a two-second loop per set of pitches, and a hit just plays that loop from a random spot,
+   faster or slower for the tuning: one node per hit, the same sound. */
+var METAL = {};
+function metalBuf(set){
+  var key = set.join(','); if (METAL[key]) return METAL[key];
+  var sr = ac.sampleRate, n = Math.round(sr * 2), b = ac.createBuffer(1, n, sr), d = b.getChannelData(0);
+  set.forEach(function(f){
+    var dt = Math.round(f * 2) / 2 / sr, ph = Math.random();                              // whole turns in two seconds, so the loop has no seam
+    for (var i = 0; i < n; i++){
+      var v = ph < 0.5 ? 1 : -1, x;                                                       // a square with its two edges rounded just enough not to alias
+      if (ph < dt){ x = ph / dt; v += x + x - x * x - 1; } else if (ph > 1 - dt){ x = (ph - 1) / dt; v += x * x + x + x + 1; }
+      var p2 = ph + 0.5; if (p2 >= 1) p2 -= 1; if (p2 < dt){ x = p2 / dt; v -= x + x - x * x - 1; } else if (p2 > 1 - dt){ x = (p2 - 1) / dt; v -= x * x + x + x + 1; }
+      d[i] += v; ph += dt; if (ph >= 1) ph -= 1;
+    }
+  });
+  return METAL[key] = b;
+}
 function metal(t, dur, mul, set){
   var mix = ac.createGain(); mix.gain.value = 0.3;
-  set.forEach(function(f){ osc('square', f * mul, t, dur).connect(mix); });
+  var s = ac.createBufferSource(); s.buffer = metalBuf(set); s.loop = true; s.playbackRate.value = mul; s.connect(mix); s.start(t, Math.random() * 1.9); s.stop(t + dur + 0.05);
   return mix;
 }
 /* the voices. p = { tune, decay, ctrl } all 0..1, vel 0..1.3, tone = one of TONES */
@@ -74,6 +93,9 @@ function vBD(dst, t, vel, p, tone){
   var comp = ac.createGain(); comp.gain.value = 1.15 / (0.75 + p.ctrl * 0.7);
   var e = envG(t, vel, dec, 0.0015);
   o.connect(drive); drive.connect(ws); ws.connect(comp); comp.connect(e); e.connect(dst);
+  // Unhook the hit once it has rung out. The shaper's curve used to give a hair of output for silence in, so the browser never retired
+  // it: every kick ever played kept running for good, and after a few minutes the sound engine choked (dropouts).
+  o.onended = function(){ try { e.disconnect(); ws.disconnect(); } catch (x) {} };
   var ck = nz(t, 0.02), cf = filt(tone === '909' ? 'highpass' : 'lowpass', tone === '909' ? 1800 : 2600), ce = envG(t, vel * (tone === '909' ? 0.5 : tone === '606' ? 0.3 : 0.2) * (0.5 + p.ctrl), 0.012);
   ck.connect(cf); cf.connect(ce); ce.connect(dst);
 }

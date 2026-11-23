@@ -186,7 +186,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpLobby.v2 #mpSkins button canvas{ transition:transform .16s cubic-bezier(.3,1.6,.5,1) }
 #mpLobby.v2 #mpSkins button:hover:not(.taken){ transform:translateY(-4px); border-color:#fff; box-shadow:var(--edge), inset 0 0 0 2px #05060A, 0 8px 16px rgba(0,0,0,.6) }
 #mpLobby.v2 #mpSkins button:hover:not(.taken) canvas{ transform:scale(1.08) }
-#mpLobby.v2 #mpSkins button.on{ background:linear-gradient(#141204, #0D0F15); border-color:#FFE11E; box-shadow:var(--edge), inset 0 0 0 2px #05060A, 0 0 18px rgba(255,225,30,.5); animation:v2Pick 1.8s ease-in-out infinite }
+#mpLobby.v2 #mpSkins button.on{ background:linear-gradient(#141204, #0D0F15); border-color:#FFE11E; box-shadow:var(--edge), inset 0 0 0 2px #05060A, 0 0 20px rgba(255,225,30,.6) }      /* steady, not pulsing: anything moving inside the card makes the PSX filter redraw the whole card every frame */
 @keyframes v2Pick{ 50%{ box-shadow:0 0 0 2px #14161D, 0 3px 0 2px #05060A, inset 0 0 0 2px #05060A, 0 0 26px rgba(255,225,30,.75) } }
 #mpLobby.v2 .card > button, #mpLobby.v2 .row button{ position:relative; overflow:hidden; font-family:var(--disp); letter-spacing:.06em; color:#fff; border:3px solid var(--metal); border-radius:8px; box-shadow:var(--edge), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -4px 0 rgba(0,0,0,.28);
   text-shadow:0 2px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 4px 0 rgba(0,0,0,.4); transition:transform .12s cubic-bezier(.3,1.6,.5,1), filter .12s, border-color .12s }
@@ -222,7 +222,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v1.87</span>
+    <span id="verFps">studio v1.88</span>
   </div>
 </div>
 
@@ -257,7 +257,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.87</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v1.88</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
