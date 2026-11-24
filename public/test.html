@@ -235,7 +235,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v2.07</span>
+    <span id="verFps">studio v2.08</span>
   </div>
 </div>
 
@@ -270,7 +270,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.07</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.08</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -8251,6 +8251,8 @@ FACE = { bg:'#6E727C', fg:'#0B0B0D' };                        // grey when empty
 [0, 1, 2, 3].forEach(function(j){ var b = button('scslot' + j, 21 + j * 27.5, 35, 24, 28, String(j + 1), 'Scene ' + (j + 1), 0x2BE85A); b.scn = true; b.slot = j; SCBTN.push(b); });
 FACE = { bg:'#F2B544', fg:'#141005' }; var scCopyB = button('sccopy', 131, 27, 20, 11, 'COPY', 'Copy a scene', 0xF2B544); scCopyB.scn = true;
 FACE = { bg:'#E53A3A', fg:'#FFFFFF' }; var scClearB = button('scclear', 131, 43, 20, 11, 'CLEAR', 'Clear this scene', 0xFF2A3C); scClearB.scn = true;
+/* while CLEAR is held a bright bar fills across it from the left, so you can see how long is left */
+var scFill = new THREE.Mesh(new THREE.PlaneGeometry(20 * SC, 11 * SC), new THREE.MeshBasicMaterial({ color:0xFFFFFF, transparent:true, opacity:0.78, depthWrite:false })); scFill.rotation.x = -Math.PI / 2; scFill.visible = false; scFill.userData.noShadow = true; scFill.renderOrder = 5; ECG.add(scFill);
 FACE = { bg:'#C9C7C0', fg:'#0B0B0D' }; var scBarsB = button('scbars', 154, 35, 16, 28, 'x' + SCN.bars, 'Bars per chained scene', 0xC9C7C0); scBarsB.scn = true;
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 (function(){ var E = DEVH.ec; DEVH.ec = { label:function(c){ return c.scn ? scLabel(c) : E.label(c); }, press:function(c){ return c.scn ? scPress(c) : E.press(c); }, release:function(c){ return c.scn ? scRelease(c) : E.release(c); }, ctl:E.ctl, turn:E.turn }; })();
@@ -8271,7 +8273,8 @@ function scUpdate(now, dt){
     if (SCN.copy === 1 && has) L = bl ? 1.6 : 0.2; else if (SCN.copy === 2) L = j === SCN.src ? 2.1 : (bl ? 1.6 : 0.2);
     if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
   var cl = SCN.copy ? (bl ? 1.2 : 0.2) : (scCopyB.down ? 0.9 : 0.25); if (cl !== scCopyB.lit){ scCopyB.lit = cl; scCopyB.paintLit(); }
-  var hl = SCN.hold ? clamp((now - SCN.hold.t0) / SCHOLD, 0, 1) * 1.2 + 0.2 : 0.25; if (hl !== scClearB.lit){ scClearB.lit = hl; scClearB.paintLit(); }
+  var hk = SCN.hold ? clamp((now - SCN.hold.t0) / SCHOLD, 0, 1) : 0, hl = SCN.hold ? hk * 1.2 + 0.2 : 0.25; if (hl !== scClearB.lit){ scClearB.lit = hl; scClearB.paintLit(); }
+  scFill.visible = hk > 0.001; if (scFill.visible){ var fw = 20 * SC; scFill.scale.x = Math.max(0.001, hk); scFill.position.set(scx(131) - fw / 2 + fw * hk / 2, scClearB.m.position.y + 0.0052, scz(43)); scFill.material.opacity = SCN.hold && SCN.hold.done ? 0.95 : 0.78; }
   var bb = scBarsB.down ? 0.8 : SCN.chain.length >= 2 ? 0.5 : 0; if (bb !== scBarsB.lit){ scBarsB.lit = bb; scBarsB.paintLit(); }
   [scCopyB, scClearB, scBarsB].forEach(function(c){ var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
 }
@@ -10354,7 +10357,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v2.07 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v2.08 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
