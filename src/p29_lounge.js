@@ -6,7 +6,7 @@
 var SEATS = [], COUCHES = [], SEATY = 0.42, SITDROP = 0.285, SITEYE = 1.2;
 var SIT = { on:false, seat:-1, pose:0, k:0 };
 (function(){
-  var fab = new THREE.MeshLambertMaterial({ color:0x6F737B }), fab2 = new THREE.MeshLambertMaterial({ color:0x80848D }), dark = new THREE.MeshLambertMaterial({ color:0x2A2C32 }), wood = new THREE.MeshLambertMaterial({ color:0x1B1C21 }), top = new THREE.MeshLambertMaterial({ color:0x2E3038 });
+  var fab = new THREE.MeshLambertMaterial({ color:0x3C3F45 }), fab2 = new THREE.MeshLambertMaterial({ color:0x494C53 }), dark = new THREE.MeshLambertMaterial({ color:0x2A2C32 }), wood = new THREE.MeshLambertMaterial({ color:0x1B1C21 }), top = new THREE.MeshLambertMaterial({ color:0x2E3038 });
   function box(g, w, h, d, x, y, z, m){ var b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; b.receiveShadow = true; g.add(b); return b; }
   function couch(cx, cz, dx, dz){                              // (dx, dz): the way it faces, out from the wall
     var g = new THREE.Group(), W = 1.7, ci = COUCHES.length; g.position.set(cx, 0, cz); g.rotation.y = Math.atan2(dx, dz); scene.add(g);
@@ -21,7 +21,7 @@ var SIT = { on:false, seat:-1, pose:0, k:0 };
   var stk = (window.JB_STICKERS || []).map(function(src){ var t = tex(src); t.magFilter = THREE.LinearFilter; return new THREE.MeshLambertMaterial({ map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.22 }); });
   var disc = new THREE.CircleGeometry(0.058, 20);
   function table(cx, cz, seed){
-    var g = new THREE.Group(), S2 = 0.8, H = 0.44; g.position.set(cx, 0, cz); scene.add(g);
+    var g = new THREE.Group(), S2 = 0.8, H = 0.62;      // as high as the couch arms g.position.set(cx, 0, cz); scene.add(g);
     box(g, S2, 0.05, S2, 0, H - 0.025, 0, top); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(q){ box(g, 0.06, H - 0.05, 0.06, q[0] * (S2 / 2 - 0.06), (H - 0.05) / 2, q[1] * (S2 / 2 - 0.06), wood); });
     solid(g, 'lounge'); BLOCKS.push([cx - S2 / 2, cx + S2 / 2, cz - S2 / 2, cz + S2 / 2]);
     if (!stk.length) return; var r = seed;
@@ -56,7 +56,7 @@ function sitTick(dt){
 function sitPose(P, pose, headYaw, k){
   var hx = [-1.5, -1.5, -2.3][pose] * k, kx = [1.5, 1.5, 2.4][pose] * k;
   P.legL.rotation.set(hx, 0, 0); P.legR.rotation.set(hx, 0, 0); P.legL.userData.knee.rotation.x = kx; P.legR.userData.knee.rotation.x = kx;
-  if (pose === 1){ P.legR.rotation.set(-1.72 * k, -1.25 * k, -0.2 * k); P.legR.userData.knee.rotation.x = 1.75 * k; }      // one leg up on the other: the thigh lifts a little, turns out, and the shin lies across the other knee
+  if (pose === 1){ P.legR.rotation.set(-1.9 * k, 1.3 * k, 0.16 * k); P.legR.userData.knee.rotation.x = 1.62 * k; }      // one leg up on the other: the thigh lifts a little, turns out, and the shin lies across the other knee
   P.armL.rotation.x = P.armR.rotation.x = (pose === 2 ? -1.25 : -0.85) * k; P.torso.rotation.x = -0.1 * k; P.torso.position.y = 0.78;
   P.head.rotation.y = headYaw * k; P.g.position.y = -SITDROP * k;
 }
