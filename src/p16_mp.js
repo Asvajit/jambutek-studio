@@ -449,39 +449,7 @@ var MP = (function(){
     if (Q.ws && !Q.spec && !Q.chatOpen && (e.key === 't' || e.key === 'T') && mode === 'walk' && !e.repeat){ e.preventDefault(); e.stopPropagation(); openChat(); }
   }, true);
   // ---- every frame: send where we are and which knobs moved; move everyone else smoothly ----
-  /* ---- seats: a small plate floats over every machine while other people are in the room. It names the machine and whoever is leaned in
-     at it, in their colour, or says it is free. It hides while you are leaned in yourself, and Settings can switch it off. ---- */
-  var SEATS = null, SEATAT = 0, seatV = new THREE.Vector3();
-  function seatBuild(){
-    SEATS = []; Object.keys(DEVS).forEach(function(k){ var D = DEVS[k]; if (!D || !D.stand) return;
-      var c = document.createElement('canvas'); c.width = 384; c.height = 112; var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
-      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:true, depthWrite:false })); sp.scale.set(0.48, 0.14, 1); sp.visible = false; sp.renderOrder = 40;
-      var yaw = D.yaw || 0, y = 1.42; if (D.g && D.g.getWorldPosition){ D.g.updateMatrixWorld(true); D.g.getWorldPosition(seatV); if (seatV.y > 0.3) y = seatV.y + 0.5; }
-      sp.position.set(D.stand.x - Math.sin(yaw) * 0.55, y, D.stand.z - Math.cos(yaw) * 0.55); scene.add(sp); SEATS.push({ k:k, i:Object.keys(DEVS).indexOf(k), D:D, c:c, tex:tex, sp:sp, sig:null }); });
-  }
-  function seatPaint(S, who){
-    var g = S.c.getContext('2d'), free = !who.length; g.clearRect(0, 0, 384, 112);
-    g.fillStyle = 'rgba(6,8,12,.78)'; g.fillRect(0, 0, 384, 112); g.fillStyle = free ? 'rgba(77,255,122,.55)' : who[0].color; g.fillRect(0, 0, 384, 7);
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(230,230,226,.72)'; g.font = "bold 30px 'Anton', Impact, 'Arial Narrow', sans-serif"; g.fillText(String(S.D.name || S.k).toUpperCase().slice(0, 22), 192, 36);
-    g.font = "bold 40px 'Anton', Impact, 'Arial Narrow', sans-serif";
-    if (free){ g.fillStyle = 'rgba(77,255,122,.8)'; g.fillText('FREE', 192, 80); }
-    else if (who.length === 1){ g.fillStyle = who[0].color; g.fillText(who[0].name.slice(0, 16), 192, 80); }
-    else { var tw = 0, parts = who.slice(0, 3).map(function(P){ var t = P.name.slice(0, 9); var w = g.measureText(t).width + 22; tw += w; return [t, w, P.color]; }), x = 192 - tw / 2; parts.forEach(function(q){ g.fillStyle = q[2]; g.fillText(q[0], x + q[1] / 2, 80); x += q[1]; }); }
-    S.tex.needsUpdate = true;
-  }
-  function seatTick(now){
-    var ids = Object.keys(Q.peers), show = OPT.seats && ids.length && !Q.lobbyOpen && mode === 'walk';
-    if (!show){ if (SEATS && SEATS.on){ SEATS.on = false; SEATS.forEach(function(S){ S.sp.visible = false; }); } return; }
-    if (!SEATS) seatBuild(); SEATS.on = true; if (now - SEATAT < 250) return; SEATAT = now;
-    SEATS.forEach(function(S){
-      var who = []; ids.forEach(function(id){ var P = Q.peers[id]; if (P.s && P.s[6] - 1 === S.i) who.push(P); });
-      var d = Math.hypot(S.sp.position.x - (SPEC.on ? SPEC.x : cam.x), S.sp.position.z - (SPEC.on ? SPEC.z : cam.z)); S.sp.visible = d < 6.5 && (who.length > 0 || d > 0.9);
-      var sc = clamp(0.7 + d * 0.22, 0.85, 2); S.sp.scale.set(0.5 * sc, 0.146 * sc, 1); S.sp.material.opacity = who.length ? 1 : 0.6; var sig = who.map(function(P){ return P.name + P.color; }).join('|'); if (sig !== S.sig){ S.sig = sig; seatPaint(S, who); }
-    });
-  }
-  Q.seats = function(){ return SEATS ? SEATS.map(function(S){ return S.k + ':' + (S.sig || 'free') + (S.sp.visible ? '' : ' (hidden)'); }) : null; };
   Q.tick = function(now, dt){
-    seatTick(now);
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
         Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
@@ -614,7 +582,7 @@ var MP = (function(){
     if (linesIdx !== OPT.pic){ linesIdx = OPT.pic; resize(); } optSave();
   }
   function optPaint(){ if (!optEl) return; ['sens', 'vol', 'grain'].forEach(function(k){ optEl.querySelector('#opt_' + k).value = OPT[k]; optEl.querySelector('#optv_' + k).textContent = Math.round(OPT[k] * 100) + '%'; });
-    optEl.querySelector('#opt_pic').value = OPT.pic; optEl.querySelector('#opt_snap').checked = !!OPT.snap; optEl.querySelector('#opt_seats').checked = !!OPT.seats; }
+    optEl.querySelector('#opt_pic').value = OPT.pic; optEl.querySelector('#opt_snap').checked = !!OPT.snap; }
   function optMenu(show){
     if (!optEl){ optEl = document.createElement('div'); optEl.id = 'optMenu'; optEl.hidden = true;
       optEl.innerHTML = '<h3>Settings</h3>' +
@@ -623,14 +591,12 @@ var MP = (function(){
         '<label>Picture<select id="opt_pic"><option value="0">Sharp</option><option value="1">Standard</option><option value="2">Chunky</option><option value="3">Chunkier</option><option value="4">Blocky (fastest)</option></select></label>' +
         '<label>Film grain <b id="optv_grain"></b><input type="range" id="opt_grain" min="0" max="2" step="0.05"></label>' +
         '<label class="chk"><input type="checkbox" id="opt_snap"> Snap other players\u2019 notes to the grid</label>' +
-        '<label class="chk"><input type="checkbox" id="opt_seats"> Show who is at each machine</label>' +
         '<p>These are yours alone and are remembered on this device. Nothing here changes the room for anyone else.</p>' +
         '<div class="rw"><button type="button" id="optReset">Reset</button><button type="button" id="optX">Close</button></div>';
       document.body.appendChild(optEl);
       ['sens', 'vol', 'grain'].forEach(function(k){ optEl.querySelector('#opt_' + k).addEventListener('input', function(){ OPT[k] = +this.value; optApply(); optPaint(); }); });
       optEl.querySelector('#opt_pic').addEventListener('change', function(){ OPT.pic = +this.value | 0; optApply(); });
       optEl.querySelector('#opt_snap').addEventListener('change', function(){ OPT.snap = this.checked ? 1 : 0; optSave(); });
-      optEl.querySelector('#opt_seats').addEventListener('change', function(){ OPT.seats = this.checked ? 1 : 0; optSave(); });
       optEl.querySelector('#optReset').addEventListener('click', function(){ OPT.sens = 1; OPT.vol = 1; OPT.pic = 1; OPT.grain = 1; OPT.snap = 1; OPT.seats = 1; optApply(); optPaint(); });
       optEl.querySelector('#optX').addEventListener('click', function(){ optMenu(false); });
       ['keydown', 'keyup', 'pointerdown', 'wheel'].forEach(function(t){ optEl.addEventListener(t, function(e){ if (e.key !== 'F1' && e.key !== 'Escape') e.stopPropagation(); }); });
