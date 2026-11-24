@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Jambutek · Character Creator</title>
 <style>
 :root{ --bg:#0B0C10; --panel:#14161B; --line:rgba(216,216,216,.16); --bone:#D8D8D8; --dim:rgba(216,216,216,.55); --gold:#FFE15A; --green:#3BFF6A }
 *{ box-sizing:border-box }
-html, body{ height:100%; margin:0; background:var(--bg); color:var(--bone); font:13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow:hidden }
+html, body{ height:100%; margin:0; background:var(--bg); color:var(--bone); font:13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; overflow:hidden; overscroll-behavior:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation }
+input, select{ -webkit-user-select:auto; user-select:auto }
+@media (pointer:coarse){ .btn{ min-height:38px } #sw button{ min-height:26px } input[type=range]{ height:30px } }
+@media (max-width:900px){ main{ grid-template-columns:168px minmax(0, 1fr) minmax(0, 1fr) !important } header h1{ display:none } }
 button, input, select{ font:inherit; color:inherit }
 header{ height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; border-bottom:1px solid var(--line); background:var(--panel) }
 header h1{ font-size:12px; letter-spacing:.2em; text-transform:uppercase; margin:0 8px 0 0; font-weight:600; white-space:nowrap }
@@ -84,7 +88,8 @@ p.note{ color:var(--dim); font-size:11px; margin:10px 0 0 }
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="redo">Redo</button>
     </div>
-    <p class="note">Drag on the figure or the sheet to paint. Drag empty space to turn the figure. Scroll to zoom. Hold Alt to pick a colour. Ctrl+Z undoes. Drop an image anywhere to use it as the sheet.</p>
+    <p class="note"><b>iPad with a Pencil:</b> the Pencil draws, and pressing harder makes the brush bigger. One finger turns the figure or slides the sheet; two fingers pinch to zoom. Use the Undo button.</p>
+      <p class="note">Drag on the figure or the sheet to paint. Drag empty space to turn the figure. Scroll to zoom. Hold Alt to pick a colour. Ctrl+Z undoes. Drop an image anywhere to use it as the sheet.</p>
     <p class="note">Your work is kept in this browser as you go. Export makes the file to send for the games.</p>
   </aside>
   <section class="pane" id="p3">
@@ -161,7 +166,7 @@ function outs(){ $('szO').textContent = $('sz').value + ' px'; $('sfO').textCont
 function hex(r, g, b){ return '#' + [r, g, b].map(function(v){ return ('0' + v.toString(16)).slice(-2); }).join(''); }
 function pick(x, y){ var d = tg.getImageData(clamp(x | 0, 0, S - 1), clamp(y | 0, 0, S - 1), 1, 1).data; setCol(hex(d[0], d[1], d[2])); toast('Picked ' + COL); }
 function dab(F, x, y){
-  var r = +$('sz').value / 2, soft = +$('sf').value / 100, a = +$('op').value / 100;
+  var r = +$('sz').value / 2 * PRESS, soft = +$('sf').value / 100, a = +$('op').value / 100;
   tg.save(); clipFace(tg, F);
   if (soft < 0.02){ tg.globalAlpha = a; tg.fillStyle = COL; tg.beginPath(); tg.arc(x, y, r, 0, 7); tg.fill(); }
   else { var gr = tg.createRadialGradient(x, y, r * (1 - soft), x, y, r), n = parseInt(COL.slice(1), 16), rgb = (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
@@ -180,6 +185,12 @@ function fillAt(F){
   var list = $('whole').checked ? FACES.filter(function(q){ return q.part === F.part; }) : [F]; if ($('mir').checked) list.slice().forEach(function(q){ var T = twin(q); if (T && list.indexOf(T) < 0) list.push(T); });
   tg.save(); tg.globalAlpha = +$('op').value / 100; tg.fillStyle = COL; list.forEach(function(q){ tg.fillRect(q.x0 - BLEED, q.y0 - BLEED, q.x1 - q.x0 + BLEED * 2, q.y1 - q.y0 + BLEED * 2); }); tg.restore(); changed();
 }
+/* ---- pen and fingers (iPad with a Pencil): the pen draws, and how hard it presses sets the size of the brush. Once a pen has been
+   seen, a finger never draws: one finger turns the figure or slides the sheet, two fingers pinch to zoom. Without a pen a finger
+   draws as the mouse does, and two fingers still zoom. ---- */
+var PEN = false, PRESS = 1;
+function penOf(e){ if (e.pointerType === 'pen'){ PEN = true; PRESS = e.pressure > 0 ? 0.3 + 0.7 * Math.min(1, e.pressure * 1.25) : 1; } else PRESS = 1; }
+function fingers(T){ var a = []; for (var k in T) a.push(T[k]); return a; }
 function useTool(F, x, y, first, alt){                         // one pointer sample, in sheet pixels
   if (alt || TOOL === 'pick'){ if (first) pick(x, y); return; }
   if (!F) { STROKE = null; return; }
@@ -236,17 +247,25 @@ var ORB = { yaw:0.55, pitch:0.12, d:3.5, ty:0.95 };
 function place3(){ var cp = Math.cos(ORB.pitch); cam3.position.set(Math.sin(ORB.yaw) * cp * ORB.d, ORB.ty + Math.sin(ORB.pitch) * ORB.d, Math.cos(ORB.yaw) * cp * ORB.d); cam3.lookAt(0, ORB.ty, 0); }
 var ray = new THREE.Raycaster(), nd = new THREE.Vector2();
 function hit3(e){ var r = c3.getBoundingClientRect(); nd.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height * 2 - 1)); ray.setFromCamera(nd, cam3); var h = ray.intersectObjects(P.meshes, false)[0]; if (!h || !h.uv) return null; var x = h.uv.x * S, y = (1 - h.uv.y) * S; return { F:faceAt(x, y), x:x, y:y }; }
-var D3 = null;
+var D3 = null, T3 = {};
 c3.addEventListener('pointerdown', function(e){
-  c3.setPointerCapture(e.pointerId); var h = e.button === 0 && TOOL !== 'move' ? hit3(e) : null;
+  c3.setPointerCapture(e.pointerId); penOf(e);
+  if (e.pointerType === 'touch'){ T3[e.pointerId] = { x:e.clientX, y:e.clientY }; var f3 = fingers(T3);
+    if (f3.length >= 2){ if (D3 && D3.paint) undo(); STROKE = null; D3 = { pinch:true, d:Math.hypot(f3[0].x - f3[1].x, f3[0].y - f3[1].y) || 1 }; return; }
+    if (PEN){ D3 = { paint:false, x:e.clientX, y:e.clientY }; return; } }
+  var h = e.button === 0 && TOOL !== 'move' ? hit3(e) : null;
   if (h){ D3 = { paint:true }; useTool(h.F, h.x, h.y, true, e.altKey); } else D3 = { paint:false, x:e.clientX, y:e.clientY };
 });
 c3.addEventListener('pointermove', function(e){
+  if (e.pointerType === 'touch' && T3[e.pointerId]){ T3[e.pointerId].x = e.clientX; T3[e.pointerId].y = e.clientY; }
   if (!D3) return;
-  if (D3.paint){ var h = hit3(e); if (h) useTool(h.F, h.x, h.y, false, e.altKey); else STROKE = null; }
+  if (D3.pinch){ var f3 = fingers(T3); if (f3.length >= 2){ var d3 = Math.hypot(f3[0].x - f3[1].x, f3[0].y - f3[1].y) || 1; ORB.d = clamp(ORB.d * D3.d / d3, 1.1, 7); D3.d = d3; } return; }
+  if (e.pointerType === 'touch' && PEN && D3.paint) return;
+  penOf(e);
+  if (D3.paint){ var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!evs || !evs.length) evs = [e]; evs.forEach(function(q){ var h = hit3(q); if (h) useTool(h.F, h.x, h.y, false, e.altKey); else STROKE = null; }); }
   else { ORB.yaw -= (e.clientX - D3.x) * 0.008; ORB.pitch = clamp(ORB.pitch + (e.clientY - D3.y) * 0.006, -1.2, 1.35); D3.x = e.clientX; D3.y = e.clientY; }
 });
-function up3(){ D3 = null; STROKE = null; }
+function up3(e){ if (e && e.pointerType === 'touch'){ delete T3[e.pointerId]; if (D3 && D3.pinch){ if (!fingers(T3).length) D3 = null; return; } } D3 = null; STROKE = null; }
 c3.addEventListener('pointerup', up3); c3.addEventListener('pointercancel', up3); c3.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 c3.addEventListener('wheel', function(e){ e.preventDefault(); ORB.d = clamp(ORB.d * Math.exp(e.deltaY * 0.0012), 1.1, 7); }, { passive:false });
 
@@ -254,20 +273,28 @@ c3.addEventListener('wheel', function(e){ e.preventDefault(); ORB.d = clamp(ORB.
 var c2 = $('c2'), g2 = c2.getContext('2d'), V = { z:0.5, x:0, y:0, fit:false }, M2 = { x:-1, y:-1, in:false };
 function fit2(){ var w = c2.clientWidth, h = c2.clientHeight; V.z = Math.min(w, h) / S * 0.94; V.x = (w - S * V.z) / 2; V.y = (h - S * V.z) / 2; V.fit = true; }
 function sheetXY(e){ var r = c2.getBoundingClientRect(); return { x:(e.clientX - r.left - V.x) / V.z, y:(e.clientY - r.top - V.y) / V.z, cx:e.clientX - r.left, cy:e.clientY - r.top }; }
-var D2 = null;
+var D2 = null, T2 = {};
+function mid2(f){ var r = c2.getBoundingClientRect(); return { x:(f[0].x + f[1].x) / 2 - r.left, y:(f[0].y + f[1].y) / 2 - r.top, d:Math.hypot(f[0].x - f[1].x, f[0].y - f[1].y) || 1 }; }
 c2.addEventListener('pointerdown', function(e){
-  c2.setPointerCapture(e.pointerId); var q = sheetXY(e), F = faceAt(q.x, q.y);
+  c2.setPointerCapture(e.pointerId); penOf(e);
+  if (e.pointerType === 'touch'){ T2[e.pointerId] = { x:e.clientX, y:e.clientY }; var f2 = fingers(T2);
+    if (f2.length >= 2){ if (D2 && !D2.pan && !D2.pinch && (TOOL === 'brush' || TOOL === 'fill')) undo(); STROKE = null; D2 = { pinch:true, m:mid2(f2) }; return; }
+    if (PEN){ D2 = { pan:true, x:e.clientX, y:e.clientY }; return; } }
+  var q = sheetXY(e), F = faceAt(q.x, q.y);
   if (e.button !== 0 || TOOL === 'move' || (!F && !e.altKey && TOOL !== 'pick')){ D2 = { pan:true, x:e.clientX, y:e.clientY }; return; }
   D2 = { pan:false, F:F }; useTool(F, q.x, q.y, true, e.altKey);
 });
 c2.addEventListener('pointermove', function(e){
   var q = sheetXY(e); M2.x = q.x; M2.y = q.y; M2.in = true;
   var F = faceAt(q.x, q.y); $('tip2').textContent = F ? PN[F.part] + (/L$/.test(F.part) ? ' (their right)' : /R$/.test(F.part) ? ' (their left)' : '') + ' · ' + FN[F.f] : '';
+  if (e.pointerType === 'touch' && T2[e.pointerId]){ T2[e.pointerId].x = e.clientX; T2[e.pointerId].y = e.clientY; }
   if (!D2) return;
+  if (D2.pinch){ var f2 = fingers(T2); if (f2.length >= 2){ var m = mid2(f2), z = clamp(V.z * m.d / D2.m.d, 0.15, 12), sx = (D2.m.x - V.x) / V.z, sy = (D2.m.y - V.y) / V.z; V.z = z; V.x = m.x - sx * z; V.y = m.y - sy * z; D2.m = m; } return; }
+  penOf(e);
   if (D2.pan){ V.x += e.clientX - D2.x; V.y += e.clientY - D2.y; D2.x = e.clientX; D2.y = e.clientY; return; }
-  if (TOOL === 'brush' && !e.altKey){ if (F === D2.F) useTool(D2.F, q.x, q.y, false, false); else if (D2.F) useTool(D2.F, q.x, q.y, false, false); }      // a stroke stays on the face it began on
+  if (TOOL === 'brush' && !e.altKey && D2.F){ var ev2 = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!ev2 || !ev2.length) ev2 = [e]; ev2.forEach(function(w){ var qq = sheetXY(w); useTool(D2.F, qq.x, qq.y, false, false); }); }      // a stroke stays on the face it began on
 });
-function up2(){ D2 = null; STROKE = null; }
+function up2(e){ if (e && e.pointerType === 'touch'){ delete T2[e.pointerId]; if (D2 && D2.pinch){ if (!fingers(T2).length) D2 = null; return; } } D2 = null; STROKE = null; }
 c2.addEventListener('pointerup', up2); c2.addEventListener('pointercancel', up2); c2.addEventListener('pointerleave', function(){ M2.in = false; }); c2.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 c2.addEventListener('wheel', function(e){ e.preventDefault(); var q = sheetXY(e), z = clamp(V.z * Math.exp(-e.deltaY * 0.0015), 0.15, 12); V.x = q.cx - q.x * z; V.y = q.cy - q.y * z; V.z = z; }, { passive:false });
 function draw2(){
