@@ -26,15 +26,16 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.BasicShadowMap;
 
 /* Settings: this player's own choices, kept in this browser and never sent to the room. */
-var OPT = { sens:1, vol:1, pic:1, grain:1, snap:1, seats:1 };
-(function(){ try { var o = JSON.parse(localStorage.getItem('jambutek-studio-opt-v1') || 'null'); if (o){ ['sens', 'vol', 'grain'].forEach(function(k){ if (typeof o[k] === 'number' && isFinite(o[k])) OPT[k] = o[k]; }); if (o.pic >= 0 && o.pic < 5) OPT.pic = o.pic | 0; OPT.snap = o.snap === 0 ? 0 : 1; OPT.seats = o.seats === 0 ? 0 : 1; } } catch (e) {}
-  OPT.sens = Math.min(3, Math.max(0.2, OPT.sens)); OPT.vol = Math.min(1, Math.max(0, OPT.vol)); OPT.grain = Math.min(2, Math.max(0, OPT.grain)); })();
+var OPT = { sens:1, vol:1, q:2, snap:1 };                      // q: picture quality, 0 low, 1 medium, 2 high (high is the room as it always was)
+(function(){ try { var o = JSON.parse(localStorage.getItem('jambutek-studio-opt-v1') || 'null'); if (o){ ['sens', 'vol'].forEach(function(k){ if (typeof o[k] === 'number' && isFinite(o[k])) OPT[k] = o[k]; }); if (o.q === 0 || o.q === 1) OPT.q = o.q; } } catch (e) {}
+  OPT.sens = Math.min(3, Math.max(0.2, OPT.sens)); OPT.vol = Math.min(1, Math.max(0, OPT.vol)); })();
+var QLINES = [3, 2, 1];                                         // which picture size each quality uses
 function optSave(){ try { localStorage.setItem('jambutek-studio-opt-v1', JSON.stringify(OPT)); } catch (e) {} }
-var LINES_OPTS = [1000, 600, 420, 300, 220], linesIdx = OPT.pic, nearSharp = false;   // starts at the sharpest; P steps down through the chunkier sizes
+var LINES_OPTS = [1000, 600, 420, 300, 220], linesIdx = QLINES[OPT.q], nearSharp = false;   // starts at the sharpest; P steps down through the chunkier sizes
 var rt = new THREE.WebGLRenderTarget(4, 4, { minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter });
 rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
 var post = new THREE.ShaderMaterial({
-  uniforms:{ tDiffuse:{value:rt.texture}, res:{value:new THREE.Vector2(4,4)}, time:{value:0}, levels:{value:26}, flash:{value:0}, grain:{value:0.045 * OPT.grain}, fxScale:{value:1}, tDepth:{value:rt.depthTexture}, aper:{value:0}, focus:{value:1.2} },
+  uniforms:{ tDiffuse:{value:rt.texture}, res:{value:new THREE.Vector2(4,4)}, time:{value:0}, levels:{value:26}, flash:{value:0}, grain:{value:0.045}, fxScale:{value:1}, tDepth:{value:rt.depthTexture}, aper:{value:0}, focus:{value:1.2} },
   vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }',
   fragmentShader:[
     'uniform sampler2D tDiffuse; uniform vec2 res; uniform float time; uniform float levels; uniform float flash; uniform float grain; uniform float fxScale; uniform sampler2D tDepth; uniform float aper; uniform float focus;',

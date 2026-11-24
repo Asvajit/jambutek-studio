@@ -578,26 +578,22 @@ var MP = (function(){
   /* ---- settings: the gear under the mute button, or F1. This player's own choices only. ---- */
   var optEl = null;
   function optApply(){
-    if (AU.out) AU.out.gain.value = muted ? 0 : OPT.vol; if (menuA) menuA.volume = Math.min(1, OPT.vol); post.uniforms.grain.value = 0.045 * OPT.grain;
-    if (linesIdx !== OPT.pic){ linesIdx = OPT.pic; resize(); } optSave();
+    if (AU.out) AU.out.gain.value = muted ? 0 : OPT.vol; if (menuA) menuA.volume = Math.min(1, OPT.vol);
+    if (linesIdx !== QLINES[OPT.q]){ linesIdx = QLINES[OPT.q]; resize(); } optSave();
   }
-  function optPaint(){ if (!optEl) return; ['sens', 'vol', 'grain'].forEach(function(k){ optEl.querySelector('#opt_' + k).value = OPT[k]; optEl.querySelector('#optv_' + k).textContent = Math.round(OPT[k] * 100) + '%'; });
-    optEl.querySelector('#opt_pic').value = OPT.pic; optEl.querySelector('#opt_snap').checked = !!OPT.snap; }
+  function optPaint(){ if (!optEl) return; ['sens', 'vol'].forEach(function(k){ optEl.querySelector('#opt_' + k).value = OPT[k]; optEl.querySelector('#optv_' + k).textContent = Math.round(OPT[k] * 100) + '%'; }); optEl.querySelector('#opt_q').value = OPT.q; }
   function optMenu(show){
     if (!optEl){ optEl = document.createElement('div'); optEl.id = 'optMenu'; optEl.hidden = true;
       optEl.innerHTML = '<h3>Settings</h3>' +
+        '<label>Volume <b id="optv_vol"></b><input type="range" id="opt_vol" min="0" max="1" step="0.01"></label>' +
         '<label>Mouse sensitivity <b id="optv_sens"></b><input type="range" id="opt_sens" min="0.2" max="3" step="0.05"></label>' +
-        '<label>My volume <b id="optv_vol"></b><input type="range" id="opt_vol" min="0" max="1" step="0.01"></label>' +
-        '<label>Picture<select id="opt_pic"><option value="0">Sharp</option><option value="1">Standard</option><option value="2">Chunky</option><option value="3">Chunkier</option><option value="4">Blocky (fastest)</option></select></label>' +
-        '<label>Film grain <b id="optv_grain"></b><input type="range" id="opt_grain" min="0" max="2" step="0.05"></label>' +
-        '<label class="chk"><input type="checkbox" id="opt_snap"> Snap other players\u2019 notes to the grid</label>' +
-        '<p>These are yours alone and are remembered on this device. Nothing here changes the room for anyone else.</p>' +
+        '<label>Quality<select id="opt_q"><option value="2">High</option><option value="1">Medium</option><option value="0">Low</option></select></label>' +
+        '<p>These are yours alone and are remembered on this device.</p>' +
         '<div class="rw"><button type="button" id="optReset">Reset</button><button type="button" id="optX">Close</button></div>';
       document.body.appendChild(optEl);
-      ['sens', 'vol', 'grain'].forEach(function(k){ optEl.querySelector('#opt_' + k).addEventListener('input', function(){ OPT[k] = +this.value; optApply(); optPaint(); }); });
-      optEl.querySelector('#opt_pic').addEventListener('change', function(){ OPT.pic = +this.value | 0; optApply(); });
-      optEl.querySelector('#opt_snap').addEventListener('change', function(){ OPT.snap = this.checked ? 1 : 0; optSave(); });
-      optEl.querySelector('#optReset').addEventListener('click', function(){ OPT.sens = 1; OPT.vol = 1; OPT.pic = 1; OPT.grain = 1; OPT.snap = 1; OPT.seats = 1; optApply(); optPaint(); });
+      ['sens', 'vol'].forEach(function(k){ optEl.querySelector('#opt_' + k).addEventListener('input', function(){ OPT[k] = +this.value; optApply(); optPaint(); }); });
+      optEl.querySelector('#opt_q').addEventListener('change', function(){ OPT.q = clamp(+this.value | 0, 0, 2); optApply(); });
+      optEl.querySelector('#optReset').addEventListener('click', function(){ OPT.sens = 1; OPT.vol = 1; OPT.q = 2; optApply(); optPaint(); });
       optEl.querySelector('#optX').addEventListener('click', function(){ optMenu(false); });
       ['keydown', 'keyup', 'pointerdown', 'wheel'].forEach(function(t){ optEl.addEventListener(t, function(e){ if (e.key !== 'F1' && e.key !== 'Escape') e.stopPropagation(); }); });
     }

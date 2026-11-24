@@ -293,7 +293,7 @@ document.addEventListener('keydown', function(e){
   if (tag === 'BUTTON' || tag === 'INPUT') return;
   if (e.key === ' '){ e.preventDefault(); unlock(); if (!e.repeat && JUMP.y <= 0.001) JUMP.v = 2.5; return; }
   if (k === 'r'){ cam.homing = true; cam.walkTo = null; return; }
-  if (k === 'p'){ linesIdx = (linesIdx + 1) % LINES_OPTS.length; OPT.pic = linesIdx; optSave(); resize(); return; }
+  if (k === 'p'){ linesIdx = (linesIdx + 1) % LINES_OPTS.length; resize(); return; }
   keys[k] = true; if (k.indexOf('arrow') === 0) e.preventDefault();
   if ('wasd'.indexOf(k) >= 0 || k.indexOf('arrow') === 0){ cam.homing = false; cam.walkTo = null; unlock(); dimHint(); }
 });
@@ -341,7 +341,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.01 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.02 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

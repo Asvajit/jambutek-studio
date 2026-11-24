@@ -58,7 +58,7 @@ body{
   width:40px; height:40px; display:grid; place-items:center;
   border:1px solid rgba(216,216,216,.22); border-radius:50%; background:rgba(11,13,18,.6); color:var(--bone); cursor:pointer; opacity:.6;
 }
-#now{ position:fixed; z-index:5; top:calc(12px + env(safe-area-inset-top, 0px)); right:calc(64px + env(safe-area-inset-right, 0px)); height:40px; display:flex; align-items:center; gap:14px; padding:0 14px; max-width:calc(100% - 420px); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:rgba(216,216,216,.6); background:rgba(8,10,14,.6); border:1px solid rgba(216,216,216,.16); border-radius:10px; pointer-events:none; white-space:nowrap }
+#now{ position:fixed; z-index:5; top:calc(12px + env(safe-area-inset-top, 0px)); right:calc(112px + env(safe-area-inset-right, 0px)); height:40px; display:flex; align-items:center; gap:14px; padding:0 14px; max-width:calc(100% - 468px); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:rgba(216,216,216,.6); background:rgba(8,10,14,.6); border:1px solid rgba(216,216,216,.16); border-radius:10px; pointer-events:none; white-space:nowrap }
 #now b{ color:var(--bone); font-weight:500 }
 #now .it{ overflow:hidden; text-overflow:ellipsis }
 #now .it.dim b{ color:rgba(216,216,216,.45) }
@@ -133,10 +133,10 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #specHud b{ color:#C08AFF; font-weight:600 }
 #dbgMenu{ position:fixed; z-index:30; left:16px; top:50%; transform:translateY(-50%); width:300px; background:rgba(8,10,14,.94); border:1px solid rgba(255,225,90,.5); border-radius:10px; padding:14px; font-size:12px; color:var(--bone) }
 #dbgMenu[hidden]{ display:none }
-#gear{ position:fixed; z-index:14; top:calc(60px + env(safe-area-inset-top, 0px)); right:max(12px, env(safe-area-inset-right, 0px)); width:40px; height:40px; display:grid; place-items:center;
+#gear{ position:fixed; z-index:14; top:calc(12px + env(safe-area-inset-top, 0px)); right:calc(60px + env(safe-area-inset-right, 0px)); width:40px; height:40px; display:grid; place-items:center;
   border:1px solid rgba(216,216,216,.22); border-radius:50%; background:rgba(11,13,18,.6); color:var(--bone); cursor:pointer; opacity:.6; padding:0; transition:opacity .15s, transform .3s }
-#gear:hover{ opacity:1; transform:rotate(40deg) }
-#optMenu{ position:fixed; z-index:40; right:16px; top:112px; width:300px; max-height:calc(100% - 128px); overflow-y:auto; box-sizing:border-box; background:rgba(8,10,14,.95); border:1px solid rgba(46,230,214,.5); border-radius:10px; padding:14px; font-size:12px; color:var(--bone) }
+#gear:hover{ opacity:1; transform:rotate(60deg) }
+#optMenu{ position:fixed; z-index:40; right:12px; top:64px; width:290px; max-height:calc(100% - 80px); overflow-y:auto; box-sizing:border-box; background:rgba(8,10,14,.95); border:1px solid rgba(46,230,214,.5); border-radius:10px; padding:14px; font-size:12px; color:var(--bone) }
 #optMenu[hidden]{ display:none }
 #optMenu h3{ margin:0 0 12px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#2EE6D6; font-weight:600 }
 #optMenu label{ display:block; margin:0 0 12px; color:rgba(216,216,216,.85) } #optMenu label b{ float:right; color:#fff; font-weight:normal }
@@ -235,7 +235,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v2.01</span>
+    <span id="verFps">studio v2.02</span>
   </div>
 </div>
 
@@ -270,7 +270,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.01</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.02</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -329,7 +329,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <p class="small">The instruments are written for this room from the published designs; names are given as credit only and belong to their makers.</p>
   <button type="button" class="ghost" id="mpCredX">Close</button>
 </div></div>
-<button id="gear" type="button" aria-label="Settings" title="Settings (F1)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg></button>
+<button id="gear" type="button" aria-label="Settings" title="Settings (F1)"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.8l2.5-.9 1.7 2.9-2 1.7c.1.6.1 1.2 0 1.8l2 1.7-1.7 2.9-2.5-.9c-.5.3-1.1.6-1.7.8l-.5 2.6h-3.4l-.5-2.6c-.6-.2-1.2-.5-1.7-.8l-2.5.9-1.7-2.9 2-1.7c-.1-.6-.1-1.2 0-1.8l-2-1.7 1.7-2.9 2.5.9c.5-.3 1.1-.6 1.7-.8L10.3 2zM12 8.2a3.3 3.3 0 100 6.6 3.3 3.3 0 000-6.6z" transform="translate(0 1.5)"/></svg></button>
 <button id="mute" type="button" aria-pressed="false" aria-label="Mute sound">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <g class="on"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></g>
