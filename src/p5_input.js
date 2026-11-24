@@ -162,7 +162,7 @@ function moveCtl(e){
   var dy = locked ? (drag.acc += e.movementY || 0) : e.clientY - drag.y;
   if (Math.abs(dy) > 3) drag.moved = true;
   if (c.endless){ var n = Math.trunc(-dy / 12); if (n !== drag.clicks){ turnCtl(c, n - drag.clicks); drag.clicks = n; } }
-  else setCtl(c, drag.v0 - dy / (c.kind === 'fader' ? 170 : 230) * (e.shiftKey ? 0.25 : 1));
+  else setCtl(c, drag.v0 - dy / (c.kind === 'fader' ? 170 : 230) * (e.shiftKey ? 0.15 : 1));
 }
 function endCtl(cancel){
   if (drag){ var d = drag; drag = null; canvas.className = ''; pointer.has = false; if (d.c.grab) d.c.grab(false); if (!cancel && !d.moved && d.c.click) d.c.click(); }
@@ -244,12 +244,12 @@ canvas.addEventListener('wheel', function(e){
   if (c && c.wheel){ if (c.wheel(c, e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY)) e.preventDefault(); return; }
   if (!c || (c.kind !== 'knob' && c.kind !== 'fader')) return;
   e.preventDefault(); unlock();
-  var dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+  var dy0 = e.deltaY || e.deltaX, dy = e.deltaMode === 1 ? dy0 * 33 : dy0;          // with Shift held most browsers report the wheel sideways
   if (wheelOn !== c){ wheelOn = c; wheelAcc = 0; }
   if (c.endless || c.detents){
     wheelAcc += dy; var n = Math.trunc(wheelAcc / 50); if (!n) return; wheelAcc -= n * 50;
     if (c.endless) turnCtl(c, -n); else setCtl(c, Math.round((c.v - n / c.detents) * c.detents) / c.detents);
-  } else setCtl(c, c.v - dy / 100 * 0.04 * (e.shiftKey ? 0.25 : 1));
+  } else setCtl(c, c.v - dy / 100 * 0.04 * (e.shiftKey ? 0.15 : 1));      // Shift: fine steps
 }, { passive:false });
 
 document.addEventListener('keydown', function(e){
@@ -340,7 +340,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.95 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.96 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

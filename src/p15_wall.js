@@ -147,18 +147,18 @@ function rkLoad(){ var on = 0, root = 0, scale = 2; try { var s = JSON.parse(sto
 rkLoad(); RESTORE[RKKEY] = rkLoad; SAVENOW.push(rkSave);
 function wallLabel(c){ if (c.wk === 'key') return 'Room key is ' + (RK.on ? 'on: every sequencer plays in ' + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'off: each sequencer keeps its own key') + ' · click';
   if (c.wk === 'note') return 'Room key note: ' + NOTEN[RK.root] + ' · click for the next'; if (c.wk === 'scale') return 'Room key scale: ' + SCALES[RK.scale][0] + ' · click for the next';
-  return c.name + (c.wk === 'exp' || c.wk === 'load' ? ' · click' : ' · press and hold'); }
+  return c.name + (c.wk === 'exp' ? ' · click' : ' · press and hold'); }
 function wallPress(c){ unlock(); c.down = 1;
   if (c.wk === 'key' || c.wk === 'note' || c.wk === 'scale'){ if (c.wk === 'key') RK.on = RK.on ? 0 : 1; else if (c.wk === 'note') RK.root = (RK.root + 1) % 12; else RK.scale = (RK.scale + 1) % SCALES.length;
-    rkShow(); rkSave(); toast('Room key ' + (RK.on ? 'on · ' : 'off · ') + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0], 2200); return; } if (c.wk === 'exp'){ patternExport(); return; } if (c.wk === 'load'){ jamOpen(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
-function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : 'load the demo jam')); WALL.c = null; } }
+    rkShow(); rkSave(); toast('Room key ' + (RK.on ? 'on · ' : 'off · ') + NOTEN[RK.root] + ' ' + SCALES[RK.scale][0], 2200); return; } if (c.wk === 'exp'){ patternExport(); return; } WALL.c = c; WALL.t0 = performance.now(); WALL.done = false; }
+function wallRelease(c){ c.down = 0; if (WALL.c === c){ if (!WALL.done) toast('Keep holding to ' + (c.wk === 'clear' ? 'clear everything' : c.wk === 'load' ? 'open the jam list' : 'load the demo jam')); WALL.c = null; } }
 DEVH.wall = { label:wallLabel, press:wallPress, release:wallRelease, ctl:NOP, turn:NOP };
 function wallUpdate(now){
   nowUpdate();
   WALLBTN.forEach(function(c){
     var ring = c.down ? 1 : 0, wk = c.wk;
-    if (wk === 'clear' || wk === 'def'){ ring = 0;
-      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(wk === 'def'); jamNamed(wk === 'def' ? (DEF && DEF.name) || 'Demo jam' : 'New jam'); } } ring = WALL.done ? 1 : clamp(k, 0, 1); } }      // held: the ring fills clockwise from the top
+    if (wk === 'clear' || wk === 'def' || wk === 'load'){ ring = 0;
+      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (wk === 'load'){ WALL.c = null; c.down = false; jamOpen(); } else if (wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(wk === 'def'); jamNamed(wk === 'def' ? (DEF && DEF.name) || 'Demo jam' : 'New jam'); } } ring = WALL.done ? 1 : clamp(k, 0, 1); } }      // held: the ring fills clockwise from the top
     else if (wk === 'key'){ ring = RK.on || c.down ? 1 : 0; var kc = RK.on ? '#177D32' : '#D9590B'; if (c.capCol !== kc){ c.capCol = kc; c.capText = null; } rbCap(c, 'KEY\n' + (RK.on ? 'ON' : 'OFF')); }      // green when the room key is on, deep orange when it is off
     else if (wk === 'note') rbCap(c, NOTEN[RK.root]); else if (wk === 'scale') rbCap(c, SCALES[RK.scale][0]);
     rbRing(c, ring); if (c.cap){ var ty = c.down ? -0.007 : 0; if (c.cap.position.y !== ty) c.cap.position.y = ty; }
