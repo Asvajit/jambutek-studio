@@ -38,7 +38,7 @@ var MP = (function(){
     b(0.13, 0.39, 0.15, 'shinL', -0.08, 0.195, 0); b(0.13, 0.39, 0.15, 'shinR', 0.08, 0.195, 0);
     b(0.15, 0.07, 0.24, 'shoeL', -0.08, 0.035, 0.03); b(0.15, 0.07, 0.24, 'shoeR', 0.08, 0.035, 0.03);
     b(0.38, 0.56, 0.22, 'torso', 0, 1.06, 0); b(0.1, 0.52, 0.12, 'armL', -0.25, 1.04, 0); b(0.1, 0.52, 0.12, 'armR', 0.25, 1.04, 0);
-    b(0.24, 0.26, 0.24, 'head', 0, 1.51, 0); b(0.27, 0.07, 0.27, 'hat', 0, 1.65, 0);
+    b(0.27, 0.27, 0.27, 'head', 0, 1.515, 0);
     var F = P.figs[i] = { g:g, ready:false, ang:0 };
     img.onload = function(){ t.needsUpdate = true; F.ready = true; pvDraw(i); }; img.src = A[SKINS[i].a];
     return F;
@@ -101,7 +101,7 @@ var MP = (function(){
     var legL = leg(-0.08), legR = leg(0.08), torso = new THREE.Group(); torso.position.y = 0.78; g.add(torso); sbox(0.38, 0.56, 0.22, 'torso', 0, 0.28, 0, torso);
     function arm(x){ var sh = new THREE.Group(); sh.position.set(x, 0.52, 0); torso.add(sh); sbox(0.1, 0.52, 0.12, x < 0 ? 'armL' : 'armR', 0, -0.26, 0, sh); return sh; }
     var armL = arm(-0.25), armR = arm(0.25), head = new THREE.Group(); head.position.y = 0.6; torso.add(head);
-    sbox(0.24, 0.26, 0.24, 'head', 0, 0.13, 0, head); sbox(0.27, 0.07, 0.27, 'hat', 0, 0.27, 0, head);
+    sbox(0.27, 0.27, 0.27, 'head', 0, 0.135, 0, head);              // the head is one solid cube: hair and headgear are drawn on it (the old separate hat box is gone; its patch of the sheet is unused)
     var tc = mk(256, 96), tg = tc.getContext('2d'), tt = canvasTex(tc); tt.minFilter = THREE.LinearFilter;
     var tag = new THREE.Sprite(new THREE.SpriteMaterial({ map:tt, transparent:true, depthTest:true, depthWrite:false })); tag.scale.set(0.62, 0.23, 1); tag.position.y = 1.95; g.add(tag);
     g.traverse(function(o){ o.userData.noShadow = true; });

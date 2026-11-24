@@ -109,8 +109,9 @@ p.note{ color:var(--dim); font-size:11px; margin:10px 0 0 }
    either on the figure or flat, previews it moving, and exports it as a small file the games can load. */
 var SKINR = /*__SKINR__*/;
 var SKINS = /*__SKINS__*/;
-var S = 1024, PARTS = Object.keys(SKINR), FN = ['their left side', 'their right side', 'top', 'bottom', 'front', 'back'];
-var PN = { head:'Head', hat:'Hat', torso:'Body', armL:'Arm', armR:'Arm', legL:'Thigh', legR:'Thigh', shinL:'Shin', shinR:'Shin', shoeL:'Shoe', shoeR:'Shoe' };
+var S = 1024, PARTS = Object.keys(SKINR).filter(function(p){ return p !== 'hat'; }),      /* the head is one solid cube now; the old hat's patch of the sheet is left unused */
+     FN = ['their left side', 'their right side', 'top', 'bottom', 'front', 'back'];
+var PN = { head:'Head', torso:'Body', armL:'Arm', armR:'Arm', legL:'Thigh', legR:'Thigh', shinL:'Shin', shinR:'Shin', shoeL:'Shoe', shoeR:'Shoe' };
 function clamp(v, a, b){ return v < a ? a : v > b ? b : v; }
 function lerp(a, b, t){ return a + (b - a) * t; }
 function smooth(t){ return t * t * (3 - 2 * t); }
@@ -129,7 +130,7 @@ function twin(F){                                              // the same face 
 }
 function clipFace(g, F){ g.beginPath(); g.rect(F.x0 - BLEED, F.y0 - BLEED, F.x1 - F.x0 + BLEED * 2, F.y1 - F.y0 + BLEED * 2); g.clip(); }
 function blank(){
-  var base = { head:'#E0A982', hat:'#2B2D33', torso:'#C9C7C0', armL:'#C9C7C0', armR:'#C9C7C0', legL:'#3B4A7C', legR:'#3B4A7C', shinL:'#3B4A7C', shinR:'#3B4A7C', shoeL:'#1D1E22', shoeR:'#1D1E22' };
+  var base = { head:'#E0A982', torso:'#C9C7C0', armL:'#C9C7C0', armR:'#C9C7C0', legL:'#3B4A7C', legR:'#3B4A7C', shinL:'#3B4A7C', shinR:'#3B4A7C', shoeL:'#1D1E22', shoeR:'#1D1E22' };
   tg.fillStyle = '#000'; tg.fillRect(0, 0, S, S); FACES.forEach(function(F){ tg.fillStyle = base[F.part]; tg.fillRect(F.x0 - BLEED, F.y0 - BLEED, F.x1 - F.x0 + BLEED * 2, F.y1 - F.y0 + BLEED * 2); });
 }
 var dirty = true, saveT = null;
@@ -200,7 +201,7 @@ var P = (function(){                                           // the same eleve
   var legL = leg(-0.08), legR = leg(0.08), torso = new THREE.Group(); torso.position.y = 0.78; g.add(torso); sbox(0.38, 0.56, 0.22, 'torso', 0, 0.28, 0, torso);
   function arm(x){ var sh = new THREE.Group(); sh.position.set(x, 0.52, 0); torso.add(sh); sbox(0.1, 0.52, 0.12, x < 0 ? 'armL' : 'armR', 0, -0.26, 0, sh); return sh; }
   var armL = arm(-0.25), armR = arm(0.25), head = new THREE.Group(); head.position.y = 0.6; torso.add(head);
-  sbox(0.24, 0.26, 0.24, 'head', 0, 0.13, 0, head); sbox(0.27, 0.07, 0.27, 'hat', 0, 0.27, 0, head);
+  sbox(0.27, 0.27, 0.27, 'head', 0, 0.135, 0, head);
   scene.add(g); return { g:g, torso:torso, head:head, armL:armL, armR:armR, legL:legL, legR:legR, meshes:meshes, pitch:0 };
 })();
 /*__EMOTE__*/
@@ -271,7 +272,7 @@ function download(name, url){ var a = document.createElement('a'); a.download = 
 $('png').addEventListener('click', function(){ download(slug() + '-sheet.png', TEX.toDataURL('image/png')); toast('Sheet saved as ' + slug() + '-sheet.png'); });
 $('exp').addEventListener('click', function(){
   var nm = $('name').value.trim(); if (!nm){ toast('Give the character a name first'); $('name').focus(); return; }
-  var J = { app:'jambutek-character', v:1, name:nm, layout:'box11-v1', size:S, made:new Date().toISOString(), sheet:TEX.toDataURL('image/png') };      // lossless, so a character can be opened and reworked any number of times
+  var J = { app:'jambutek-character', v:1, name:nm, layout:'box10-v1', size:S, made:new Date().toISOString(), sheet:TEX.toDataURL('image/png') };      // lossless, so a character can be opened and reworked any number of times
   var u = URL.createObjectURL(new Blob([JSON.stringify(J)], { type:'application/json' })); download(slug() + '.jambu-character.json', u); setTimeout(function(){ URL.revokeObjectURL(u); }, 4000); toast('Exported ' + slug() + '.jambu-character.json');
 });
 $('tpl').addEventListener('click', function(){
