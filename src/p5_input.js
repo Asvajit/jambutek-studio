@@ -281,8 +281,8 @@ document.addEventListener('keydown', function(e){
       else if (M.mode === 'trrec' && ti < 8) pressPad((M.kbHalf ? 8 : 0) + ti);   // step record: keys 1-8 switch steps in the selected half
       return;
     }
-    var di = '1234567890-'.indexOf(e.key); if (di >= 0 && !e.repeat){ hit(di); return; }
-    return;
+    if (LEAN === DEVS.ec){ var si = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); if (si < 0 && !e.shiftKey) si = '1234'.indexOf(e.key); if (si >= 0 && !e.repeat && !(e.ctrlKey || e.metaKey || e.altKey)){ var sb = CT['scslot' + si]; if (sb){ press(sb); release(sb); } } return; }      // at the effects and scenes: 1-4 are the scenes (with Shift they chain)
+    return;                                                            // the number keys play the drums only when leaned over the drum machine
   }
   if (k === 'c' && !e.repeat){ crouch.on = true; return; }
   if (k === 'e' && !e.repeat){
@@ -341,7 +341,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.05 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.06 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

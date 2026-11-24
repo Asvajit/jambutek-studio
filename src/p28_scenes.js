@@ -116,8 +116,8 @@ if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').the
 })();
 HOST = ECG; LX = scx; LZ = scz; DEV = 'ec';
 var SCBTN = [];
-FACE = { bg:'#2B2E37', fg:'#F4F4F0' };
-[0, 1, 2, 3].forEach(function(j){ var b = button('scslot' + j, 21 + j * 27.5, 35, 24, 28, String(j + 1), 'Scene ' + (j + 1), 0x2EE6D6); b.scn = true; b.slot = j; SCBTN.push(b); });
+FACE = { bg:'#6E727C', fg:'#0B0B0D' };                        // grey when empty; the green lamp shows through when a scene is stored
+[0, 1, 2, 3].forEach(function(j){ var b = button('scslot' + j, 21 + j * 27.5, 35, 24, 28, String(j + 1), 'Scene ' + (j + 1), 0x2BE85A); b.scn = true; b.slot = j; SCBTN.push(b); });
 FACE = { bg:'#F2B544', fg:'#141005' }; var scCopyB = button('sccopy', 131, 27, 20, 11, 'COPY', 'Copy a scene', 0xF2B544); scCopyB.scn = true;
 FACE = { bg:'#E53A3A', fg:'#FFFFFF' }; var scClearB = button('scclear', 131, 43, 20, 11, 'CLEAR', 'Clear this scene', 0xFF2A3C); scClearB.scn = true;
 FACE = { bg:'#C9C7C0', fg:'#0B0B0D' }; var scBarsB = button('scbars', 154, 35, 16, 28, 'x' + SCN.bars, 'Bars per chained scene', 0xC9C7C0); scBarsB.scn = true;
@@ -133,9 +133,11 @@ function scUpdate(now, dt){
   if (SCN.hold && !SCN.hold.done && now - SCN.hold.t0 >= SCHOLD){ SCN.hold.done = true; var j = SCN.cur;
     if (j >= 0){ SCN.slots[j] = null; scSlotSave(j); var ix = SCN.chain.indexOf(j); if (ix >= 0) SCN.chain.splice(ix, 1); SCN.cur = -1; SCN.next = -1; scMetaSave(); toast('Scene ' + (j + 1) + ' cleared'); } }
   var bl = Math.sin(now * 0.016) > 0 ? 1 : 0, sl = 0.45 + Math.sin(now * 0.006) * 0.35;
-  SCBTN.forEach(function(c){ var j = c.slot, has = !!SCN.slots[j], L = j === SCN.cur ? 1.3 : has ? 0.22 : 0;
-    if (j === SCN.next) L = bl ? 1.2 : 0.1; else if (SCN.chain.indexOf(j) >= 0 && j !== SCN.cur) L = sl;
-    if (SCN.copy === 1 && has) L = bl ? 1 : 0.15; else if (SCN.copy === 2) L = j === SCN.src ? 1.3 : (bl ? 1 : 0.15);
+  var beat = 1; if (M.playing && ac){ var sdb = stepDur(), ph = (((SEQ.n16 - (SEQ.nextT - ac.currentTime) / sdb) / 4) % 1 + 1) % 1; beat = ph < 0.5 ? 1 : 0; }      // on for the first half of every beat
+  SCBTN.forEach(function(c){ var j = c.slot, has = !!SCN.slots[j], L = has ? 0.75 : 0;                       // empty: grey. stored: green. the one that is on: bright, flashing on the beat while the sequence plays
+    if (j === SCN.cur && has) L = beat ? 2.1 : 0.75;
+    if (j === SCN.next) L = bl ? 2.1 : 0.2; else if (SCN.chain.indexOf(j) >= 0 && j !== SCN.cur) L = 0.75 + sl * 0.6;
+    if (SCN.copy === 1 && has) L = bl ? 1.6 : 0.2; else if (SCN.copy === 2) L = j === SCN.src ? 2.1 : (bl ? 1.6 : 0.2);
     if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
   var cl = SCN.copy ? (bl ? 1.2 : 0.2) : (scCopyB.down ? 0.9 : 0.25); if (cl !== scCopyB.lit){ scCopyB.lit = cl; scCopyB.paintLit(); }
   var hl = SCN.hold ? clamp((now - SCN.hold.t0) / SCHOLD, 0, 1) * 1.2 + 0.2 : 0.25; if (hl !== scClearB.lit){ scClearB.lit = hl; scClearB.paintLit(); }
