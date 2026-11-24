@@ -74,6 +74,7 @@ function roomLoad(st){
   var keys = Object.keys(st).filter(function(k){ return k.indexOf('jambutek-studio-') === 0 && RESTORE[k] && !JAMSKIP[k] && typeof st[k] === 'string' && st[k].length < 600000; }), n = 0;
   SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });
   if (typeof st[RKKEY] !== 'string' && RK.on){ RK.on = 0; rkShow(); rkSave(); }                    // a jam made without a room key plays in its own keys                                 // a loaded jam opens on page A of every Snake
+  if (typeof st[SCKEY] !== 'string' && typeof scWipe === 'function') scWipe();                       // a jam saved without scenes does not inherit the last jam's
   keys.sort(function(a, b){ return (a === SAVE_KEY ? 0 : 1) - (b === SAVE_KEY ? 0 : 1); });         // the drum machine first: it carries the tempo
   keys.forEach(function(k){ REMOTE[k] = st[k]; try { RESTORE[k](); n++; } catch (e) {} finally { delete REMOTE[k]; } store(k, st[k]); });      // apply it here, then keep it and pass it to everyone in the room
   return n;

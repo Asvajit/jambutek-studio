@@ -142,6 +142,7 @@ function scUpdate(now, dt){
   var bb = scBarsB.down ? 0.8 : SCN.chain.length >= 2 ? 0.5 : 0; if (bb !== scBarsB.lit){ scBarsB.lit = bb; scBarsB.paintLit(); }
   [scCopyB, scClearB, scBarsB].forEach(function(c){ var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
 }
+function scWipe(){ SCN.cur = -1; SCN.next = -1; SCN.at = -1; SCN.chain = []; SCN.copy = 0; [0, 1, 2, 3].forEach(function(i){ if (SCN.slots[i]){ SCN.slots[i] = null; scSlotSave(i); } }); scMetaSave(); }
 /* scenes travel with the room and with a jam: one small key for which is on and the chain, one key per stored scene */
 RESTORE[SCKEY] = function(){ scMetaRead(); SCN.next = -1; SCN.at = -1; scBarsB.repaintFace('x' + SCN.bars); };
 [0, 1, 2, 3].forEach(function(i){ RESTORE[SCSLOT + i] = function(){ scSlotRead(i); if (!SCN.slots[i]){ if (SCN.cur === i) SCN.cur = -1; var ix = SCN.chain.indexOf(i); if (ix >= 0) SCN.chain.splice(ix, 1); } }; });

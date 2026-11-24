@@ -235,7 +235,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v2.03</span>
+    <span id="verFps">studio v2.04</span>
   </div>
 </div>
 
@@ -270,7 +270,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.03</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.04</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -8273,6 +8273,7 @@ function scUpdate(now, dt){
   var bb = scBarsB.down ? 0.8 : SCN.chain.length >= 2 ? 0.5 : 0; if (bb !== scBarsB.lit){ scBarsB.lit = bb; scBarsB.paintLit(); }
   [scCopyB, scClearB, scBarsB].forEach(function(c){ var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
 }
+function scWipe(){ SCN.cur = -1; SCN.next = -1; SCN.at = -1; SCN.chain = []; SCN.copy = 0; [0, 1, 2, 3].forEach(function(i){ if (SCN.slots[i]){ SCN.slots[i] = null; scSlotSave(i); } }); scMetaSave(); }
 /* scenes travel with the room and with a jam: one small key for which is on and the chain, one key per stored scene */
 RESTORE[SCKEY] = function(){ scMetaRead(); SCN.next = -1; SCN.at = -1; scBarsB.repaintFace('x' + SCN.bars); };
 [0, 1, 2, 3].forEach(function(i){ RESTORE[SCSLOT + i] = function(){ scSlotRead(i); if (!SCN.slots[i]){ if (SCN.cur === i) SCN.cur = -1; var ix = SCN.chain.indexOf(i); if (ix >= 0) SCN.chain.splice(ix, 1); } }; });
@@ -8864,6 +8865,7 @@ function roomLoad(st){
   var keys = Object.keys(st).filter(function(k){ return k.indexOf('jambutek-studio-') === 0 && RESTORE[k] && !JAMSKIP[k] && typeof st[k] === 'string' && st[k].length < 600000; }), n = 0;
   SNAKES.forEach(function(s){ s.SN.view = 0; s.SN.copy = null; });
   if (typeof st[RKKEY] !== 'string' && RK.on){ RK.on = 0; rkShow(); rkSave(); }                    // a jam made without a room key plays in its own keys                                 // a loaded jam opens on page A of every Snake
+  if (typeof st[SCKEY] !== 'string' && typeof scWipe === 'function') scWipe();                       // a jam saved without scenes does not inherit the last jam's
   keys.sort(function(a, b){ return (a === SAVE_KEY ? 0 : 1) - (b === SAVE_KEY ? 0 : 1); });         // the drum machine first: it carries the tempo
   keys.forEach(function(k){ REMOTE[k] = st[k]; try { RESTORE[k](); n++; } catch (e) {} finally { delete REMOTE[k]; } store(k, st[k]); });      // apply it here, then keep it and pass it to everyone in the room
   return n;
@@ -10350,7 +10352,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v2.03 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v2.04 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
