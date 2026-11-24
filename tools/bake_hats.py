@@ -17,7 +17,6 @@ for k in sorted(A):
         h = box('head', f); t = box('hat', f); bh = max(2, int(round((h[3] - h[1]) * BAND)))
         im.paste(im.crop(t).resize((h[2] - h[0] + 4, bh + 2), Image.BILINEAR), (h[0] - 2, h[1] - 2))
     h = box('head', 2); t = box('hat', 2); im.paste(im.crop(t).resize((h[2] - h[0] + 4, h[3] - h[1] + 4), Image.BILINEAR), (h[0] - 2, h[1] - 2))
-    out = io.BytesIO(); fmt = 'JPEG' if 'jpeg' in head else 'PNG'
-    im.save(out, fmt, **({'quality': 92} if fmt == 'JPEG' else {})); A[k] = head + ',' + base64.b64encode(out.getvalue()).decode()
-    print(k, fmt, len(A[k]) // 1024, 'KB')
+    out = io.BytesIO(); im.save(out, 'WEBP', quality=88, method=6); A[k] = 'data:image/webp;base64,' + base64.b64encode(out.getvalue()).decode()      # webp, as the skins always were: a PNG here made the page several megabytes heavier
+    print(k, len(A[k]) // 1024, 'KB')
 json.dump(A, open(p, 'w'))

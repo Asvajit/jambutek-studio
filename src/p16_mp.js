@@ -231,7 +231,7 @@ var MP = (function(){
     EM.id = id;
   }
   document.addEventListener('keydown', function(e){
-    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || SIT.on || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
     var i = '123456'.indexOf(e.key); if (i >= 0 && !SPEC.on) emoteSet(i + 1);
   }, true);
   document.addEventListener('keyup', function(e){ var i = '123456'.indexOf(e.key); if (i >= 0 && EM.id === i + 1) emoteSet(0); }, true);
@@ -330,7 +330,7 @@ var MP = (function(){
       } else if (m.t === 'welcome'){
         Q.watch = m.watching | 0; var hadDbg2 = Q.dbg; Q.dbg = false;
         var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
-        if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.9, -0.9, 1.8, -1.8, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 0.55 : 0; }
+        if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.8, -0.8, 1.6, -1.6, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 0.55 : 0; }
         Object.keys(Q.peers).forEach(removePeer);
         m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
         MPON = true; MPHOST = !m.players.length; hud.hidden = false; chat.hidden = false; paintHud();
@@ -453,8 +453,9 @@ var MP = (function(){
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
         Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
-        var em = !lean && EM.id ? EM.id : 0;
-        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0, em] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
+        var em = !lean && !SIT.on && EM.id ? EM.id : 0, st8 = 0, st9 = 0;
+        if (SIT.on && !lean){ var SS = SEATS[SIT.seat], hd = cam.yaw - SS.yaw; st8 = 1 + SIT.seat * 3 + SIT.pose; st9 = +Math.atan2(Math.sin(hd), Math.cos(hd)).toFixed(3); px = SS.x; pz = SS.z; }      // seated: which seat and pose, and how far the head is turned
+        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : st8 ? SEATS[SIT.seat].yaw : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0, em, st8, st9] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
       if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)){ Q.pingAt = now; send({ t:'ping', at:performance.now() }); }
@@ -476,6 +477,8 @@ var MP = (function(){
       P.tag.position.y = 1.95 - P.c * 0.45; if (P.say && now > P.sayUntil){ P.say = ''; paintTag(P); }
       var em = s[6] ? 0 : clamp(s[7] | 0, 0, 6); if (em !== (P.eid | 0)){ if (em){ P.eshow = em; P.et = 0; } P.eid = em; } P.ek = lerp(P.ek || 0, em ? 1 : 0, 1 - Math.exp(-dt * 7)); P.et = (P.et || 0) + dt;
       emote(P, P.eshow || 1, P.et, P.ek < 0.004 ? 0 : P.ek, now);
+      var sc8 = s[8] | 0; P.sit = lerp(P.sit || 0, sc8 ? 1 : 0, 1 - Math.exp(-dt * 8)); if (sc8) P.sitP = (sc8 - 1) % 3; P.hy = lerp(P.hy || 0, sc8 ? clamp(+s[9] || 0, -1.8, 1.8) : 0, k);
+      if (P.sit > 0.01) sitPose(P, P.sitP || 0, P.hy, P.sit); else if (P.sit !== 0){ P.sit = 0; P.legR.rotation.y = P.legR.rotation.z = 0; P.head.rotation.y = 0; }      // seated on a couch
     });
   };
   // ---- is this copy being served by the room server? only then offer online play ----
@@ -607,15 +610,20 @@ var MP = (function(){
     DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(k)), 0]; P.x = x; P.z = z; P.yaw = yaw; });
     if (Q.ws) paintHud();
   }
-  function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–0 and −)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
+  function dbgSit(on){                                        // test players on every couch seat, one in each pose in turn: for this browser only
+    Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('sit') === 0) removePeer(id); }); Q.dbgSit = !!on; if (!on) return;
+    SEATS.forEach(function(S, i){ var P = Q.peers['sit' + i] = avatar(DBGCOL[i % 6], 'Sit ' + (i + 1), (i * 5 + 2) % 12); P.s = [S.x, S.z, S.yaw, 0, 0, 0, 0, 0, 1 + i * 3 + (i % 3), [0, 0.7, -0.6, 0.3][i % 4]]; P.x = S.x; P.z = S.z; P.yaw = S.yaw; });
+  }
+  function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgC').textContent = (Q.dbgSit ? '☑' : '☐') + '  Sitting test players on every couch'; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–0 and −)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
   function dbgMenu(){
-    if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgS"></button><p>In a room, test players switched on by a player show for everyone, spectators too. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
+    if (!dbgEl){ dbgEl = document.createElement('div'); dbgEl.id = 'dbgMenu'; dbgEl.innerHTML = '<h3>Debug &middot; F2</h3><button type="button" id="dbgP"></button><button type="button" id="dbgC"></button><button type="button" id="dbgS"></button><p>In a room, test players switched on by a player show for everyone, spectators too. F2 or Esc closes this.</p>'; document.body.appendChild(dbgEl); dbgEl.hidden = true;
       dbgEl.querySelector('#dbgP').addEventListener('click', function(){ dbgPlayers(!Q.dbg); dbgPaint(); });
+      dbgEl.querySelector('#dbgC').addEventListener('click', function(){ dbgSit(!Q.dbgSit); dbgPaint(); });
       dbgEl.querySelector('#dbgS').addEventListener('click', function(){ if (!Q.spec) specOn(!SPEC.on); dbgPaint(); }); }
     dbgEl.hidden = !dbgEl.hidden; if (!dbgEl.hidden){ dbgPaint(); releaseLock(); }
   }
   document.addEventListener('keydown', function(e){ if (e.key === 'F2'){ e.preventDefault(); e.stopPropagation(); if (!Q.lobbyOpen) dbgMenu(); } else if (e.key === 'Escape' && dbgEl && !dbgEl.hidden) dbgEl.hidden = true; }, true);
-  Q.debug = { players:dbgPlayers, spec:specOn, cam:specCam, cams:SPECCAMS, ots:otsSides, dof:DOF };
+  Q.debug = { sit:dbgSit, players:dbgPlayers, spec:specOn, cam:specCam, cams:SPECCAMS, ots:otsSides, dof:DOF };
   Q.serverNow = serverNow;
   return Q;
 })();

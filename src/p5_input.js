@@ -139,6 +139,8 @@ function labelFor(hit){
     return touchOnly ? 'Tap to lean over the ' + devOf(hit).name : nm + (ia === 'ctl' ? ' · get closer, or press E to lean in' : ' · E to lean in');
   }
   if (ia === 'spot') return hit.distance > REACH ? null : 'Taped out for the next instrument';
+  if (ia === 'couch') return SIT.on || mode !== 'walk' || hit.distance > REACH ? null : (touchOnly ? 'Tap to sit' : 'Couch · E to sit');
+  if (ia === 'lounge') return hit.distance > REACH ? null : 'Jambutek stickers';
   if (ia === 'sign') return 'Jambutek';
   return null;
 }
@@ -188,6 +190,7 @@ function act(hit, byTouch){
   if (hit.distance > REACH){ if (ia === 'ctl' || ia === 'trbody' || ia === 'spot') toast('Get a little closer.'); return; }
   if (ia === 'ctl' || ia === 'trbody'){ if (byTouch || !locked) enterTR(devOf(hit)); else toast('Step up to it, or press E to lean in'); return; }
   if (ia === 'spot'){ toast('Taped out for the next instrument'); return; }
+  if (ia === 'couch'){ if (!SIT.on && mode === 'walk' && (byTouch || !locked)) sitDown(seatNear(hit.object.userData.couch, 99)); else if (!SIT.on) toast('Press E to sit'); return; }
   if (ia === 'monitor'){ toast(M.playing ? 'Loud.' : 'Press START on the drum machine'); return; }
 }
 
@@ -284,9 +287,12 @@ document.addEventListener('keydown', function(e){
     if (LEAN === DEVS.ec){ var si = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); if (si < 0 && !e.shiftKey) si = '1234'.indexOf(e.key); if (si >= 0 && !e.repeat && !(e.ctrlKey || e.metaKey || e.altKey)){ var sb = CT['scslot' + si]; if (sb){ press(sb); release(sb); } } return; }      // at the effects and scenes: 1-4 are the scenes (with Shift they chain)
     return;                                                            // the number keys play the drums only when leaned over the drum machine
   }
+  if (SIT.on){ if ((k.length === 1 && 'wasdec '.indexOf(k) >= 0) || k.indexOf('arrow') === 0 || e.key === 'Escape'){ e.preventDefault(); if (!e.repeat) standUp(); } return; }      // seated: any move key, E, Space or Esc stands you up
   if (k === 'c' && !e.repeat){ crouch.on = true; return; }
   if (k === 'e' && !e.repeat){
     var hp = curAim(), ia = iaOf(hp), nd = nearDev();
+    if (hp && ia === 'couch' && hp.distance <= REACH){ sitDown(seatNear(hp.object.userData.couch, 99)); return; }
+    if (!(hp && (ia === 'ctl' || ia === 'trbody') && hp.distance <= REACH) && !nd){ var sn = seatNear(null, 1.3); if (sn >= 0){ sitDown(sn); return; } }
     if (hp && (ia === 'ctl' || ia === 'trbody') && hp.distance <= REACH) enterTR(devOf(hp)); else if (nd) enterTR(nd); else toast('Walk up to an instrument first');
     return;
   }
@@ -341,7 +347,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.08 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.09 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -376,11 +382,13 @@ function frame(now){
     cam.yaw = lerp(cam.yaw, cam.ty, ck); cam.pitch = lerp(cam.pitch, cam.tp, ck);
   }
 
-  var moving = (keys.w || keys.s || keys.a || keys.d || cam.walkTo) && mode === 'walk';
+  sitTick(dt);
+  var moving = (keys.w || keys.s || keys.a || keys.d || cam.walkTo) && mode === 'walk' && !SIT.on;
   var bob = reduce ? 0 : (moving ? Math.sin(tsec * 9) * 0.018 : Math.sin(tsec * 1.1) * 0.006);
   crouch.k = lerp(crouch.k, crouch.on && mode === 'walk' ? 1 : 0, 1 - Math.exp(-dt * 10));
   if (JUMP.y > 0 || JUMP.v > 0){ JUMP.v -= 9.8 * dt; JUMP.y += JUMP.v * dt; if (JUMP.y <= 0){ JUMP.y = 0; JUMP.v = 0; } }
   var ex = cam.x, ey = EYE - crouch.k * 0.62 + JUMP.y + bob, ez = cam.z;
+  if (SIT.k > 0.002){ var sk = smooth(SIT.k), SS = SEATS[SIT.seat]; ey = lerp(ey, SITEYE, sk); ex += SS.dx * 0.1 * sk; ez += SS.dz * 0.1 * sk; }      // seated: the eye drops to head height on the couch
   var lx2 = ex - Math.sin(cam.yaw) * Math.cos(cam.pitch), ly2 = ey + Math.sin(cam.pitch), lz2 = ez - Math.cos(cam.yaw) * Math.cos(cam.pitch);
   trBlend = lerp(trBlend, mode === 'tr' ? 1 : 0, 1 - Math.exp(-dt * 5));
   if (trBlend > 0.001){
@@ -460,5 +468,5 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { RK:RK, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { RK:RK, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, SIT:SIT, SEATS:SEATS, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
