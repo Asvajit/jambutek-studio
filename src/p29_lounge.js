@@ -21,7 +21,7 @@ var SIT = { on:false, seat:-1, pose:0, k:0 };
   var stk = (window.JB_STICKERS || []).map(function(src){ var t = tex(src); t.magFilter = THREE.LinearFilter; return new THREE.MeshLambertMaterial({ map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.22 }); });
   var disc = new THREE.CircleGeometry(0.058, 20);
   function table(cx, cz, seed){
-    var g = new THREE.Group(), S2 = 0.8, H = 0.62;      // as high as the couch arms g.position.set(cx, 0, cz); scene.add(g);
+    var g = new THREE.Group(), S2 = 0.8, H = 0.62; /* as high as the couch arms */ g.position.set(cx, 0, cz); scene.add(g);
     box(g, S2, 0.05, S2, 0, H - 0.025, 0, top); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(q){ box(g, 0.06, H - 0.05, 0.06, q[0] * (S2 / 2 - 0.06), (H - 0.05) / 2, q[1] * (S2 / 2 - 0.06), wood); });
     solid(g, 'lounge'); BLOCKS.push([cx - S2 / 2, cx + S2 / 2, cz - S2 / 2, cz + S2 / 2]);
     if (!stk.length) return; var r = seed;
