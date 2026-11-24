@@ -235,7 +235,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v2.13</span>
+    <span id="verFps">studio v2.14</span>
   </div>
 </div>
 
@@ -270,7 +270,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.13</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.14</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -8756,20 +8756,19 @@ var SIT = { on:false, seat:-1, pose:0, k:0 };
     COUCHES.push({ g:g, x:cx, z:cz }); var hx = Math.abs(px) * W / 2 + Math.abs(dx) * 0.4, hz = Math.abs(pz) * W / 2 + Math.abs(dz) * 0.4; BLOCKS.push([cx - hx, cx + hx, cz - hz, cz + hz]);
   }
   var stk = (window.JB_STICKERS || []).map(function(src){ var t = tex(src); t.magFilter = THREE.LinearFilter; return new THREE.MeshLambertMaterial({ map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.22 }); });
-  var disc = new THREE.CircleGeometry(0.058, 20);
+  var disc = new THREE.CircleGeometry(0.1, 18);
   function table(cx, cz, seed){
     var g = new THREE.Group(), S2 = 0.8, H = 0.62; /* as high as the couch arms */ g.position.set(cx, 0, cz); scene.add(g);
     box(g, S2, 0.05, S2, 0, H - 0.025, 0, top); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(q){ box(g, 0.06, H - 0.05, 0.06, q[0] * (S2 / 2 - 0.06), (H - 0.05) / 2, q[1] * (S2 / 2 - 0.06), wood); });
     solid(g, 'lounge'); BLOCKS.push([cx - S2 / 2, cx + S2 / 2, cz - S2 / 2, cz + S2 / 2]);
     if (!stk.length) return; var r = seed;
     function rn(){ r = (r * 16807) % 2147483647; return r / 2147483647; }
-    var pile = new THREE.Group(); pile.position.set(0.05, H, -0.04); g.add(pile);
-    for (var i = 0; i < 34; i++){                               // a stack, a little untidy, with a few loose ones beside it
-      var loose = i >= 30, a = rn() * 6.283, d = loose ? 0.15 + rn() * 0.1 : rn() * 0.012;
-      var m = new THREE.Mesh(disc, stk[(i * 3 + seed) % stk.length]); m.rotation.x = -Math.PI / 2; m.rotation.z = rn() * 6.283;
-      m.position.set(Math.cos(a) * d, 0.002 + (loose ? (i - 30) * 0.0004 : i * 0.0022), Math.sin(a) * d); m.userData.noShadow = true; pile.add(m);
+    var pile = new THREE.Group(); pile.position.set(0.04, H + 0.001, -0.03); g.add(pile);
+    for (var i = 0; i < 14; i++){                               // the same pile as in the Arcade: fourteen big stickers lying flat, overlapping within a hand's width
+      var m = new THREE.Mesh(disc, stk[(i + seed) % stk.length]); m.rotation.x = -Math.PI / 2; m.rotation.z = rn() * 6.283;
+      m.position.set((rn() * 2 - 1) * 0.07, i * 0.0016, (rn() * 2 - 1) * 0.07); m.userData.noShadow = true; pile.add(m);
     }
-    var grab = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.1, 10), HITMAT); grab.position.y = 0.05; pile.add(grab);      // easy to click
+    var grab = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 8), HITMAT); grab.position.y = 0.02; pile.add(grab);      // easy to click
     solid(pile, 'stickers');
   }
   var a0 = ROOM.x0, b0 = ROOM.z0, a1 = ROOM.x1, b1 = ROOM.z1;
@@ -10484,7 +10483,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v2.13 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v2.14 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
