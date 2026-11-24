@@ -235,7 +235,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v2.00</span>
+    <span id="verFps">studio v2.01</span>
   </div>
 </div>
 
@@ -270,7 +270,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <div class="err" id="mpErr"></div>
     <button type="button" class="ghost" id="mpSolo">Play solo</button>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.00</div>
+  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v2.01</div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -6612,8 +6612,8 @@ FACE = { bg:'#7FD0FF', fg:'#06131B' }; button('mxclrb', MXMX, 186, 26, 10, 'CLEA
 knob('mxhpf', MXMX - 7, 48.5, 5.6, 'Master high-pass', MX.hpf, { h:7, color:0x3A2010 }); knob('mxlpf', MXMX - 7, 100.5, 5.6, 'Master low-pass', MX.lpf, { h:7, color:0x12303F });
 FACE = { bg:'#FF9A5A', fg:'#0B0B0D' }; button('mxfrh', MXMX + 9.5, 48.5, 13, 8, 'RESET', 'Reset the high-pass', 0xFF9A5A).frst = 'h';
 FACE = { bg:'#7FD0FF', fg:'#06131B' }; button('mxfrl', MXMX + 9.5, 100.5, 13, 8, 'RESET', 'Reset the low-pass', 0x7FD0FF).frst = 'l';
-[['fh', 61.5, 0xFF9A5A, '#FF9A5A', 'High-pass on '], ['fl', 113.5, 0x7FD0FF, '#7FD0FF', 'Low-pass on ']].forEach(function(F){
-  FACE = { bg:'#30333B', fg:'#F4F4F0' };
+[['fh', 61.5, 0xFF8A2A, '#FF9A5A', 'High-pass on '], ['fl', 113.5, 0x4AB8FF, '#7FD0FF', 'Low-pass on ']].forEach(function(F){
+  FACE = { bg:'#6E727C', fg:'#0B0B0D' };      // a mid-grey face: dark enough to read as off, light enough for the lamp colour to show when on
   for (var fi = 0; fi < MXNC; fi++){ var fb = button('mx' + F[0] + fi, MXMX + ((fi % 5) - 2) * 7.1, F[1] + Math.floor(fi / 5) * 8.2, 6.3, 7, String(fi + 1), F[4] + MXN[fi], F[2]); fb.ch = fi; fb.flt = F[0]; }
 });
 FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
@@ -6673,7 +6673,7 @@ function mxUpdate(now, dt){
     for (k = 0; k < 10; k++) segs[k].color.setHex(k < n ? (k >= 9 ? 0xFF2A3C : k >= 7 ? 0xFFE15A : 0x3BFF6A) : 0x15171C);
   }
   ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ var b = CT[id], bl = b.down ? 0.9 : 0.25; if (bl !== b.lit){ b.lit = bl; b.paintLit(); } var by = b.y0 - (b.down ? 0.003 : 0); if (b.m.position.y !== by) b.m.position.y = by; });
-  for (i = 0; i < MXNC; i++){ ['fh', 'fl'].forEach(function(w){ var fb = CT['mx' + w + i], FL = MX[w][i] ? 1.25 : 0; if (fb.down) FL = Math.max(FL, 0.8); if (FL !== fb.lit){ fb.lit = FL; fb.paintLit(); } var fy = fb.y0 - (fb.down ? 0.002 : 0); if (fb.m.position.y !== fy) fb.m.position.y = fy; }); }
+  for (i = 0; i < MXNC; i++){ ['fh', 'fl'].forEach(function(w){ var fb = CT['mx' + w + i], FL = MX[w][i] ? 1.9 : 0; if (fb.down) FL = Math.max(FL, 0.8); if (FL !== fb.lit){ fb.lit = FL; fb.paintLit(); } var fy = fb.y0 - (fb.down ? 0.002 : 0); if (fb.m.position.y !== fy) fb.m.position.y = fy; }); }
   for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], L = MX.ch[i].mute ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
     var so = CT['mxsolo' + i], SL = MX.ch[i].solo ? 1 : 0; if (so.down) SL = Math.max(SL, 0.8); if (SL !== so.lit){ so.lit = SL; so.paintLit(); } var sy = so.y0 - (so.down ? 0.003 : 0); if (so.m.position.y !== sy) so.m.position.y = sy; }
 }
@@ -10090,7 +10090,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.00 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v2.01 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
