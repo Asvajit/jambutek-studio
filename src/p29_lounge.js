@@ -26,11 +26,14 @@ var SIT = { on:false, seat:-1, pose:0, k:0 };
     solid(g, 'lounge'); BLOCKS.push([cx - S2 / 2, cx + S2 / 2, cz - S2 / 2, cz + S2 / 2]);
     if (!stk.length) return; var r = seed;
     function rn(){ r = (r * 16807) % 2147483647; return r / 2147483647; }
-    for (var i = 0; i < 26; i++){                               // a loose pile in the middle, a few strays towards the edges
-      var stray = i >= 18, a = rn() * 6.283, d = stray ? 0.14 + rn() * 0.2 : rn() * rn() * 0.11;
-      var m = new THREE.Mesh(disc, stk[(i + seed) % stk.length]); m.rotation.x = -Math.PI / 2 + (stray ? 0 : (rn() - 0.5) * 0.16); m.rotation.z = rn() * 6.283; m.rotation.y = stray ? 0 : (rn() - 0.5) * 0.16;
-      m.position.set(Math.cos(a) * d, H + 0.002 + (stray ? 0 : i * 0.0016), Math.sin(a) * d); m.userData.noShadow = true; g.add(m);
+    var pile = new THREE.Group(); pile.position.set(0.05, H, -0.04); g.add(pile);
+    for (var i = 0; i < 34; i++){                               // a stack, a little untidy, with a few loose ones beside it
+      var loose = i >= 30, a = rn() * 6.283, d = loose ? 0.15 + rn() * 0.1 : rn() * 0.012;
+      var m = new THREE.Mesh(disc, stk[(i * 3 + seed) % stk.length]); m.rotation.x = -Math.PI / 2; m.rotation.z = rn() * 6.283;
+      m.position.set(Math.cos(a) * d, 0.002 + (loose ? (i - 30) * 0.0004 : i * 0.0022), Math.sin(a) * d); m.userData.noShadow = true; pile.add(m);
     }
+    var grab = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.1, 10), HITMAT); grab.position.y = 0.05; pile.add(grab);      // easy to click
+    solid(pile, 'stickers');
   }
   var a0 = ROOM.x0, b0 = ROOM.z0, a1 = ROOM.x1, b1 = ROOM.z1;
   [[a0 + 1.15, b0 + 1.15], [a1 - 1.15, b1 - 1.15]].forEach(function(q){ var l = new THREE.PointLight(0xFFD9B0, 0.95, 3.4, 1.6); l.position.set(q[0], 1.75, q[1]); scene.add(l); });      // a soft warm lamp over each lounge, so it is not lost in the dark
@@ -59,4 +62,45 @@ function sitPose(P, pose, headYaw, k){
   if (pose === 1){ P.legR.rotation.set(-1.9 * k, 1.3 * k, 0.16 * k); P.legR.userData.knee.rotation.x = 1.62 * k; }      // one leg up on the other: the thigh lifts a little, turns out, and the shin lies across the other knee
   P.armL.rotation.x = P.armR.rotation.x = (pose === 2 ? -1.25 : -0.85) * k; P.torso.rotation.x = -0.1 * k; P.torso.position.y = 0.78;
   P.head.rotation.y = headYaw * k; P.g.position.y = -SITDROP * k;
+}
+
+/* ================= stickers: take one from a stack, stick it on a wall (as in the Jambutek Arcade) =================
+   Click a stack to take a sticker (a different one each time); it rides at the corner of your view and a faint copy shows where it
+   will go. Click a wall to stick it. Click a stack again to put it back. Everyone in the room sees the walls fill up; the newest
+   sixty stay. Stickers belong to the room, not to a jam: loading a jam or changing scene leaves them alone. */
+var STKKEY = 'jambutek-studio-stickers-v1', STKMAX = 60, STKWALLN = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+var STK = { held:null, last:-1, list:[], mesh:[], tex:(window.JB_STICKERS || []).map(function(src){ var t = tex(src); t.magFilter = THREE.LinearFilter; return t; }) };
+var stkGeo = new THREE.CircleGeometry(0.11, 18);
+function stkRead(){ try { var a = JSON.parse(store(STKKEY) || '[]'); STK.list = Array.isArray(a) ? a.filter(function(s){ return s && STK.tex[s.d] && STKWALLN[s.w] && isFinite(s.x) && isFinite(s.y) && isFinite(s.z); }).slice(-STKMAX) : []; } catch (e) { STK.list = []; } }
+function stkPaint(){
+  STK.mesh.forEach(function(m){ scene.remove(m); m.material.dispose(); }); STK.mesh = [];
+  STK.list.forEach(function(s, i){ var n = STKWALLN[s.w], off = 0.014 + (i % 40) * 0.0004;
+    var m = new THREE.Mesh(stkGeo, new THREE.MeshLambertMaterial({ map:STK.tex[s.d], emissive:0xffffff, emissiveMap:STK.tex[s.d], emissiveIntensity:0.18, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-6 }));
+    m.position.set(s.x + n[0] * off, s.y, s.z + n[1] * off); m.lookAt(m.position.x + n[0], m.position.y, m.position.z + n[1]); m.rotateZ(s.r || 0); m.userData.noShadow = true; scene.add(m); STK.mesh.push(m); });
+}
+stkRead(); stkPaint();
+RESTORE[STKKEY] = function(){ stkRead(); stkPaint(); }; SAVENOW.push(function(){ store(STKKEY, JSON.stringify(STK.list)); });
+var stkGhost = new THREE.Mesh(stkGeo, new THREE.MeshBasicMaterial({ transparent:true, opacity:0.55, depthWrite:false })); stkGhost.visible = false; scene.add(stkGhost);
+var stkHand = new THREE.Mesh(new THREE.CircleGeometry(0.035, 16), new THREE.MeshBasicMaterial({ side:THREE.DoubleSide, depthTest:false, depthWrite:false, transparent:true })); stkHand.visible = false; stkHand.renderOrder = 70; stkHand.userData.noShadow = true; scene.add(stkHand);
+function stkTake(){
+  if (STK.held !== null){ STK.held = null; stkGhost.visible = false; toast('Sticker back on the stack'); return; }
+  if (!STK.tex.length) return; var d; do { d = (Math.random() * STK.tex.length) | 0; } while (d === STK.last && STK.tex.length > 1);
+  STK.last = d; STK.held = d; stkGhost.material.map = STK.tex[d]; stkGhost.material.needsUpdate = true; stkHand.material.map = STK.tex[d]; stkHand.material.needsUpdate = true;
+  toast('Got a sticker · click a wall to stick it', 2600);
+}
+function stkPlace(hit){
+  if (STK.held === null) return; var w = hit.object.userData.wall; if (!STKWALLN[w]) return;
+  var s = { d:STK.held, w:w, x:+hit.point.x.toFixed(3), y:+clamp(hit.point.y, 0.2, ROOM.h - 0.2).toFixed(3), z:+hit.point.z.toFixed(3), r:+rnd(-0.45, 0.45).toFixed(2) };
+  if (w === 0 || w === 1) s.z = w === 0 ? ROOM.z0 : ROOM.z1; else s.x = w === 2 ? ROOM.x0 : ROOM.x1;
+  STK.list.push(s); if (STK.list.length > STKMAX) STK.list.shift(); STK.held = null; stkGhost.visible = false; stkPaint(); store(STKKEY, JSON.stringify(STK.list));
+}
+var stkF = new THREE.Vector3(), stkR = new THREE.Vector3(), stkU = new THREE.Vector3();
+function stkTick(){
+  if (STK.held === null || SPEC.on || mode !== 'walk'){ if (STK.held !== null && (SPEC.on || mode !== 'walk')) STK.held = null; stkGhost.visible = false; stkHand.visible = false; return; }
+  camera.getWorldDirection(stkF); stkR.crossVectors(stkF, camera.up).normalize(); stkU.crossVectors(stkR, stkF);
+  stkHand.position.copy(camera.position).addScaledVector(stkF, 0.3).addScaledVector(stkR, 0.17).addScaledVector(stkU, -0.11); stkHand.quaternion.copy(camera.quaternion); stkHand.rotateZ(-0.2); stkHand.visible = true;
+  var hit = curAim();
+  if (hit && iaOf(hit) === 'wall' && hit.distance <= REACH && STKWALLN[hit.object.userData.wall]){ var n = STKWALLN[hit.object.userData.wall];
+    stkGhost.position.set(hit.point.x + n[0] * 0.02, hit.point.y, hit.point.z + n[1] * 0.02); stkGhost.lookAt(stkGhost.position.x + n[0], hit.point.y, stkGhost.position.z + n[1]); stkGhost.visible = true; }
+  else stkGhost.visible = false;
 }

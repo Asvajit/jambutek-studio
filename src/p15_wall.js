@@ -52,7 +52,8 @@ function wallPanel(P){                                       // called by vidBoo
   HOST = o.H; LX = o.X; LZ = o.Z; DEV = o.D; FACE = o.F;
 }
 /* everything a pattern is, on every machine, as one small file (the Tape's loop is audio and stays out) */
-var JAMSKIP = {};                                           // nothing is left out now: the video synths and the roof switch travel with a jam too
+var JAMSKIP = { 'jambutek-studio-stickers-v1':1 };      // the stickers on the walls belong to the room, not to a jam or a scene
+//                                           // nothing is left out now: the video synths and the roof switch travel with a jam too
 /* A jam file is the whole room: every machine's patterns, sounds and settings, the mixer, the effects, both video synths and the roof switch.
    It is the same text each machine already saves for itself, gathered under `state`. The older pattern-only fields stay in the
    file too, so a file still means something to an older copy of the room. The Tape's recorded loop is audio and is left out. */
