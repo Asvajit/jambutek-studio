@@ -34,7 +34,7 @@ var DEVS = {
   mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.78, asp:1.63, off:0.05, lookz:0.03, hud:'hudMx' }
 };
 DEVS.mc = { key:'mc', g:MCG, name:'Chord synth', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.56, asp:2.0, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
-DEVS.ec = { key:'ec', g:ECG, name:'Echo and reverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.82, asp:0.8, off:0.04, lookz:RVOFF / 2 + 0.07, hud:'hudEc' };
+DEVS.ec = { key:'ec', g:ECG, name:'Echo and reverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.98, asp:0.6, off:0.04, lookz:0.2 + 0.05, hud:'hudEc' };
 DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 FLOWS.forEach(function(f){ DEVS[f.key] = { key:f.key, g:f.G, name:'Video synth A', stand:devStand(f.pos), yaw:f.pos.r, pitch:-0.42, d:0.72, asp:1.9, off:0.04, lookz:0.05, hud:'hudPf' }; });
 DEVS.bz = { key:'bz', g:BZG, name:'Video synth B', stand:devStand(PGPOS), yaw:PGPOS.r, pitch:-0.42, d:0.52, asp:1.9, off:0.04, lookz:0.02, hud:'hudBz' };
@@ -332,15 +332,16 @@ function hintBuild(){
 }
 function hintUpdate(now){
   if (HINT.done) return; if (M.playing){ HINT.done = true; if (HINT.g){ HINT.g.visible = HINT.ring.visible = false; } return; }
-  var show = !MP.lobbyOpen && !SPEC.on && CT.start && CT.start.m; if (!show){ if (HINT.g) HINT.g.visible = HINT.ring.visible = false; return; }
+  var show = !MP.lobbyOpen && !SPEC.on && CT.start && CT.start.m && (mode !== 'tr' || (LEAN && LEAN.key === 'tr')); if (!show){ if (HINT.g) HINT.g.visible = HINT.ring.visible = false; return; }
   if (!HINT.g) hintBuild();
-  CT.start.m.getWorldPosition(HINT.p); var d = Math.hypot(HINT.p.x - cam.x, HINT.p.z - cam.z), s = clamp(0.55 + d * 0.5, 0.7, 1.9), b = Math.sin(now * 0.005);
+  CT.start.m.getWorldPosition(HINT.p); var d = camera.position.distanceTo(HINT.p), s = clamp(0.1 + d * 0.62, 0.32, 1.9),      // sized by how far the eye is, so it stays modest when leaned over the drum machine
+       b = Math.sin(now * 0.005);
   HINT.g.visible = HINT.ring.visible = true; HINT.g.position.set(HINT.p.x, HINT.p.y + 0.035 + (0.03 + b * 0.022) * s, HINT.p.z); HINT.g.scale.setScalar(s); HINT.g.children[0].rotation.y = HINT.g.children[1].rotation.y = now * 0.003;
   var rp = (now * 0.0012) % 1; HINT.ring.position.set(HINT.p.x, HINT.p.y + 0.012, HINT.p.z); HINT.ring.scale.setScalar(0.7 + rp * 1.8); HINT.ring.material.opacity = 1 - rp;
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.97 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.98 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -421,7 +422,7 @@ function frame(now){
     if (cen) xhLab.textContent = dl; else { tip.hidden = false; tip.textContent = dl; tip.style.left = pointer.cx + 'px'; tip.style.top = pointer.cy + 'px'; }
   }
 
-  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); ecUpdate(now, dt); rvUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); zkUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); scopeUpdate(); monUpdate(); flowUpdate(now, dt); bzUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
+  updateTR(now, dt); mfUpdate(now, dt); bsUpdate(now, dt); mxUpdate(now, dt); ecUpdate(now, dt); rvUpdate(now, dt); scUpdate(now, dt); snUpdate(now, dt); mbUpdate(now, dt); zkUpdate(now, dt); shUpdate(now, dt); wallUpdate(now); scopeUpdate(); monUpdate(); flowUpdate(now, dt); bzUpdate(now, dt); mcUpdate(now, dt); skUpdate(now, dt); MP.tick(now, dt); amUpdate(now, dt); tpUpdate(now, dt);
   var kick = SEQ.kick; snLightUpdate(dt);
   monitors.forEach(function(m){ var s = 1 + kick * 0.025; m.spk.scale.set(s, s, 1); var q = 0.3 + clamp(kick, 0, 1) * 0.7; m.mat.color.setRGB(q, q, q); });
   trLamp.light.intensity = trLamp.base * (1 + kick * 0.08);

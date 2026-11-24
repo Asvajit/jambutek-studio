@@ -149,7 +149,7 @@ var MP = (function(){
     if (typeof k !== 'string') return;
     if (k === 'transport'){ transport(v); return; }
     if (k === 'dbg'){ dbgPlayers(v === '1', true); dbgPaint(); return; }       // the F2 test players, switched on by someone in the room
-    if (typeof v !== 'string') return; Q.seen[k] = v; Q.applying = true;
+    if (typeof v !== 'string') return; Q.seen[k] = v; if (Q.scSkip[k] === v){ delete Q.scSkip[k]; return; }      /* a scene switch this browser has already made for itself */ Q.applying = true;
     try {
       if (k === 'tr:m') trMeta(JSON.parse(v)); else if (k.indexOf('tr:p') === 0) trPat(+k.slice(4), JSON.parse(v));
       else if (RESTORE[k]){ REMOTE[k] = v; try { RESTORE[k](); } finally { delete REMOTE[k]; } }
@@ -183,6 +183,7 @@ var MP = (function(){
   var mcChord0 = mcChord, mcHarp0 = mcHarp;                    // the chord box: its buttons and strip are heard by everyone too
   mcChord = function(c, r, on){ mcChord0(c, r, on); if (Q.ws && !Q.applying) send({ t:'ev', e:['m', 0, c, r, on ? 1 : 0] }); };
   mcHarp = function(i, on){ mcHarp0(i, on); if (on && Q.ws && !Q.applying) send({ t:'ev', e:['m', 1, i] }); };
+  Q.scSkip = {}; Q.scene = function(j, at){ if (Q.ws) send({ t:'ev', e:['x', j, at] }); };      // a scene switch: every browser makes it for itself, on the same bar
   MPNET.scratch = function(a){ if (Q.ws) send({ t:'ev', e:['q', a] }); };       // the scratch box: the gesture travels, each browser plays it
   var hit0 = hit; hit = function(i, vel){ hit0(i, vel); if (Q.ws && !Q.applying) send({ t:'ev', e:['h', i, vel] }); };
   var setCtl0 = setCtl;
@@ -303,6 +304,7 @@ var MP = (function(){
       else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } (function(dev, nn, on, vel){ snapRun(id + dev + ':' + nn, on, function(){ NOTE[dev][on ? 0 : 1](nn, vel == null ? undefined : vel); }); })(e[1], e[2], e[3], e[4]); }
       else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) (function(a, b, on){ snapRun(id + 'mc' + a + ':' + b, on, function(){ mcChord0(a, b, on); }); })(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
       else if (e[0] === 'q') skRemote(e[1]);
+      else if (e[0] === 'x') scRemote(e[1] | 0, typeof e[2] === 'number' ? e[2] : -1);
       else if (e[0] === 'h' && e[1] >= 0 && e[1] < 11) (function(i, v){ snapRun(null, 1, function(){ hit0(i, v); }); })(e[1] | 0, typeof e[2] === 'number' ? e[2] : 0.8);
     } catch (err2) {}
     Q.applying = false;

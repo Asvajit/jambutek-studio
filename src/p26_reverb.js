@@ -3,10 +3,10 @@
    Inspired by the big "delay that turns into a reverb" plugins: four modulated delay lines feeding each other. With DENSITY low you
    hear separate repeats; turned up they smear into a wash, and with DECAY high the tail goes on for a very long time. The engine is
    written for this room. It shares the echo's spot on the table, so leaning over the echo shows both. */
-var RVOFF = 0.27;                                  // how far below the echo it sits, down the slope of the table
+var RVOFF = 0.25;                                  // how far below the echo it sits, down the slope of the table
 function rvx(u){ return (u - ECW / 2) * SC; }
 function rvz(u){ return (u - ECD / 2) * SC + RVOFF; }
-ECG.position.z = -RVOFF / 2;                       // the echo moves up so the pair is centred on the table
+ECG.position.z = -0.2;                             // the echo moves up: the reverb sits under it and the scenes box under that, the three centred on the table
 var RV = { p:{ size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, mode:0, on:1 }, lv:0 };
 var RVMODES = [['HALL', [1, 1.31, 1.73, 2.19], 0.22], ['CLOUD', [1, 1.47, 2.11, 2.83], 0.5], ['VOID', [1, 1.62, 2.41, 3.37], 0.85]];
 function rvRestore(){ try { var s = JSON.parse(store('jambutek-studio-reverb-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(RV.p).forEach(function(k){ if (typeof s.p[k] !== 'number') return; RV.p[k] = k === 'mode' ? clamp(s.p[k] | 0, 0, 2) : k === 'on' ? (s.p[k] ? 1 : 0) : clamp(s.p[k], 0, 1); }); } catch (e) {} } rvRestore();
