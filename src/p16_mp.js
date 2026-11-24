@@ -584,11 +584,10 @@ var MP = (function(){
   function optPaint(){ if (!optEl) return; ['sens', 'vol'].forEach(function(k){ optEl.querySelector('#opt_' + k).value = OPT[k]; optEl.querySelector('#optv_' + k).textContent = Math.round(OPT[k] * 100) + '%'; }); optEl.querySelector('#opt_q').value = OPT.q; }
   function optMenu(show){
     if (!optEl){ optEl = document.createElement('div'); optEl.id = 'optMenu'; optEl.hidden = true;
-      optEl.innerHTML = '<h3>Settings</h3>' +
+      optEl.innerHTML = '<h3>Local settings</h3>' +
         '<label>Volume <b id="optv_vol"></b><input type="range" id="opt_vol" min="0" max="1" step="0.01"></label>' +
         '<label>Mouse sensitivity <b id="optv_sens"></b><input type="range" id="opt_sens" min="0.2" max="3" step="0.05"></label>' +
         '<label>Quality<select id="opt_q"><option value="2">High</option><option value="1">Medium</option><option value="0">Low</option></select></label>' +
-        '<p>These are yours alone and are remembered on this device.</p>' +
         '<div class="rw"><button type="button" id="optReset">Reset</button><button type="button" id="optX">Close</button></div>';
       document.body.appendChild(optEl);
       ['sens', 'vol'].forEach(function(k){ optEl.querySelector('#opt_' + k).addEventListener('input', function(){ OPT[k] = +this.value; optApply(); optPaint(); }); });
