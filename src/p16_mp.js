@@ -536,12 +536,12 @@ var MP = (function(){
   }, { passive:true });
   var SPK = {}, specSpin = false, specAuto = false, specBar = -1;      // auto edit: the room cuts between cameras 1 to 5 by itself, every four bars
   function specHudText(){ if (!specEl) return; var i = SPEC.i;
-    if (i === 10){ specEl.innerHTML = '<b>TOP CAMERA</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; <b>scroll</b> zooms &middot; mouse turns and tilts'; return; }
+    if (i === 10){ specEl.innerHTML = '<b>TOP CAMERA</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; <b>scroll</b> zooms &middot; <b>Q</b> slow turn ' + (specSpin ? '<b>on</b>' : 'off') + ' &middot; mouse turns and tilts'; return; }
     if (i >= 6){ specEl.innerHTML = '<b>CAMERA ' + (i === 9 ? 0 : i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; <b>&larr; &rarr;</b> next machine &middot; <b>F</b> depth of field ' + (DOF.on ? '<b>on</b> &middot; <b>scroll</b> focus <b>' + DOF.f.toFixed(2) + ' m</b> &middot; <b>Shift + scroll</b> aperture <b>' + Math.round(DOF.a * 100) + '%</b>' : 'off'); return; }
     specEl.innerHTML = '<b>CAMERA ' + (i + 1) + '</b> &middot; keys <b>1</b>&ndash;<b>0</b> and <b>&minus;</b> change camera &middot; ' + (i === 5 && !specAuto ? '' : '<b>A</b> auto edit ' + (specAuto ? '<b>on</b>' : 'off') + ' &middot; ') + (i === 5 ? '<b>WASD</b> fly &middot; <b>Space</b> / <b>C</b> up and down &middot; <b>Shift</b> faster' : i === 4 ? '<b>Q</b> ' + (specSpin ? 'stops the slow turn' : 'turns it slowly') + ' &middot; mouse looks round' : '<b>scroll</b> sets height &middot; mouse looks round'); }
   /* the top-down camera, on the minus key: in the ceiling over the middle of the rig, looking straight down through a wide lens.
      The mouse turns (and tilts) it, the wheel zooms. */
-  var TOP = { fov:100 };
+  var TOP = { fov:118 };                                       // starts fully pulled back: the widest view, as if from the highest point
   Q.specFov = function(){ return SPEC.on && SPEC.i === 10 ? TOP.fov : 0; };
   window.addEventListener('wheel', function(e){ if (!SPEC.on || SPEC.i !== 10 || Q.lobbyOpen || (dbgEl && !dbgEl.hidden)) return; TOP.fov = clamp(TOP.fov + (e.deltaY > 0 ? 4 : -4), 40, 118); specHudText(); }, { passive:true });
   function specCam(i, quiet){
@@ -553,7 +553,7 @@ var MP = (function(){
     if (specAuto){ var bar = M.playing && typeof SEQ.visN === 'number' ? Math.floor(SEQ.visN / 64) : Math.floor(performance.now() / 8000);      // four bars with the drums running, eight seconds without
       if (bar !== specBar){ var first = specBar === -1; specBar = bar; if (!first){ var nx = (SPEC.i + 1 + ((Math.random() * 4) | 0)) % 5; specCam(nx, true); } } }
     if (SPEC.i < 4){ var cc = SPECCAMS[SPEC.i]; if (Math.abs(cc.y - SPEC.y) > 0.0005){ var ny = lerp(SPEC.y, cc.y, 1 - Math.exp(-dt * 9)), dp = specAim(cc, ny) - specAim(cc, SPEC.y); SPEC.y = ny; cam.tp = clamp(cam.tp + dp, -1.35, 1.25); cam.pitch = clamp(cam.pitch + dp, -1.35, 1.25); } }      // glide to the new height, keeping the rig in frame
-    if (SPEC.i === 4 && specSpin) cam.ty += dt * 0.16;
+    if ((SPEC.i === 4 || SPEC.i === 10) && specSpin) cam.ty += dt * (SPEC.i === 10 ? 0.12 : 0.16);
     if (SPEC.i !== 5) return; var f = (SPK.w || SPK.arrowup ? 1 : 0) - (SPK.s || SPK.arrowdown ? 1 : 0), r = (SPK.d ? 1 : 0) - (SPK.a ? 1 : 0), u = (SPK[' '] ? 1 : 0) - (SPK.c ? 1 : 0); if (!f && !r && !u){ SPEC.v = 0; return; }
     SPEC.v = lerp(SPEC.v || 0, SPK.shift ? 4.2 : 1.6, 1 - Math.exp(-dt * 5)); var sp = SPEC.v * dt, cp = Math.cos(cam.pitch), sy = Math.sin(cam.yaw), cy = Math.cos(cam.yaw);      // eases up to speed so moves start softly
     SPEC.x = clamp(SPEC.x + (-sy * cp * f + cy * r) * sp, ROOM.x0 + 0.2, ROOM.x1 - 0.2); SPEC.z = clamp(SPEC.z + (-cy * cp * f - sy * r) * sp, ROOM.z0 + 0.2, ROOM.z1 - 0.2); SPEC.y = clamp(SPEC.y + (Math.sin(cam.pitch) * f + u) * sp, 0.25, ROOM.h - 0.2);
@@ -570,7 +570,7 @@ var MP = (function(){
     var i = '1234567890-'.indexOf(e.key), k = e.key.toLowerCase(); if (i >= 0 && !e.repeat){ specAuto = false; specCam(i); }
     else if (SPEC.i >= 6 && SPEC.i <= 9 && !e.repeat && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){ var sdI = SPEC.i - 6, Ls = otsSides()[sdI]; OTSAT[sdI] = (OTSAT[sdI] + (e.key === 'ArrowRight' ? 1 : Ls.length - 1)) % Ls.length; otsPlace(sdI); e.preventDefault(); }
     else if (SPEC.i >= 6 && SPEC.i <= 9 && !e.repeat && k === 'f'){ DOF.on = !DOF.on; dofSave(); toast(DOF.on ? 'Depth of field on' : 'Depth of field off'); specHudText(); } else if (k === 'a' && !e.repeat && (SPEC.i !== 5 || specAuto)){ specAuto = !specAuto; specBar = -1; if (specAuto && SPEC.i >= 5) specCam(0, true); toast(specAuto ? 'Auto edit on · cuts every four bars · A or a number key for manual' : 'Auto edit off · manual'); specHudText(); }
-    else if (k === 'q' && !e.repeat && SPEC.i === 4){ specSpin = !specSpin; toast(specSpin ? 'Camera 5 turning slowly · Q stops it' : 'Camera 5 still'); specHudText(); }
+    else if (k === 'q' && !e.repeat && (SPEC.i === 4 || SPEC.i === 10)){ specSpin = !specSpin; toast((SPEC.i === 10 ? 'Top camera' : 'Camera 5') + (specSpin ? ' turning slowly · Q stops it' : ' still')); specHudText(); }
     SPK[k] = true; SPK.shift = e.shiftKey; e.stopPropagation(); if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') e.preventDefault();
   }, true);
 
