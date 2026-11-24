@@ -70,10 +70,10 @@ function sitPose(P, pose, headYaw, k){
 var STKKEY = 'jambutek-studio-stickers-v1', STKMAX = 60, STKWALLN = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 var STK = { held:null, last:-1, list:[], mesh:[], tex:(window.JB_STICKERS || []).map(function(src){ var t = tex(src); t.magFilter = THREE.LinearFilter; return t; }) };
 var stkGeo = new THREE.CircleGeometry(0.11, 18);
-function stkRead(){ try { var a = JSON.parse(store(STKKEY) || '[]'); STK.list = Array.isArray(a) ? a.filter(function(s){ return s && STK.tex[s.d] && STKWALLN[s.w] && isFinite(s.x) && isFinite(s.y) && isFinite(s.z); }).slice(-STKMAX) : []; } catch (e) { STK.list = []; } }
+function stkRead(){ try { var a = JSON.parse(store(STKKEY) || '[]'); STK.list = Array.isArray(a) ? a.filter(function(s){ return s && STK.tex[s.d] && (isFinite(s.nx) && isFinite(s.nz) || STKWALLN[s.w]) && isFinite(s.x) && isFinite(s.y) && isFinite(s.z); }).slice(-STKMAX) : []; } catch (e) { STK.list = []; } }
 function stkPaint(){
   STK.mesh.forEach(function(m){ scene.remove(m); m.material.dispose(); }); STK.mesh = [];
-  STK.list.forEach(function(s, i){ var n = STKWALLN[s.w], off = 0.014 + (i % 40) * 0.0004;
+  STK.list.forEach(function(s, i){ var n = isFinite(s.nx) && isFinite(s.nz) ? [s.nx, s.nz] : STKWALLN[s.w], off = 0.014 + (i % 40) * 0.0004;
     var m = new THREE.Mesh(stkGeo, new THREE.MeshLambertMaterial({ map:STK.tex[s.d], emissive:0xffffff, emissiveMap:STK.tex[s.d], emissiveIntensity:0.18, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-6 }));
     m.position.set(s.x + n[0] * off, s.y, s.z + n[1] * off); m.lookAt(m.position.x + n[0], m.position.y, m.position.z + n[1]); m.rotateZ(s.r || 0); m.userData.noShadow = true; scene.add(m); STK.mesh.push(m); });
 }
@@ -88,10 +88,15 @@ function stkTake(){
   toast('Got a sticker · click a wall to stick it', 2600);
 }
 function stkPlace(hit){
-  if (STK.held === null) return; var w = hit.object.userData.wall; if (!STKWALLN[w]) return;
-  var s = { d:STK.held, w:w, x:+hit.point.x.toFixed(3), y:+clamp(hit.point.y, 0.2, ROOM.h - 0.2).toFixed(3), z:+hit.point.z.toFixed(3), r:+rnd(-0.45, 0.45).toFixed(2) };
-  if (w === 0 || w === 1) s.z = w === 0 ? ROOM.z0 : ROOM.z1; else s.x = w === 2 ? ROOM.x0 : ROOM.x1;
+  if (STK.held === null) return; var n = stkNormal(hit); if (!n) return;
+  // it goes exactly where it was put, on the face that was clicked (any wall-like surface, the booth walls too), facing the way that face faces
+  var s = { d:STK.held, x:+hit.point.x.toFixed(3), y:+clamp(hit.point.y, 0.12, ROOM.h - 0.12).toFixed(3), z:+hit.point.z.toFixed(3), nx:+n[0].toFixed(3), nz:+n[1].toFixed(3), r:+rnd(-0.45, 0.45).toFixed(2) };
   STK.list.push(s); if (STK.list.length > STKMAX) STK.list.shift(); STK.held = null; stkGhost.visible = false; stkPaint(); store(STKKEY, JSON.stringify(STK.list));
+}
+var stkN = new THREE.Vector3(), stkM = new THREE.Matrix3();
+function stkNormal(hit){                                         // which way the clicked face looks, flat to the floor, turned towards whoever clicked it
+  if (!hit || !hit.face) return null; stkN.copy(hit.face.normal).applyMatrix3(stkM.getNormalMatrix(hit.object.matrixWorld)); if (Math.abs(stkN.y) > 0.5) return null;
+  stkN.y = 0; if (stkN.lengthSq() < 0.01) return null; stkN.normalize(); if (stkN.x * (camera.position.x - hit.point.x) + stkN.z * (camera.position.z - hit.point.z) < 0) stkN.negate(); return [stkN.x, stkN.z];
 }
 var stkF = new THREE.Vector3(), stkR = new THREE.Vector3(), stkU = new THREE.Vector3();
 function stkTick(){
@@ -99,7 +104,8 @@ function stkTick(){
   camera.getWorldDirection(stkF); stkR.crossVectors(stkF, camera.up).normalize(); stkU.crossVectors(stkR, stkF);
   stkHand.position.copy(camera.position).addScaledVector(stkF, 0.3).addScaledVector(stkR, 0.17).addScaledVector(stkU, -0.11); stkHand.quaternion.copy(camera.quaternion); stkHand.rotateZ(-0.2); stkHand.visible = true;
   var hit = curAim();
-  if (hit && iaOf(hit) === 'wall' && hit.distance <= REACH && STKWALLN[hit.object.userData.wall]){ var n = STKWALLN[hit.object.userData.wall];
+  var n = hit && iaOf(hit) === 'wall' && hit.distance <= REACH ? stkNormal(hit) : null;
+  if (n){
     stkGhost.position.set(hit.point.x + n[0] * 0.02, hit.point.y, hit.point.z + n[1] * 0.02); stkGhost.lookAt(stkGhost.position.x + n[0], hit.point.y, stkGhost.position.z + n[1]); stkGhost.visible = true; }
   else stkGhost.visible = false;
 }
