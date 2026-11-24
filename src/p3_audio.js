@@ -12,7 +12,7 @@ function unlock(){
   if (ac){ if (ac.state === 'suspended') ac.resume(); return; }
   try {
     ac = new (window.AudioContext || window.webkitAudioContext)({ latencyHint:'balanced' });      // a slightly deeper buffer than the smallest one: far fewer dropouts for a few thousandths of a second
-    var out = ac.createGain(); out.gain.value = muted ? 0 : 1; out.connect(ac.destination); AU.out = out;
+    var out = ac.createGain(); out.gain.value = muted ? 0 : OPT.vol; out.connect(ac.destination); AU.out = out;
     var comp = ac.createDynamicsCompressor(); comp.threshold.value = -9; comp.knee.value = 8; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.12;
     var vol = ac.createGain(); AU.vol = vol;
     AU.ch = []; AU.tap = ac.createGain(); AU.sendA = ac.createGain(); AU.sendB = ac.createGain(); for (var ci = 0; ci < 10; ci++){ var C = { sa:ac.createGain(), sb:ac.createGain(), inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), duck:ac.createGain(), hp:ac.createBiquadFilter(), lp:ac.createBiquadFilter(), an:ac.createAnalyser() };

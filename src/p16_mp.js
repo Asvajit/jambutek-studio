@@ -280,16 +280,30 @@ var MP = (function(){
     x = +x.toFixed(2); y = +y.toFixed(2); z = +z.toFixed(2); pingShow(null, kind, key, x, y, z); if (Q.ws) send({ t:'ev', e:['p', kind, key, x, y, z] });
   };
 
+  /* ---- other players' hand-played notes land on the grid. A note from the network arrives a little late and never on the beat; while
+     the sequence runs it waits for the next sixteenth instead (or plays at once if a sixteenth has only just passed). The note's end
+     waits the same way so its length is kept. Your own playing is never touched. Settings can switch this off. ---- */
+  var SNAPON = {};
+  function snapWait(){
+    if (!OPT.snap || !M.playing || !ac || !AU.ready) return 0; var sd = stepDur(), d = (((SEQ.nextT - ac.currentTime) % sd) + sd) % sd;
+    return sd - d < 0.028 ? 0 : d * 1000;
+  }
+  function snapRun(key, on, fn){
+    var now = performance.now(), w = snapWait();
+    if (on){ if (key) SNAPON[key] = now + w; if (w < 3) fn(); else setTimeout(function(){ Q.applying = true; try { fn(); } catch (e) {} Q.applying = false; }, w); return; }
+    var at = key && SNAPON[key] ? SNAPON[key] + 70 : 0, w2 = Math.max(w, at - now); if (key) delete SNAPON[key];
+    if (w2 < 3) fn(); else setTimeout(function(){ Q.applying = true; try { fn(); } catch (e) {} Q.applying = false; }, w2);
+  }
   function onEv(id, e){
     if (!Array.isArray(e)) return; var P = Q.peers[id]; Q.applying = true;
     try {
       if (e[0] === 'c' && Array.isArray(e[1])) e[1].forEach(function(a){ var c = CT[a[0]]; if (c && (c.kind === 'knob' || c.kind === 'fader') && !c.endless && typeof a[1] === 'number'){ setCtl0(c, a[1]); if (c.show) c.show(); if (P) glow(c, P.color); } });
       else if (e[0] === 'b'){ if (P && typeof e[1] === 'string' && CT[e[1]]) glow(CT[e[1]], P.color); }
       else if (e[0] === 'p'){ if (e[1] === 'p' || e[1] === 'd' || e[1] === 'w') pingShow(id, e[1], e[2], e[3], e[4], e[5]); }
-      else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } NOTE[e[1]][e[3] ? 0 : 1](e[2], e[4] == null ? undefined : e[4]); }
-      else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) mcChord0(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
+      else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } (function(dev, nn, on, vel){ snapRun(id + dev + ':' + nn, on, function(){ NOTE[dev][on ? 0 : 1](nn, vel == null ? undefined : vel); }); })(e[1], e[2], e[3], e[4]); }
+      else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) (function(a, b, on){ snapRun(id + 'mc' + a + ':' + b, on, function(){ mcChord0(a, b, on); }); })(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
       else if (e[0] === 'q') skRemote(e[1]);
-      else if (e[0] === 'h' && e[1] >= 0 && e[1] < 11) hit0(e[1] | 0, typeof e[2] === 'number' ? e[2] : 0.8);
+      else if (e[0] === 'h' && e[1] >= 0 && e[1] < 11) (function(i, v){ snapRun(null, 1, function(){ hit0(i, v); }); })(e[1] | 0, typeof e[2] === 'number' ? e[2] : 0.8);
     } catch (err2) {}
     Q.applying = false;
   }
@@ -356,7 +370,7 @@ var MP = (function(){
   function menuTry(){ if (!menuA || !Q.lobbyOpen) return; menuA.muted = muted; if (!menuA.paused) return; var p = menuA.play(); if (p && p.catch) p.catch(function(){}); }
   function menuOn(){
     if (!menuA){ menuA = new Audio('menu.mp3'); menuA.loop = true; menuA.preload = 'auto'; }
-    clearInterval(menuFade); menuA.volume = 1; menuTry(); uiStart();          // the file itself is levelled to the room's starter jam (about -16 dB average)
+    clearInterval(menuFade); menuA.volume = Math.min(1, OPT.vol); menuTry(); uiStart();          // the file itself is levelled to the room's starter jam (about -16 dB average)
   }
   function menuOff(){ if (!menuA) return; clearInterval(menuFade); menuFade = setInterval(function(){ var v = menuA.volume - 0.04; if (v <= 0.02){ clearInterval(menuFade); menuA.pause(); menuA.volume = 0; } else menuA.volume = v; }, 60); }
   Q.menuAudio = function(){ return menuA; };
@@ -375,7 +389,7 @@ var MP = (function(){
   var uiNap = null;
   function uiSleep(){ clearTimeout(uiNap); uiNap = setTimeout(function(){ if (uiAC && !Q.lobbyOpen && uiAC.state === 'running') uiAC.suspend().catch(function(){}); }, 6500); }
   function uiWake(){ if (!Q.lobbyOpen) return; uiStart(); if (uiAC && uiAC.state !== 'running' && uiAC.resume) uiAC.resume().catch(function(){}); menuTry(); }
-  function uiPlay(buf, vol){ var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = buf; g.gain.value = vol; n.connect(g); g.connect(uiAC.destination); n.start(); }
+  function uiPlay(buf, vol){ var n = uiAC.createBufferSource(), g = uiAC.createGain(); n.buffer = buf; g.gain.value = vol * OPT.vol; n.connect(g); g.connect(uiAC.destination); n.start(); }
   function uiPress(){ Q.uiLastSound = 'press';
     if (!uiAC || muted || uiAC.state !== 'running') return;
     if (uiClick) uiPlay(uiClick, 0.48);
@@ -433,12 +447,44 @@ var MP = (function(){
     if (Q.ws && !Q.spec && !Q.chatOpen && (e.key === 't' || e.key === 'T') && mode === 'walk' && !e.repeat){ e.preventDefault(); e.stopPropagation(); openChat(); }
   }, true);
   // ---- every frame: send where we are and which knobs moved; move everyone else smoothly ----
+  /* ---- seats: a small plate floats over every machine while other people are in the room. It names the machine and whoever is leaned in
+     at it, in their colour, or says it is free. It hides while you are leaned in yourself, and Settings can switch it off. ---- */
+  var SEATS = null, SEATAT = 0, seatV = new THREE.Vector3();
+  function seatBuild(){
+    SEATS = []; Object.keys(DEVS).forEach(function(k){ var D = DEVS[k]; if (!D || !D.stand) return;
+      var c = document.createElement('canvas'); c.width = 384; c.height = 112; var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:true, depthWrite:false })); sp.scale.set(0.48, 0.14, 1); sp.visible = false; sp.renderOrder = 40;
+      var yaw = D.yaw || 0, y = 1.42; if (D.g && D.g.getWorldPosition){ D.g.updateMatrixWorld(true); D.g.getWorldPosition(seatV); if (seatV.y > 0.3) y = seatV.y + 0.5; }
+      sp.position.set(D.stand.x - Math.sin(yaw) * 0.55, y, D.stand.z - Math.cos(yaw) * 0.55); scene.add(sp); SEATS.push({ k:k, i:Object.keys(DEVS).indexOf(k), D:D, c:c, tex:tex, sp:sp, sig:null }); });
+  }
+  function seatPaint(S, who){
+    var g = S.c.getContext('2d'), free = !who.length; g.clearRect(0, 0, 384, 112);
+    g.fillStyle = 'rgba(6,8,12,.78)'; g.fillRect(0, 0, 384, 112); g.fillStyle = free ? 'rgba(77,255,122,.55)' : who[0].color; g.fillRect(0, 0, 384, 7);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(230,230,226,.72)'; g.font = "bold 30px 'Anton', Impact, 'Arial Narrow', sans-serif"; g.fillText(String(S.D.name || S.k).toUpperCase().slice(0, 22), 192, 36);
+    g.font = "bold 40px 'Anton', Impact, 'Arial Narrow', sans-serif";
+    if (free){ g.fillStyle = 'rgba(77,255,122,.8)'; g.fillText('FREE', 192, 80); }
+    else if (who.length === 1){ g.fillStyle = who[0].color; g.fillText(who[0].name.slice(0, 16), 192, 80); }
+    else { var tw = 0, parts = who.slice(0, 3).map(function(P){ var t = P.name.slice(0, 9); var w = g.measureText(t).width + 22; tw += w; return [t, w, P.color]; }), x = 192 - tw / 2; parts.forEach(function(q){ g.fillStyle = q[2]; g.fillText(q[0], x + q[1] / 2, 80); x += q[1]; }); }
+    S.tex.needsUpdate = true;
+  }
+  function seatTick(now){
+    var ids = Object.keys(Q.peers), show = OPT.seats && ids.length && !Q.lobbyOpen && mode === 'walk';
+    if (!show){ if (SEATS && SEATS.on){ SEATS.on = false; SEATS.forEach(function(S){ S.sp.visible = false; }); } return; }
+    if (!SEATS) seatBuild(); SEATS.on = true; if (now - SEATAT < 250) return; SEATAT = now;
+    SEATS.forEach(function(S){
+      var who = []; ids.forEach(function(id){ var P = Q.peers[id]; if (P.s && P.s[6] - 1 === S.i) who.push(P); });
+      var d = Math.hypot(S.sp.position.x - (SPEC.on ? SPEC.x : cam.x), S.sp.position.z - (SPEC.on ? SPEC.z : cam.z)); S.sp.visible = d < 6.5 && (who.length > 0 || d > 0.9);
+      var sc = clamp(0.7 + d * 0.22, 0.85, 2); S.sp.scale.set(0.5 * sc, 0.146 * sc, 1); S.sp.material.opacity = who.length ? 1 : 0.6; var sig = who.map(function(P){ return P.name + P.color; }).join('|'); if (sig !== S.sig){ S.sig = sig; seatPaint(S, who); }
+    });
+  }
+  Q.seats = function(){ return SEATS ? SEATS.map(function(S){ return S.k + ':' + (S.sig || 'free') + (S.sp.visible ? '' : ' (hidden)'); }) : null; };
   Q.tick = function(now, dt){
+    seatTick(now);
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
         Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
         var em = !lean && EM.id ? EM.id : 0;
-        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 : 0, em] });
+        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0, em] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
       if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)){ Q.pingAt = now; send({ t:'ping', at:performance.now() }); }
@@ -559,10 +605,43 @@ var MP = (function(){
 
   /* ---- F2: a small debug menu ---- */
   var dbgEl = null, DBGDEV = ['tr', 'mx', 'mf', 'bs', 'sh', 'sc'], DBGCOL = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
+  /* ---- settings: the gear under the mute button, or F1. This player's own choices only. ---- */
+  var optEl = null;
+  function optApply(){
+    if (AU.out) AU.out.gain.value = muted ? 0 : OPT.vol; if (menuA) menuA.volume = Math.min(1, OPT.vol); post.uniforms.grain.value = 0.045 * OPT.grain;
+    if (linesIdx !== OPT.pic){ linesIdx = OPT.pic; resize(); } optSave();
+  }
+  function optPaint(){ if (!optEl) return; ['sens', 'vol', 'grain'].forEach(function(k){ optEl.querySelector('#opt_' + k).value = OPT[k]; optEl.querySelector('#optv_' + k).textContent = Math.round(OPT[k] * 100) + '%'; });
+    optEl.querySelector('#opt_pic').value = OPT.pic; optEl.querySelector('#opt_snap').checked = !!OPT.snap; optEl.querySelector('#opt_seats').checked = !!OPT.seats; }
+  function optMenu(show){
+    if (!optEl){ optEl = document.createElement('div'); optEl.id = 'optMenu'; optEl.hidden = true;
+      optEl.innerHTML = '<h3>Settings</h3>' +
+        '<label>Mouse sensitivity <b id="optv_sens"></b><input type="range" id="opt_sens" min="0.2" max="3" step="0.05"></label>' +
+        '<label>My volume <b id="optv_vol"></b><input type="range" id="opt_vol" min="0" max="1" step="0.01"></label>' +
+        '<label>Picture<select id="opt_pic"><option value="0">Sharp</option><option value="1">Standard</option><option value="2">Chunky</option><option value="3">Chunkier</option><option value="4">Blocky (fastest)</option></select></label>' +
+        '<label>Film grain <b id="optv_grain"></b><input type="range" id="opt_grain" min="0" max="2" step="0.05"></label>' +
+        '<label class="chk"><input type="checkbox" id="opt_snap"> Snap other players\u2019 notes to the grid</label>' +
+        '<label class="chk"><input type="checkbox" id="opt_seats"> Show who is at each machine</label>' +
+        '<p>These are yours alone and are remembered on this device. Nothing here changes the room for anyone else.</p>' +
+        '<div class="rw"><button type="button" id="optReset">Reset</button><button type="button" id="optX">Close</button></div>';
+      document.body.appendChild(optEl);
+      ['sens', 'vol', 'grain'].forEach(function(k){ optEl.querySelector('#opt_' + k).addEventListener('input', function(){ OPT[k] = +this.value; optApply(); optPaint(); }); });
+      optEl.querySelector('#opt_pic').addEventListener('change', function(){ OPT.pic = +this.value | 0; optApply(); });
+      optEl.querySelector('#opt_snap').addEventListener('change', function(){ OPT.snap = this.checked ? 1 : 0; optSave(); });
+      optEl.querySelector('#opt_seats').addEventListener('change', function(){ OPT.seats = this.checked ? 1 : 0; optSave(); });
+      optEl.querySelector('#optReset').addEventListener('click', function(){ OPT.sens = 1; OPT.vol = 1; OPT.pic = 1; OPT.grain = 1; OPT.snap = 1; OPT.seats = 1; optApply(); optPaint(); });
+      optEl.querySelector('#optX').addEventListener('click', function(){ optMenu(false); });
+      ['keydown', 'keyup', 'pointerdown', 'wheel'].forEach(function(t){ optEl.addEventListener(t, function(e){ if (e.key !== 'F1' && e.key !== 'Escape') e.stopPropagation(); }); });
+    }
+    optEl.hidden = show == null ? !optEl.hidden : !show; if (!optEl.hidden){ optPaint(); if (typeof releaseLock === 'function') releaseLock(); }
+  }
+  document.getElementById('gear').addEventListener('click', function(){ optMenu(); this.blur(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'F1'){ e.preventDefault(); if (!e.repeat) optMenu(); } else if (e.key === 'Escape' && optEl && !optEl.hidden) optMenu(false); }, true);
+  Q.opt = optMenu;
   function dbgPlayers(on, remote){                           // a player who switches them on shows them to the whole room, spectators included
     if (!remote && Q.ws && !Q.spec) send({ t:'set', k:'dbg', v:on ? '1' : '0' });
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on){ if (Q.ws) paintHud(); return; }
-    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1, 0]; P.x = x; P.z = z; P.yaw = yaw; });
+    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(k)), 0]; P.x = x; P.z = z; P.yaw = yaw; });
     if (Q.ws) paintHud();
   }
   function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–0 and −)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }

@@ -95,7 +95,7 @@ function switchLean(dev){                                      // hop straight f
 var LOOKUP = { on:false, k:0, yaw:0, pitch:0 };
 function hasSeq(D){ return !!D && !!D.key && (D.key.indexOf('sn') === 0 || SNDEV.indexOf(D.key) > 0); }
 document.addEventListener('keyup', function(e){ if (e.key && e.key.toLowerCase() === 'q') LOOKUP.on = false; }); window.addEventListener('blur', function(){ LOOKUP.on = false; });
-document.addEventListener('mousemove', function(e){ if (!LOOKUP.on || mode !== 'tr') return; LOOKUP.yaw -= (e.movementX || 0) * 0.0026; LOOKUP.pitch = clamp(LOOKUP.pitch - (e.movementY || 0) * 0.0026, -0.75, 0.7); });
+document.addEventListener('mousemove', function(e){ if (!LOOKUP.on || mode !== 'tr') return; LOOKUP.yaw -= (e.movementX || 0) * 0.0026 * OPT.sens; LOOKUP.pitch = clamp(LOOKUP.pitch - (e.movementY || 0) * 0.0026 * OPT.sens, -0.75, 0.7); });
 var LASTSN = {};                                               // per synth, the sequencer you last came from
 function swapLean(){                                           // Q: between a synth and the sequencer that plays it
   var i, S;
@@ -218,7 +218,7 @@ canvas.addEventListener('pointermove', function(e){
   }
   if (mode !== 'walk') return;
   if (locked){                                                            // captured: moving the mouse turns your head
-    var k = 0.0023; dx = e.movementX || 0; dy = e.movementY || 0;
+    var k = 0.0023 * OPT.sens; dx = e.movementX || 0; dy = e.movementY || 0;
     cam.ty -= dx * k; cam.yaw = cam.ty; cam.tp = clamp(cam.tp - dy * k, -1.35, 1.25); cam.pitch = cam.tp; cam.walkTo = null; cam.homing = false;
     return;
   }
@@ -293,7 +293,7 @@ document.addEventListener('keydown', function(e){
   if (tag === 'BUTTON' || tag === 'INPUT') return;
   if (e.key === ' '){ e.preventDefault(); unlock(); if (!e.repeat && JUMP.y <= 0.001) JUMP.v = 2.5; return; }
   if (k === 'r'){ cam.homing = true; cam.walkTo = null; return; }
-  if (k === 'p'){ linesIdx = (linesIdx + 1) % LINES_OPTS.length; resize(); return; }
+  if (k === 'p'){ linesIdx = (linesIdx + 1) % LINES_OPTS.length; OPT.pic = linesIdx; optSave(); resize(); return; }
   keys[k] = true; if (k.indexOf('arrow') === 0) e.preventDefault();
   if ('wasd'.indexOf(k) >= 0 || k.indexOf('arrow') === 0){ cam.homing = false; cam.walkTo = null; unlock(); dimHint(); }
 });
@@ -306,7 +306,7 @@ document.addEventListener('keyup', function(e){
 /* sound toggle */
 var btnMute = document.getElementById('mute');
 function paintMute(){ btnMute.setAttribute('aria-pressed', String(muted)); btnMute.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound'); }
-btnMute.addEventListener('click', function(){ unlock(); muted = !muted; if (AU.out) AU.out.gain.value = muted ? 0 : 1; store('jambutek-muted', muted ? '1' : '0'); paintMute(); var ma = MP.menuAudio && MP.menuAudio(); if (ma) ma.muted = muted; });
+btnMute.addEventListener('click', function(){ unlock(); muted = !muted; if (AU.out) AU.out.gain.value = muted ? 0 : OPT.vol; store('jambutek-muted', muted ? '1' : '0'); paintMute(); var ma = MP.menuAudio && MP.menuAudio(); if (ma) ma.muted = muted; });
 paintMute();
 
 /* ================= frame loop ================= */
@@ -340,7 +340,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.96 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v1.97 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
