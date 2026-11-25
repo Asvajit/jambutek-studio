@@ -76,7 +76,8 @@ function trPose(eye, look){
 function nearDev(){ var best = null, bd = 1.5; Object.keys(DEVS).forEach(function(k){ var D = DEVS[k], d = Math.hypot(cam.x - D.stand.x, cam.z - D.stand.z); if (d < bd){ bd = d; best = D; } }); return best; }
 function devOf(hit){ var u = hit.object.userData; return DEVS[(u.ctl && u.ctl.dev) || u.dev || 'tr']; }
 function enterTR(dev){
-  var D = typeof dev === 'string' ? DEVS[dev] : dev; if (mode !== 'walk' || !D) return;      // dev is a key or a DEVS entry; the wall buttons have none
+  var D = typeof dev === 'string' ? DEVS[dev] : dev; if (mode !== 'walk' || !D) return;
+  if (MP.guest){ MP.guestSay(); return; }                             // guests look, they do not play      // dev is a key or a DEVS entry; the wall buttons have none
   LEAN = D;
   unlock(); mode = 'tr'; keys = {}; cam.walkTo = null; cam.homing = false; relock = locked; releaseLock(); trBlend = 0;
   trhud.hidden = false; hintEl.hidden = true; ['hudTr', 'hudMf', 'hudBs', 'hudMx', 'hudSn', 'hudMb', 'hudSh', 'hudAm', 'hudTp', 'hudPf', 'hudMc', 'hudSc', 'hudEc', 'hudBz', 'hudZk'].forEach(function(h){ document.getElementById(h).hidden = LEAN.hud !== h; });
@@ -187,6 +188,7 @@ document.addEventListener('pointerlockerror', function(){ if (mode === 'walk' &&
 function refreshLockUi(){ lockmsg.hidden = (typeof MP !== 'undefined' && MP && MP.lobbyOpen) || locked || (lockFailed && !everLocked) || touchOnly || mode !== 'walk' || !started; }
 function act(hit, byTouch){
   var ia = iaOf(hit); if (!ia) return;
+  if (MP.guest && ia !== 'floor' && ia !== 'couch' && ia !== 'stickers' && ia !== 'wall'){ if (ia === 'ctl' || ia === 'trbody') MP.guestSay(); return; }      // a guest's clicks reach the couches, the stickers and the walls only
   if (ia === 'floor'){ if (byTouch && hit.distance > 0.8 && mode === 'walk') cam.walkTo = { x:hit.point.x, z:hit.point.z }; return; }
   if (hit.distance > REACH){ if (ia === 'ctl' || ia === 'trbody' || ia === 'spot') toast('Get a little closer.'); return; }
   if (ia === 'ctl' || ia === 'trbody'){ if (byTouch || !locked) enterTR(devOf(hit)); else toast('Step up to it, or press E to lean in'); return; }
@@ -246,6 +248,7 @@ window.addEventListener('blur', function(){ endCtl(true); keys = {}; Object.keys
 canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 var wheelAcc = 0, wheelOn = null;
 canvas.addEventListener('wheel', function(e){
+  if (MP.guest) return;
   var c = ctlOf(curAim());
   if (c && c.wheel){ if (c.wheel(c, e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY)) e.preventDefault(); return; }
   if (!c || (c.kind !== 'knob' && c.kind !== 'fader')) return;
@@ -260,7 +263,7 @@ canvas.addEventListener('wheel', function(e){
 
 document.addEventListener('keydown', function(e){
   var tag = (e.target && e.target.tagName) || '', k = e.key.toLowerCase();
-  if (e.key === 'Enter' && tag !== 'BUTTON'){ e.preventDefault(); if (!e.repeat){ unlock(); toggleSeq(); } return; }
+  if (e.key === 'Enter' && tag !== 'BUTTON'){ e.preventDefault(); if (!e.repeat){ unlock(); if (MP.guest) MP.guestSay(); else toggleSeq(); } return; }
   if (e.key === 'Shift'){ if (!e.repeat){ M.shift = true; MF.shift = true; BS.fn = true; TP.chomp = true; dispDirty = true; MF.dirty = true; if (mode === 'walk') running = true; } return; }   // Shift holds the shift button on every machine
   if (mode === 'tr' && LEAN.keys){                                       // the two keyboards: letters play notes, so only Esc steps back
     if (e.key === 'Escape'){ leaveTR(); return; }
@@ -350,7 +353,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.223 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.224 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -407,7 +410,8 @@ function frame(now){
   var k3 = MP.view3(dt);                                        // an emote is playing: step back and look at yourself
   var xh3 = k3 > 0.15 ? '0' : ''; if (xhEl3.style.opacity !== xh3) xhEl3.style.opacity = xh3;      // no crosshair or labels over your own back
   if (k3 > 0){
-    var p3 = clamp(cam.pitch - 0.22, -1.2, 0.45), tx3 = cam.x, ty3 = 1.15 - crouch.k * 0.4 + JUMP.y, tz3 = cam.z, bx = Math.sin(cam.yaw) * Math.cos(p3), by = -Math.sin(p3), bz = Math.cos(cam.yaw) * Math.cos(p3), d3 = 2.7;
+    var yw3 = SIT.on ? SEATS[SIT.seat].yaw + Math.PI + 0.4 : cam.yaw;      // seated, the view steps out in front of the couch (behind you is the wall) and looks back at you
+    var p3 = SIT.on ? -0.2 : clamp(cam.pitch - 0.22, -1.2, 0.45), tx3 = cam.x, ty3 = SIT.on ? 0.95 : 1.15 - crouch.k * 0.4 + JUMP.y, tz3 = cam.z, bx = Math.sin(yw3) * Math.cos(p3), by = -Math.sin(p3), bz = Math.cos(yw3) * Math.cos(p3), d3 = SIT.on ? 2.3 : 2.7;
     eyeV.set(tx3, ty3, tz3); lookV.set(bx, by, bz).normalize(); ray.set(eyeV, lookV); ray.far = d3 + 0.25; var h3 = ray.intersectObjects(solids, false); if (h3.length) d3 = clamp(h3[0].distance - 0.25, 0.7, d3);
     var cx3 = clamp(tx3 + bx * d3, ROOM.x0 + 0.25, ROOM.x1 - 0.25), cy3 = clamp(ty3 + by * d3, 0.35, ROOM.h - 0.3), cz3 = clamp(tz3 + bz * d3, ROOM.z0 + 0.25, ROOM.z1 - 0.25), s3 = smooth(k3);
     ex = lerp(ex, cx3, s3); ey = lerp(ey, cy3, s3); ez = lerp(ez, cz3, s3); lx2 = lerp(lx2, tx3, s3); ly2 = lerp(ly2, ty3, s3); lz2 = lerp(lz2, tz3, s3);

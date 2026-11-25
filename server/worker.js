@@ -3,6 +3,9 @@
    every knob they turn, keeps the latest state of each machine for people who arrive later,
    and wipes itself when everyone leaves. */
 const MAX_PLAYERS = 6;
+const MAX_GUESTS = 6;            // once the six places are taken, six more people can come in as guests: they walk, sit, chat, emote and place stickers, and touch nothing else
+const GUESTCOLOR = '#C4C6CE';
+const GUESTKEYS = { 'jambutek-studio-stickers-v1': 1 };   // the only shared state a guest may change
 const MAX_WATCHERS = 24;        // spectators: they see and hear the room, are not in it, and do not count towards the six
 const SKINS = 12;                 // one of each look per room (the twelve in the menu's grid)
 const SKINMAX = 64;               // looks beyond the twelve are custom ones, reached by a code
@@ -23,7 +26,8 @@ export class Room {
       try { return { ws, a: ws.deserializeAttachment() }; } catch (e) { return null; }
     }).filter((p) => p && p.a && !p.a.gone && p.ws !== except);
   }
-  players(except) { return this.everyone(except).filter((p) => !p.a.spec); }
+  players(except) { return this.everyone(except).filter((p) => !p.a.spec); }           // everyone with a body in the room: the six and the guests
+  seated(except) { return this.players(except).filter((p) => !p.a.guest); }            // the six who can play
   watchers(except) { return this.everyone(except).filter((p) => p.a.spec); }
   broadcast(msg, except) {
     const s = JSON.stringify(msg);
@@ -32,7 +36,7 @@ export class Room {
   async fetch(req) {
     if (new URL(req.url).pathname.startsWith('/room/')) {    // which looks are already being worn here
       const ps = this.players();
-      return Response.json({ n: ps.length, taken: ps.map((p) => p.a.skin || 0), watching: this.watchers().length }, { headers: { 'Cache-Control': 'no-store' } });
+      return Response.json({ n: ps.filter((p) => !p.a.guest).length, guests: ps.filter((p) => p.a.guest).length, taken: ps.map((p) => p.a.skin || 0), watching: this.watchers().length }, { headers: { 'Cache-Control': 'no-store' } });
     }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('Expected a WebSocket', { status: 426 });
     const url = new URL(req.url);
@@ -46,13 +50,14 @@ export class Room {
       server.serializeAttachment({ id: crypto.randomUUID().slice(0, 8), spec: 1 });
       server.send(JSON.stringify({
         t: 'welcome', spec: 1, max: MAX_PLAYERS, now: Date.now(), watching: w.length + 1,
-        players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s })),
+        players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s, guest: p.a.guest ? 1 : 0 })),
         world: this.world,
       }));
       this.broadcast({ t: 'watch', n: w.length + 1 }, server);
       return new Response(null, { status: 101, webSocket: client });
     }
-    if (others.length >= MAX_PLAYERS) {
+    const six = others.filter((p) => !p.a.guest), guest = six.length >= MAX_PLAYERS ? 1 : 0;
+    if (guest && others.length - six.length >= MAX_GUESTS) {
       server.accept();
       server.send(JSON.stringify({ t: 'full' }));
       server.close(4001, 'Room full');
@@ -63,17 +68,17 @@ export class Room {
     const takenSkins = others.map((p) => p.a.skin || 0);
     let skin = Math.max(0, Math.min(SKINMAX - 1, parseInt(url.searchParams.get('skin') || '0', 10) || 0));
     if (takenSkins.includes(skin)) { for (let i = 0; i < SKINS; i++) if (!takenSkins.includes(i)) { skin = i; break; } }
-    const used = others.map((p) => p.a.color);
-    const color = COLORS.find((c) => !used.includes(c)) || COLORS[0];
+    const used = six.map((p) => p.a.color);
+    const color = guest ? GUESTCOLOR : (COLORS.find((c) => !used.includes(c)) || COLORS[0]);
     const id = crypto.randomUUID().slice(0, 8);
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id, name, color, skin, s: null });
+    server.serializeAttachment({ id, name, color, skin, s: null, guest, at: Date.now() });
     server.send(JSON.stringify({
-      t: 'welcome', id, color, skin, max: MAX_PLAYERS, now: Date.now(), watching: this.watchers().length,
-      players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s })),
+      t: 'welcome', id, color, skin, guest, max: MAX_PLAYERS, now: Date.now(), watching: this.watchers().length,
+      players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s, guest: p.a.guest ? 1 : 0 })),
       world: this.world,
     }));
-    this.broadcast({ t: 'join', id, name, color, skin }, server);
+    this.broadcast({ t: 'join', id, name, color, skin, guest }, server);
     if (url.searchParams.get('me') !== '1') this.tell(name, url, others.length + 1);
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -106,12 +111,14 @@ export class Room {
         return;
       }
       case 'set':                                 // the latest state of one machine, one pattern, or the transport
+        if (a.guest && !GUESTKEYS[m.k]) return;   // a guest changes nothing but the stickers
         if (typeof m.k !== 'string' || m.k.length > 40 || Object.keys(this.world).length > 80) return;
         this.world[m.k] = m.v;
         this.ctx.storage.put('w:' + m.k, m.v);
         this.broadcast({ t: 'set', k: m.k, v: m.v, id: a.id, now: Date.now() }, ws);
         return;
       case 'ev':                                  // one-off things others should hear or see: a knob moving, a note, a pad
+        if (a.guest && !(Array.isArray(m.e) && m.e[0] === 'p')) return;      // from a guest, only a ping
         this.broadcast({ t: 'ev', id: a.id, e: m.e }, ws);
         return;
       case 'ping':                                // also how clients agree on one clock
@@ -127,6 +134,15 @@ export class Room {
     a.gone = true; try { ws.serializeAttachment(a); } catch (e) {}
     if (a.spec) { this.broadcast({ t: 'watch', n: this.watchers(ws).length }, ws); return; }
     this.broadcast({ t: 'leave', id: a.id, name: a.name }, ws);
+    if (!a.guest) {                                 // one of the six left: whoever has waited longest as a guest takes the place
+      const g = this.players(ws).filter((p) => p.a.guest).sort((x, y) => (x.a.at || 0) - (y.a.at || 0))[0];
+      if (g && this.seated(ws).length < MAX_PLAYERS) {
+        const used = this.seated(ws).map((p) => p.a.color);
+        g.a.guest = 0; g.a.color = COLORS.find((c) => !used.includes(c)) || COLORS[0];
+        try { g.ws.serializeAttachment(g.a); } catch (e) {}
+        this.broadcast({ t: 'role', id: g.a.id, guest: 0, color: g.a.color });
+      }
+    }
     if (!this.players(ws).length) { this.world = {}; await this.ctx.storage.deleteAll(); }   // last one out: the room resets
   }
 }

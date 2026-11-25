@@ -128,14 +128,16 @@ var MP = (function(){
   }
   function removePeer(id){ var P = Q.peers[id]; if (!P) return; Object.keys(P.held).forEach(function(k){ var a = k.split(':'); try { NOTE[a[0]][1](+a[1]); } catch (e) {} }); scene.remove(P.g); delete Q.peers[id]; paintHud(); }
   function paintHud(){
-    var n = Object.keys(Q.peers).filter(function(id){ return id.indexOf('dbg') !== 0; }).length + (Q.spec ? 0 : 1), w = Q.watch | 0;      /* test players are not counted */
-    document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max + (w ? ' · ' + w + ' watching' : '');
-    var list = Q.spec ? '<li><i style="background:#888"></i>you are watching</li>' : '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + ' (you)</li>';
-    Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; list += '<li><i style="background:' + esc(P.color) + '"></i>' + esc(P.name) + '</li>'; });
+    var real = Object.keys(Q.peers).filter(function(id){ return id.indexOf('dbg') !== 0 && id.indexOf('sit') !== 0; }), g = real.filter(function(id){ return Q.peers[id].guest; }).length + (Q.guest ? 1 : 0), n = real.length + (Q.spec ? 0 : 1) - g, w = Q.watch | 0;      /* test players are not counted */
+    document.getElementById('mpCodeShow').textContent = Q.code; document.getElementById('mpCount').textContent = '· ' + n + '/' + Q.max + (g ? ' · ' + g + (g === 1 ? ' guest' : ' guests') : '') + (w ? ' · ' + w + ' watching' : '');
+    var list = Q.spec ? '<li><i style="background:#888"></i>you are watching</li>' : '<li><i style="background:' + esc(Q.color || '#fff') + '"></i>' + esc(Q.name) + (Q.guest ? ' (you · guest)' : ' (you)') + '</li>';
+    Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; list += '<li><i style="background:' + esc(P.color) + '"></i>' + esc(P.name) + (P.guest ? ' · guest' : '') + '</li>'; });
     document.getElementById('mpList').innerHTML = list;
   }
   function line(html, sys){ var d = document.createElement('div'); d.innerHTML = html; if (sys) d.className = 'sys'; log.appendChild(d); while (log.children.length > 8) log.removeChild(log.firstChild); setTimeout(function(){ d.classList.add('old'); }, 9000); }
-  function send(o){ if (Q.spec && o.t !== 'ping') return false;      /* a spectator never changes the room */
+  var GUESTMSG = 'Guests can walk, sit, chat, emote and place stickers';
+  function send(o){ if (Q.spec && o.t !== 'ping') return false;
+    if (Q.guest && ((o.t === 'ev' && !(o.e && o.e[0] === 'p')) || (o.t === 'set' && o.k !== STKKEY))) return false;      /* a guest changes nothing in the room but the stickers */      /* a spectator never changes the room */
     if (Q.ws && Q.ws.readyState === 1){ try { Q.ws.send(JSON.stringify(o)); } catch (e) {} return true; } return false; }
   function serverNow(){ return Date.now() + Q.off; }
 
@@ -195,6 +197,7 @@ var MP = (function(){
   var mcChord0 = mcChord, mcHarp0 = mcHarp;                    // the chord box: its buttons and strip are heard by everyone too
   mcChord = function(c, r, on){ mcChord0(c, r, on); if (Q.ws && !Q.applying) send({ t:'ev', e:['m', 0, c, r, on ? 1 : 0] }); };
   mcHarp = function(i, on){ mcHarp0(i, on); if (on && Q.ws && !Q.applying) send({ t:'ev', e:['m', 1, i] }); };
+  Q.guest = false; Q.guestSay = function(){ toast(GUESTMSG, 2600); };
   Q.scSkip = {}; Q.scene = function(j, at){ if (Q.ws) send({ t:'ev', e:['x', j, at] }); };      // a scene switch: every browser makes it for itself, on the same bar
   MPNET.scratch = function(a){ if (Q.ws) send({ t:'ev', e:['q', a] }); };       // the scratch box: the gesture travels, each browser plays it
   var hit0 = hit; hit = function(i, vel){ hit0(i, vel); if (Q.ws && !Q.applying) send({ t:'ev', e:['h', i, vel] }); };
@@ -239,11 +242,11 @@ var MP = (function(){
   }
   function emoteSet(id){
     if (id && (mode !== 'walk' || Q.chatOpen || Q.lobbyOpen)) return; if (id === EM.id) return;
-    if (id){ if (!EM.id){ EM.face = cam.yaw; EM.pitch = cam.pitch; } EM.show = id; EM.et = 0; cam.walkTo = null; cam.homing = false; }
+    if (id){ if (!EM.id){ EM.face = SIT.on ? SEATS[SIT.seat].yaw : cam.yaw; EM.pitch = cam.pitch; } EM.show = id; EM.et = 0; cam.walkTo = null; cam.homing = false; }
     EM.id = id;
   }
   document.addEventListener('keydown', function(e){
-    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || SIT.on || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || mode !== 'walk' || Q.chatOpen || Q.lobbyOpen) return; var tg = (e.target && e.target.tagName) || ''; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
     var i = '123456'.indexOf(e.key); if (i >= 0 && !SPEC.on) emoteSet(i + 1);
   }, true);
   document.addEventListener('keyup', function(e){ var i = '123456'.indexOf(e.key); if (i >= 0 && EM.id === i + 1) emoteSet(0); }, true);
@@ -257,7 +260,9 @@ var MP = (function(){
     var P = EM.me, now = performance.now(); EM.et += dt; P.pitch = EM.pitch; P.g.visible = EM.k > 0.12;
     P.g.position.set(cam.x, JUMP.y, cam.z); P.g.rotation.set(0, EM.face + Math.PI, 0); P.torso.position.y = 0.78 - crouch.k * 0.45; P.torso.rotation.set(crouch.k * 0.25, 0, 0); P.head.rotation.set(clamp(-EM.pitch, -0.8, 0.8), 0, 0);
     [P.armL, P.armR, P.legL, P.legR, P.legL.userData.knee, P.legR.userData.knee].forEach(function(j){ j.rotation.set(0, 0, 0); });
-    emote(P, EM.show, EM.et, Math.min(1, EM.k * 1.15), now); return EM.k;
+    emote(P, EM.show, EM.et, Math.min(1, EM.k * 1.15), now);
+    if (SIT.on){ var SS = SEATS[SIT.seat]; P.g.position.set(SS.x, 0, SS.z); sitPose(P, SIT.pose, 0, 1, Math.min(1, EM.k * 1.15)); }      // emoting from the couch: seated, legs still
+    return EM.k;
   };
   Q.face = function(){ return EM.face; };
 
@@ -333,7 +338,7 @@ var MP = (function(){
       if (m.t === 'welcome' && Q.spec){                      // watching: take the room as it is, own nothing in it
         Q.id = null; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; Q.watch = m.watching | 0; if (typeof m.now === 'number') Q.off = m.now - Date.now();
         var hadDbg = Q.dbg; Object.keys(Q.peers).forEach(removePeer); Q.dbg = false;
-        m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
+        m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); P.guest = !!p.guest; if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
         MPON = true; MPHOST = false; hud.hidden = false; chat.hidden = false; chat.classList.add('watch'); paintHud();
         try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
         var w0 = m.world || {}; Object.keys(w0).filter(function(k){ return k !== 'transport'; }).sort().forEach(function(k){ applySet(k, w0[k]); }); if (M.playing && !(w0.transport && w0.transport.on)) stopSeq(true); if (w0.transport) transport(w0.transport);
@@ -341,20 +346,25 @@ var MP = (function(){
         specOn(true); toast(m.players.length ? 'Watching room ' + Q.code : 'Room ' + Q.code + ' is empty for now'); line('Watching room <b>' + esc(Q.code) + '</b> · click once for sound', true);
       } else if (m.t === 'welcome'){
         Q.watch = m.watching | 0; var hadDbg2 = Q.dbg; Q.dbg = false;
-        var first = !Q.id; Q.id = m.id; Q.color = m.color; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
-        if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.8, -0.8, 1.6, -1.6, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 0.55 : 0; }
+        var first = !Q.id; Q.id = m.id; Q.color = m.color; Q.guest = !!m.guest; if (typeof m.skin === 'number') Q.skin = m.skin; Q.max = m.max || 6; Q.retry = 0; Q.seen = {}; Q.pings = 0; Q.rtt = 1e9; if (typeof m.now === 'number') Q.off = m.now - Date.now();
+        if (first && Q.guest){ cam.x = clamp(cam.x + (Math.random() * 2 - 1) * 2.2, ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += 0.2 + Math.random() * 0.5; }      // guests come in scattered behind the line
+        else if (first && m.players.length){ var ci = Math.max(0, ['#FF2A6A','#30A8F0','#90F0A8','#F5D547','#B05AFF','#FF8A3A'].indexOf(m.color)); cam.x = clamp(cam.x + [0, 0.8, -0.8, 1.6, -1.6, 0][ci], ROOM.x0 + 0.5, ROOM.x1 - 0.5); cam.z += ci === 5 ? 0.55 : 0; }
         Object.keys(Q.peers).forEach(removePeer);
-        m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
+        m.players.forEach(function(p){ var P = Q.peers[p.id] = avatar(p.color, p.name, p.skin); P.guest = !!p.guest; if (p.s){ P.s = p.s; P.x = p.s[0]; P.z = p.s[1]; } });
         MPON = true; MPHOST = !m.players.length; hud.hidden = false; chat.hidden = false; paintHud();
         try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
         if (MPHOST){ if (M.playing) stopSeq(true); Q.force = true; SAVENOW.forEach(function(f){ try { f(); } catch (e) {} }); Q.force = false; }   // first in: this browser's machines become the room's
         else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); ks.forEach(function(k){ applySet(k, w[k]); }); if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
         if (hadDbg2 && !Q.dbg) dbgPlayers(true);               // and the rest of the room gets them too
-        toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
-        line('You joined room <b>' + esc(Q.code) + '</b>', true);
-      } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; var wasSpec = Q.spec; Q.spec = false; showLobby(wasSpec ? 'Room ' + Q.code + ' has no room left for spectators.' : 'Room ' + Q.code + ' is full (' + Q.max + ' players).'); }
+        if (Q.guest){ toast('Room ' + Q.code + ' is full: you are in as a guest', 4200); line('The six places are taken, so you joined room <b>' + esc(Q.code) + '</b> as a <b>guest</b>: walk, sit, chat, emote and place stickers. You get a place when one of the six leaves.', true); }
+        else { toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
+        line('You joined room <b>' + esc(Q.code) + '</b>', true); }
+      } else if (m.t === 'full'){ Q.closedByUs = true; MPON = false; var wasSpec = Q.spec; Q.spec = false; showLobby(wasSpec ? 'Room ' + Q.code + ' has no room left for spectators.' : 'Room ' + Q.code + ' is full (players and guests).'); }
+      else if (m.t === 'role'){                              // a guest was given one of the six places
+        if (m.id === Q.id){ Q.guest = !!m.guest; Q.color = m.color || Q.color; paintHud(); toast('A place opened: you can play now', 4200); line('A place opened: you are one of the six now and can use everything in the room.', true); }
+        else { var G = Q.peers[m.id]; if (G){ var gs = G.s, gn = G.name, gk = G.skinI != null ? G.skinI : G.skin; removePeer(m.id); var N = Q.peers[m.id] = avatar(m.color, gn, gk | 0); N.guest = !!m.guest; if (gs){ N.s = gs; N.x = gs[0]; N.z = gs[1]; } paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(gn) + '</b> has a place now', true); } } }
       else if (m.t === 'watch'){ Q.watch = m.n | 0; paintHud(); }
-      else if (m.t === 'join'){ if (!Q.peers[m.id]) Q.peers[m.id] = avatar(m.color, m.name, m.skin); paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + '</b> joined', true); toast(m.name + ' joined'); }
+      else if (m.t === 'join'){ if (!Q.peers[m.id]) Q.peers[m.id] = avatar(m.color, m.name, m.skin); Q.peers[m.id].guest = !!m.guest; paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + '</b> joined' + (m.guest ? ' as a guest' : ''), true); toast(m.name + ' joined' + (m.guest ? ' as a guest' : '')); }
       else if (m.t === 'leave'){ var P = Q.peers[m.id]; if (P) line('<b style="color:' + esc(P.color) + '">' + esc(P.name) + '</b> left', true); removePeer(m.id); }
       else if (m.t === 's'){ var R = Q.peers[m.id]; if (R){ if (!R.s){ R.x = m.s[0]; R.z = m.s[1]; } R.s = m.s; } }
       else if (m.t === 'chat'){ line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + ':</b> ' + esc(m.text)); var S = Q.peers[m.id]; if (S){ S.say = m.text; S.sayUntil = performance.now() + 6000; paintTag(S); } }
@@ -490,7 +500,7 @@ var MP = (function(){
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
         Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
-        var em = !lean && !SIT.on && EM.id ? EM.id : 0, st8 = 0, st9 = 0;
+        var em = !lean && EM.id ? EM.id : 0, st8 = 0, st9 = 0;
         if (SIT.on && !lean){ var SS = SEATS[SIT.seat], hd = cam.yaw - SS.yaw; st8 = 1 + SIT.seat * 3 + SIT.pose; st9 = +Math.atan2(Math.sin(hd), Math.cos(hd)).toFixed(3); px = SS.x; pz = SS.z; }      // seated: which seat and pose, and how far the head is turned
         send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : st8 ? SEATS[SIT.seat].yaw : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0, em, st8, st9] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
       }
@@ -515,7 +525,7 @@ var MP = (function(){
       var em = s[6] ? 0 : clamp(s[7] | 0, 0, 6); if (em !== (P.eid | 0)){ if (em){ P.eshow = em; P.et = 0; } P.eid = em; } P.ek = lerp(P.ek || 0, em ? 1 : 0, 1 - Math.exp(-dt * 7)); P.et = (P.et || 0) + dt;
       emote(P, P.eshow || 1, P.et, P.ek < 0.004 ? 0 : P.ek, now);
       var sc8 = s[8] | 0; P.sit = lerp(P.sit || 0, sc8 ? 1 : 0, 1 - Math.exp(-dt * 8)); if (sc8) P.sitP = (sc8 - 1) % 3; P.hy = lerp(P.hy || 0, sc8 ? clamp(+s[9] || 0, -1.8, 1.8) : 0, k);
-      if (P.sit > 0.01) sitPose(P, P.sitP || 0, P.hy, P.sit); else if (P.sit !== 0){ P.sit = 0; P.legR.rotation.y = P.legR.rotation.z = 0; P.head.rotation.y = 0; }      // seated on a couch
+      if (P.sit > 0.01) sitPose(P, P.sitP || 0, P.hy, P.sit, P.ek); else if (P.sit !== 0){ P.sit = 0; P.legR.rotation.y = P.legR.rotation.z = 0; P.head.rotation.y = 0; }      // seated on a couch
     });
   };
   // ---- is this copy being served by the room server? only then offer online play ----

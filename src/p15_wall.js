@@ -111,17 +111,17 @@ var jamEl = null;
 function jamClose(){ if (jamEl){ jamEl.remove(); jamEl = null; } }
 function jamOpen(){
   jamClose(); if (typeof releaseLock === 'function') releaseLock();
-  var el = jamEl = document.createElement('div'); el.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(4,6,10,.72);font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;color:#E6E6E2';
-  var box = document.createElement('div'); box.style.cssText = 'width:min(420px,92vw);max-height:84vh;overflow:auto;background:#14161B;border:2px solid #C08AFF;border-radius:10px;padding:16px 16px 12px';
-  var h = document.createElement('div'); h.textContent = 'LOAD A JAM'; h.style.cssText = 'font-weight:700;letter-spacing:.08em;margin-bottom:4px'; box.appendChild(h);
-  var p = document.createElement('div'); p.textContent = 'Replaces the patterns, sounds, settings and visuals on every machine' + (typeof MPON !== 'undefined' && MPON ? ', for everyone in the room.' : '.'); p.style.cssText = 'color:#9A9CA4;font-size:12px;margin-bottom:10px'; box.appendChild(p);
-  function row(label, sub, fn, col){ var b = document.createElement('button'); b.type = 'button'; b.style.cssText = 'display:flex;justify-content:space-between;gap:12px;width:100%;margin:5px 0;padding:10px 12px;background:' + (col || '#23262C') + ';color:#F0F0EC;border:1px solid #3A3D46;border-radius:7px;font:inherit;cursor:pointer;text-align:left';
-    var a = document.createElement('span'); a.textContent = label; a.style.fontWeight = '700'; var c = document.createElement('span'); c.textContent = sub; c.style.color = '#9A9CA4'; b.appendChild(a); b.appendChild(c); b.addEventListener('click', fn); box.appendChild(b); return b; }
-  JAMS.forEach(function(j){ row(j.name, (j === DEF ? 'starter · ' : '') + j.bpm + ' BPM', function(){ if (loadJam(j, j.name)) jamClose(); }); });
+  var el = jamEl = document.createElement('div'); el.id = 'jamUI';                                  // styled in the page head, in the menu's faces and colours
+  var box = document.createElement('div'); box.className = 'box'; box.style.zoom = Math.min(1, (window.innerWidth - 16) / 700, (window.innerHeight - 16) / 640).toFixed(3);
+  var h = document.createElement('h2'); h.textContent = 'Load a jam'; box.appendChild(h);
+  var p = document.createElement('p'); p.textContent = 'Replaces the patterns, sounds, settings and visuals on every machine' + (typeof MPON !== 'undefined' && MPON ? ', for everyone in the room.' : '.'); box.appendChild(p);
+  function row(label, sub, fn, cls){ var b = document.createElement('button'); b.type = 'button'; b.className = cls || '';
+    var a = document.createElement('span'); a.textContent = label; var c = document.createElement('i'); c.textContent = sub; b.appendChild(a); b.appendChild(c); b.addEventListener('click', fn); box.appendChild(b); return b; }
+  JAMS.forEach(function(j){ row(j.name, (j === DEF ? 'starter - ' : '') + j.bpm + ' BPM', function(){ if (loadJam(j, j.name)) jamClose(); }); });
   var inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json'; inp.style.display = 'none'; box.appendChild(inp);
   inp.addEventListener('change', function(){ var f = inp.files && inp.files[0]; if (!f) return; var r = new FileReader(); r.onload = function(){ var J = null; try { J = JSON.parse(r.result); } catch (e) {} if (J && J.app === 'jambutek-studio' && loadJam(J, f.name.replace(/\.json$/i, ''))) jamClose(); else if (!J || J.app !== 'jambutek-studio') toast('That file is not a Jambutek Studio jam'); }; r.readAsText(f); });
-  row('From a file…', 'an exported jam', function(){ inp.click(); }, '#2A2140');
-  row('Cancel', 'Esc', jamClose, '#1B1D22');
+  row('From a file', 'an exported jam', function(){ inp.click(); }, 'file');
+  row('Cancel', 'Esc', jamClose, 'cancel');
   el.appendChild(box); el.addEventListener('click', function(e){ if (e.target === el) jamClose(); }); document.body.appendChild(el);
 }
 document.addEventListener('keydown', function(e){ if (jamEl && e.key === 'Escape'){ e.stopPropagation(); jamClose(); } }, true);

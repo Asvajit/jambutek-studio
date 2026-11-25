@@ -55,11 +55,13 @@ function sitTick(dt){
   var d = cam.ty - S.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(d) > 1.75){ cam.ty = S.yaw + (d > 0 ? 1.75 : -1.75); cam.yaw = cam.ty; }      // the head turns, the body stays put
 }
 /* the sitting figure: used for every other player (and the test players) */
-function sitPose(P, pose, headYaw, k){
+function sitPose(P, pose, headYaw, k, ek){                    // ek: how much of an emote is showing (0 to 1). Seated, an emote moves the arms, head and body; the legs stay put
+  ek = clamp(ek || 0, 0, 1);
   var hx = [-1.5, -1.5, -2.3][pose] * k, kx = [1.5, 1.5, 2.4][pose] * k;
   P.legL.rotation.set(hx, 0, 0); P.legR.rotation.set(hx, 0, 0); P.legL.userData.knee.rotation.x = kx; P.legR.userData.knee.rotation.x = kx;
   if (pose === 1){ P.legR.rotation.set(-1.9 * k, 1.3 * k, 0.16 * k); P.legR.userData.knee.rotation.x = 1.62 * k; }      // one leg up on the other: the thigh lifts a little, turns out, and the shin lies across the other knee
-  P.armL.rotation.x = P.armR.rotation.x = (pose === 2 ? -1.25 : -0.85) * k; P.torso.rotation.x = -0.1 * k; P.torso.position.y = 0.78;
+  var ax = (pose === 2 ? -1.25 : -0.85) * k; P.armL.rotation.x = lerp(ax, P.armL.rotation.x, ek); P.armR.rotation.x = lerp(ax, P.armR.rotation.x, ek);
+  P.torso.rotation.x = lerp(-0.1 * k, P.torso.rotation.x, ek * 0.5); P.torso.position.y = 0.78;
   P.head.rotation.y = headYaw * k; P.g.position.y = -SITDROP * k;
 }
 
