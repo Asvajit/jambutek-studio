@@ -454,6 +454,7 @@ var MP = (function(){
   nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? goJoin() : goCreate()); });
   document.getElementById('mpSolo').addEventListener('click', function(){ err.textContent = ''; Q.taken = []; toFit(function(){ Q.on = false; hideLobby(); }); });
   document.getElementById('mpGo').addEventListener('click', function(){ var f = fitNext; toMain(); if (f) f(); });
+  document.getElementById('mpBack').addEventListener('click', function(){ toMain(); setTimeout(function(){ nameIn.focus(); }, 30); });
   /* custom skins by code: the box and the button are here; there are no custom skins to hand out yet, so every code is turned down */
   function skinCode(){
     var c = (document.getElementById('mpSkinCode').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''), ix = -1; SKINS.forEach(function(sk, i){ if (sk.code && sk.code === c) ix = i; });

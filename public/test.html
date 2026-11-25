@@ -257,7 +257,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpLobby.v3 #mpSkins button.taken{ opacity:.28; cursor:not-allowed }
 #mpLobby.v3 #mpSkins button:nth-child(n+4):nth-child(-n+6){ order:2 } #mpLobby.v3 #mpSkins button:nth-child(n+7):nth-child(-n+9){ order:1 } #mpLobby.v3 #mpSkins button:nth-child(n+10){ order:3 }      /* shown in the design's order: the second and third rows change places */
 #mpLobby.v3 .row2{ display:flex; gap:14px; margin:6px 0 26px } #mpLobby.v3 .row2 input{ width:245px; flex:none; margin:0; text-align:center; padding:7px 4px 0 } #mpLobby.v3 #mpSkinGo{ flex:1; background:#242335 }
-#mpLobby.v3 #mpGo{ margin-bottom:0 }
+#mpLobby.v3 .row3{ display:flex; gap:14px } #mpLobby.v3 #mpBack{ width:150px; flex:none; background:#6B6B72 } #mpLobby.v3 #mpGo{ flex:1; margin-bottom:0 }
 </style>
 
 <canvas id="view" aria-label="A dark studio room with a grid sequencer, a drum machine, four synthesizers, a sampler and a mixer in a row on angled stands"></canvas>
@@ -273,7 +273,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.218</span>
+    <span id="verFps">studio v0.219</span>
   </div>
 </div>
 
@@ -305,7 +305,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.218</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.219</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -315,7 +315,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <div class="fit"><canvas id="mpBig" width="245" height="426"></canvas><div id="mpSkins"></div></div>
       <label for="mpSkinCode">Have a custom skin? Enter your code:</label>
       <div class="row2"><input id="mpSkinCode" class="code" maxlength="8" placeholder="XXXXXX" autocomplete="off" spellcheck="false"><button type="button" id="mpSkinGo">Submit</button></div>
-      <button type="button" id="mpGo">Continue</button>
+      <div class="row3"><button type="button" id="mpBack">Back</button><button type="button" id="mpGo">Continue</button></div>
       <div class="err" id="mpErr2"></div>
     </div>
   </div>
@@ -10010,6 +10010,7 @@ var MP = (function(){
   nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? goJoin() : goCreate()); });
   document.getElementById('mpSolo').addEventListener('click', function(){ err.textContent = ''; Q.taken = []; toFit(function(){ Q.on = false; hideLobby(); }); });
   document.getElementById('mpGo').addEventListener('click', function(){ var f = fitNext; toMain(); if (f) f(); });
+  document.getElementById('mpBack').addEventListener('click', function(){ toMain(); setTimeout(function(){ nameIn.focus(); }, 30); });
   /* custom skins by code: the box and the button are here; there are no custom skins to hand out yet, so every code is turned down */
   function skinCode(){
     var c = (document.getElementById('mpSkinCode').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''), ix = -1; SKINS.forEach(function(sk, i){ if (sk.code && sk.code === c) ix = i; });
@@ -10573,7 +10574,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.218 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.219 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
