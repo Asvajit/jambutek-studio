@@ -220,6 +220,43 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpLobby.v2 .ver button{ transition:color .12s, text-shadow .12s } #mpLobby.v2 .ver button:hover{ text-shadow:0 0 8px rgba(255,225,90,.8) }
 @media (max-width:520px){ #mpLobby.v2 #mpCreate, #mpLobby.v2 button.ghost{ font-size:23px } #mpLobby.v2 button.alt{ font-size:17px; padding:6px 9px 8px } #mpLobby.v2 label, #mpLobby.v2 input{ font-size:18px } #mpLobby.v2 .or{ font-size:22px } }
 @media (prefers-reduced-motion: reduce){ #mpLobby.v2 .or, #mpLobby.v2 #mpSkins button.on{ animation:none } #mpLobby.v2 button, #mpLobby.v2 #mpSkins button canvas{ transition:none } }
+/* ---- lobby look 3: the two-screen menu, flat, in the two supplied faces. Built at the design's own pixel sizes (1920 x 1080) and
+   shrunk as one piece to fit smaller windows (the script sets "zoom" on .wrap). ---- */
+@font-face{ font-family:'Pixel Game'; src:url(fonts/pixelgame.otf) format('opentype'); font-display:swap }
+@font-face{ font-family:'Merchant Copy'; src:url(fonts/merchantcopy.ttf) format('truetype'); font-display:swap }
+#mpLobby.v3{ padding:0; overflow:hidden }
+#mpLobby.v3 .wrap{ width:660px; flex:none }
+#mpLobby.v3 #mpS1, #mpLobby.v3 #mpS2{ display:flex; flex-direction:column; align-items:center; width:100% }
+#mpLobby.v3 #mpS1[hidden], #mpLobby.v3 #mpS2[hidden]{ display:none }
+#mpLobby.v3 #mpLogo{ width:658px; margin:0 0 45px }
+#mpLobby.v3 .card{ position:relative; width:520px; box-sizing:border-box; background:#707070; border:0; border-radius:11px; padding:17px 24px 20px; box-shadow:0 18px 50px rgba(0,0,0,.45) }
+#mpLobby.v3 label, #mpLobby.v3 h2{ display:block; font-family:'Merchant Copy', ui-monospace, monospace; font-weight:normal; color:#FFF200; text-transform:uppercase; letter-spacing:.04em; font-size:30px; line-height:1; margin:0 0 8px; white-space:nowrap; text-shadow:none }
+#mpLobby.v3 h2{ font-size:79px; letter-spacing:.06em; margin:0 0 10px }
+#mpLobby.v3 input{ display:block; width:100%; box-sizing:border-box; height:60px; margin:0 0 15px; padding:7px 12px 0; background:#707070; border:2px solid #fff; border-radius:0; box-shadow:none; outline:0; color:#fff;
+  font-family:'Pixel Game', 'Anton', sans-serif; font-size:60px; line-height:1; letter-spacing:.03em; text-transform:uppercase; caret-color:#FFF200 }
+#mpLobby.v3 input::placeholder{ color:#fff; opacity:1 } #mpLobby.v3 input:focus::placeholder{ opacity:.35 }
+#mpLobby.v3 input:focus{ border-color:#FFF200 }
+#mpLobby.v3 .card button{ display:block; width:100%; box-sizing:border-box; height:59px; margin:0; padding:6px 8px 0; border:0; border-radius:0; color:#fff; cursor:pointer; text-transform:uppercase; white-space:nowrap;
+  font-family:'Pixel Game', 'Anton', sans-serif; font-size:52px; line-height:1; letter-spacing:.02em; text-shadow:none; box-shadow:none; transition:filter .1s, transform .1s }
+#mpLobby.v3 .card button:hover{ filter:brightness(1.18); transform:translateY(-2px) } #mpLobby.v3 .card button:active{ filter:brightness(.88); transform:translateY(1px) }
+#mpLobby.v3 #mpCreate, #mpLobby.v3 #mpGo{ background:#23B54A; margin-bottom:21px }
+#mpLobby.v3 .row{ display:flex; gap:17px; margin:4px 0 20px; align-items:stretch } #mpLobby.v3 .row input{ width:161px; flex:none; margin:0; padding:7px 4px 0; text-align:center }
+#mpLobby.v3 #mpJoin{ width:112px; flex:none; background:#0F6EDC } #mpLobby.v3 #mpSpec{ flex:1; background:#7020CD }
+#mpLobby.v3 #mpSolo{ height:72px; font-size:62px; padding-top:7px; background:#242335 }
+#mpLobby.v3 .ver{ margin:13px 0 0; text-align:center; font-family:'Merchant Copy', ui-monospace, monospace; font-size:32px; line-height:1; letter-spacing:-.045em; color:#959394; filter:none; text-transform:none; white-space:nowrap }
+#mpLobby.v3 .ver button{ display:inline; width:auto; height:auto; padding:0; margin:0; background:none; color:#959394; font:inherit; letter-spacing:inherit; text-transform:none; border-bottom:2px solid #959394; transform:none }
+#mpLobby.v3 .ver button:hover{ color:#fff; border-color:#fff; filter:none; transform:none }
+#mpLobby.v3 .err{ position:absolute; left:0; right:0; top:100%; margin:12px 0 0; min-height:0; text-align:center; font-family:'Merchant Copy', ui-monospace, monospace; font-size:27px; letter-spacing:.06em; text-transform:uppercase; color:#FF5A4D; text-shadow:0 2px 0 #000 }
+#mpLobby.v3 .fit{ display:flex; gap:14px; margin:0 0 22px; align-items:stretch }
+#mpLobby.v3 #mpBig{ width:245px; height:426px; flex:none; box-sizing:border-box; background:#000; border:2px solid #fff; image-rendering:pixelated }
+#mpLobby.v3 #mpSkins{ flex:1; display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(4, 1fr); gap:4px; margin:0 }
+#mpLobby.v3 #mpSkins button{ height:auto; padding:0; border-radius:0; background:#070B16; border:3px solid #16233F; display:grid; place-items:center; overflow:hidden; transform:none }
+#mpLobby.v3 #mpSkins button canvas{ display:block; width:auto; height:96px; image-rendering:pixelated }
+#mpLobby.v3 #mpSkins button:hover:not(.taken){ border-color:#fff; filter:none; transform:none } #mpLobby.v3 #mpSkins button.on{ border-color:#FFED11 }
+#mpLobby.v3 #mpSkins button.taken{ opacity:.28; cursor:not-allowed }
+#mpLobby.v3 #mpSkins button:nth-child(n+4):nth-child(-n+6){ order:2 } #mpLobby.v3 #mpSkins button:nth-child(n+7):nth-child(-n+9){ order:1 } #mpLobby.v3 #mpSkins button:nth-child(n+10){ order:3 }      /* shown in the design's order: the second and third rows change places */
+#mpLobby.v3 .row2{ display:flex; gap:14px; margin:6px 0 26px } #mpLobby.v3 .row2 input{ width:245px; flex:none; margin:0; text-align:center; padding:7px 4px 0 } #mpLobby.v3 #mpSkinGo{ flex:1; background:#242335 }
+#mpLobby.v3 #mpGo{ margin-bottom:0 }
 </style>
 
 <canvas id="view" aria-label="A dark studio room with a grid sequencer, a drum machine, four synthesizers, a sampler and a mixer in a row on angled stands"></canvas>
@@ -235,7 +272,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.215</span>
+    <span id="verFps">studio v0.216</span>
   </div>
 </div>
 
@@ -256,21 +293,31 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <feComposite in="p" in2="SourceGraphic" operator="arithmetic" k1="0" k2=".4" k3=".6" k4="0"/>
   </filter>
 </defs></svg>
-<div id="mpLobby" class="v2" hidden>
-  <div class="wrap">
-  <div id="mpLogo" aria-label="Jambutek Jam Studio" role="img"><img id="mpLogoA" alt=""><img id="mpLogoB" alt=""></div>
-  <div class="card">
-    <label for="mpName">Your name</label>
-    <input id="mpName" maxlength="16" autocomplete="nickname" placeholder="Enter name here">
-    <label>Pick your look</label>
-    <div id="mpSkins"></div>
-    <button type="button" id="mpCreate">Make a new room</button>
-    <div class="or">or join a friend</div>
-    <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="CODE" autocomplete="off"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from five cameras without being in it">Spectate</button></div>
-    <div class="err" id="mpErr"></div>
-    <button type="button" class="ghost" id="mpSolo">Play solo</button>
+<div id="mpLobby" class="v3" hidden>
+  <div class="wrap" id="mpWrap">
+  <div id="mpS1">
+    <div id="mpLogo" aria-label="Jambutek Jam Studio" role="img"><img id="mpLogoA" alt=""><img id="mpLogoB" alt=""></div>
+    <div class="card">
+      <label for="mpName">Name or alias (max 10 characters)</label>
+      <input id="mpName" maxlength="10" autocomplete="nickname" spellcheck="false">
+      <button type="button" id="mpCreate">Create new room</button>
+      <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
+      <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
+      <button type="button" class="ghost" id="mpSolo">Play solo</button>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.216</div>
+      <div class="err" id="mpErr"></div>
+    </div>
   </div>
-  <div class="ver">Jambutek Recordings 2026<i>/</i><button type="button" id="mpCred">Credits</button><i>/</i>v0.215</div>
+  <div id="mpS2" hidden>
+    <div class="card">
+      <h2>Pick your fit!</h2>
+      <div class="fit"><canvas id="mpBig" width="245" height="426"></canvas><div id="mpSkins"></div></div>
+      <label for="mpSkinCode">Have a custom skin? Enter your code:</label>
+      <div class="row2"><input id="mpSkinCode" class="code" maxlength="6" placeholder="XXXXXX" autocomplete="off" spellcheck="false"><button type="button" id="mpSkinGo">Submit</button></div>
+      <button type="button" id="mpGo">Continue</button>
+      <div class="err" id="mpErr2"></div>
+    </div>
+  </div>
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
@@ -325,7 +372,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <li><b>Push buttons</b> &middot; &ldquo;Button&rdquo; by DrakonSlayer, CC BY 4.0</li>
   </ul>
   <h3>Code</h3>
-  <ul><li><b>three.js</b> r128 &middot; the three.js authors, MIT</li><li><b>Fonts</b> &middot; Anton by Vernon Adams (OFL 1.1), Kaushan Script by Pablo Impallari (OFL 1.1)</li></ul>
+  <ul><li><b>three.js</b> r128 &middot; the three.js authors, MIT</li><li><b>Fonts</b> &middot; Pixel Game by suhadidesign, Merchant Copy by S. John Ross, Anton by Vernon Adams (OFL 1.1)</li></ul>
   <p class="small">The instruments are written for this room from the published designs; names are given as credit only and belong to their makers.</p>
   <button type="button" class="ghost" id="mpCredX">Close</button>
 </div></div>
@@ -9569,6 +9616,16 @@ var MP = (function(){
     if (!on || (prev >= 0 && prev !== i)){ var k = on ? prev : i, F = PV && PV.figs[k]; if (F){ F.ang = 0; pvDraw(k); } }
   }
   function drawSkinPreview(cv, i){ pvFig(i); }
+  /* the big figure on the "pick your fit" screen: the chosen look (or the one under the pointer), turning slowly, drawn in chunky pixels */
+  var bigHover = -1, bigOn = false, bigLast = 0, bigAng = 0, bigCv = document.getElementById('mpBig');
+  function bigLoop(now){
+    var s2 = document.getElementById('mpS2'); if (!Q.lobbyOpen || !s2 || s2.hidden){ bigOn = false; return; }
+    var i = bigHover >= 0 ? bigHover : Q.skin, P = pvInit(), F = pvFig(i); bigAng += Math.min(0.05, (now - (bigLast || now)) / 1000) * 0.9; bigLast = now;
+    if (F.ready && bigCv){ P.figs.forEach(function(f){ if (f) f.g.visible = false; }); F.g.visible = true; F.g.rotation.y = bigAng; P.r.render(P.sc, P.cam); F.g.rotation.y = F.ang;
+      var c = bigCv.getContext('2d'); c.imageSmoothingEnabled = false; c.clearRect(0, 0, 245, 426); c.drawImage(P.r.domElement, 2, 24, 241, 377); }
+    requestAnimationFrame(bigLoop);
+  }
+  function bigStart(){ if (!bigOn){ bigOn = true; bigLast = 0; requestAnimationFrame(bigLoop); } }
   Q.taken = [];
   function freeSkin(){ for (var i = 0; i < SKINS.length; i++) if (Q.taken.indexOf(i) < 0) return i; return 0; }
   function paintSkins(){
@@ -9588,7 +9645,7 @@ var MP = (function(){
   setInterval(function(){ if (Q.lobbyOpen) { takenT = 0; checkTaken(); } }, 5000);
   setTimeout(function(){ SKINS.forEach(function(sk, i){
     var b = document.createElement('button'); b.type = 'button'; var cv = document.createElement('canvas'); cv.width = 192; cv.height = 300; b.appendChild(cv);
-    ['mouseenter', 'focus'].forEach(function(ev){ b.addEventListener(ev, function(){ pvHover(i, true); }); }); ['mouseleave', 'blur'].forEach(function(ev){ b.addEventListener(ev, function(){ pvHover(i, false); }); });
+    ['mouseenter', 'focus'].forEach(function(ev){ b.addEventListener(ev, function(){ if (Q.taken.indexOf(i) < 0) bigHover = i; }); }); ['mouseleave', 'blur'].forEach(function(ev){ b.addEventListener(ev, function(){ if (bigHover === i) bigHover = -1; }); });
     b.setAttribute('aria-label', sk.n); b.title = sk.n; skinBox.appendChild(b); drawSkinPreview(cv, i);
     b.addEventListener('click', function(){ if (Q.taken.indexOf(i) >= 0) return; Q.skin = i; try { localStorage.setItem('jambutek-skin', i); } catch (e) {} paintSkins(); });
   }); paintSkins(); checkTaken(); }, 0);
@@ -9866,7 +9923,7 @@ var MP = (function(){
     };
   }
   function start(code, spec){
-    var nm = nameIn.value.trim().slice(0, 16); Q.spec = !!spec; if (spec && !nm) nm = 'Spectator';
+    var nm = nameIn.value.trim().slice(0, 10); Q.spec = !!spec; if (spec && !nm) nm = 'Spectator';
     if (!nm){ err.textContent = 'Type a name first.'; nameIn.focus(); return; }
     code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (code.length < 4){ err.textContent = 'Room codes are 4 letters or numbers.'; codeIn.focus(); return; }
@@ -9921,7 +9978,7 @@ var MP = (function(){
   document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiOver(); });
   document.addEventListener('click', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (!b) return;
     if (b.id === 'mpCreate' || b.id === 'mpJoin' || b.id === 'mpSpec') setTimeout(function(){ if (err.textContent) uiErr(); else uiPress(); }, 0);      // refused (no name, bad code): the error sound instead
-    else if (b.id === 'mpSolo') uiPress(); }, true);                                         // only the four ways in make the press sound
+    else if (b.id === 'mpSolo' || b.id === 'mpGo') uiPress(); }, true);                                         // only the four ways in make the press sound
   Q.uiLastSound = null;
   Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') + (uiHover ? ' hover ' + uiHover.duration.toFixed(2) + 's' : '') : null; };
   /* the credits sheet, opened from the line under the lobby card */
@@ -9930,14 +9987,31 @@ var MP = (function(){
   document.getElementById('mpCredX').addEventListener('click', function(){ cred.hidden = true; });
   cred.addEventListener('click', function(e){ if (e.target === cred) cred.hidden = true; });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !cred.hidden){ cred.hidden = true; e.stopPropagation(); } }, true);
-  function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; if (msg) uiErr(); releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
+  /* ---- two screens: the first asks who you are and where you are going, the second ("pick your fit") lets you choose a look and
+     then carries on with whatever you asked for. Watching skips the second screen. Esc goes back. ---- */
+  var S1 = document.getElementById('mpS1'), S2 = document.getElementById('mpS2'), err2 = document.getElementById('mpErr2'), fitNext = null, wrapEl = document.getElementById('mpWrap');
+  function lobbyFit(){ if (!wrapEl) return; var z = Math.min(1, (window.innerHeight - 20) / 800, (window.innerWidth - 12) / 672); wrapEl.style.zoom = z < 1 ? z.toFixed(3) : ''; }      // the design is drawn for 1920 x 1080: shrink the whole thing to fit anything smaller
+  window.addEventListener('resize', lobbyFit); lobbyFit();
+  function toMain(){ fitNext = null; S2.hidden = true; S1.hidden = false; }
+  function toFit(next){ err.textContent = ''; err2.textContent = ''; fitNext = next; S1.hidden = true; S2.hidden = false; paintSkins(); bigStart(); setTimeout(function(){ var g = document.getElementById('mpGo'); if (g) g.focus(); }, 30); }
+  function nameOk(){ if (nameIn.value.trim()) return true; err.textContent = 'Type a name first.'; nameIn.focus(); return false; }
+  function codeOk(){ var c = (codeIn.value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (c.length >= 4) return true; err.textContent = 'Room codes are 4 letters or numbers.'; codeIn.focus(); return false; }
+  function showLobby(msg){ Q.lobbyOpen = true; toMain(); lobbyFit(); menuOn(); lobby.hidden = false; err.textContent = msg || ''; if (msg) uiErr(); releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
   function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); cred.hidden = true; uiSleep(); }
-  document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
-  document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
+  function goCreate(){ err.textContent = ''; if (!nameOk()) return; Q.taken = []; toFit(function(){ start(newCode()); }); }
+  function goJoin(){ err.textContent = ''; if (!nameOk() || !codeOk()) return; takenT = 0; checkTaken(); toFit(function(){ start(codeIn.value); }); }
+  document.getElementById('mpCreate').addEventListener('click', goCreate);
+  document.getElementById('mpJoin').addEventListener('click', goJoin);
   document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
-  codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') start(codeIn.value); });
-  nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? start(codeIn.value) : start(newCode())); });
-  document.getElementById('mpSolo').addEventListener('click', function(){ Q.on = false; hideLobby(); });
+  codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') goJoin(); });
+  nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? goJoin() : goCreate()); });
+  document.getElementById('mpSolo').addEventListener('click', function(){ err.textContent = ''; Q.taken = []; toFit(function(){ Q.on = false; hideLobby(); }); });
+  document.getElementById('mpGo').addEventListener('click', function(){ var f = fitNext; toMain(); if (f) f(); });
+  /* custom skins by code: the box and the button are here; there are no custom skins to hand out yet, so every code is turned down */
+  function skinCode(){ var c = (document.getElementById('mpSkinCode').value || '').trim(); err2.textContent = c ? 'No skin found for that code.' : 'Type your code first.'; uiErr(); }
+  document.getElementById('mpSkinGo').addEventListener('click', skinCode);
+  document.getElementById('mpSkinCode').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); skinCode(); } });
+  document.addEventListener('keydown', function(e){ if (!Q.lobbyOpen || S2.hidden || !cred.hidden) return; if (e.key === 'Escape'){ toMain(); } else if (e.key === 'Enter' && e.target && e.target.id !== 'mpSkinCode' && e.target.id !== 'mpSkinGo'){ e.preventDefault(); document.getElementById('mpGo').click(); } }, true);
   document.getElementById('mpCopy').addEventListener('click', function(){
     var link = location.origin + location.pathname + '#' + Q.code;
     try { navigator.clipboard.writeText(link).then(function(){ toast('Invite link copied'); }, function(){ toast(link); }); } catch (e) { toast(link); }
@@ -10489,7 +10563,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.215 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.216 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

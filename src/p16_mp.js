@@ -61,6 +61,16 @@ var MP = (function(){
     if (!on || (prev >= 0 && prev !== i)){ var k = on ? prev : i, F = PV && PV.figs[k]; if (F){ F.ang = 0; pvDraw(k); } }
   }
   function drawSkinPreview(cv, i){ pvFig(i); }
+  /* the big figure on the "pick your fit" screen: the chosen look (or the one under the pointer), turning slowly, drawn in chunky pixels */
+  var bigHover = -1, bigOn = false, bigLast = 0, bigAng = 0, bigCv = document.getElementById('mpBig');
+  function bigLoop(now){
+    var s2 = document.getElementById('mpS2'); if (!Q.lobbyOpen || !s2 || s2.hidden){ bigOn = false; return; }
+    var i = bigHover >= 0 ? bigHover : Q.skin, P = pvInit(), F = pvFig(i); bigAng += Math.min(0.05, (now - (bigLast || now)) / 1000) * 0.9; bigLast = now;
+    if (F.ready && bigCv){ P.figs.forEach(function(f){ if (f) f.g.visible = false; }); F.g.visible = true; F.g.rotation.y = bigAng; P.r.render(P.sc, P.cam); F.g.rotation.y = F.ang;
+      var c = bigCv.getContext('2d'); c.imageSmoothingEnabled = false; c.clearRect(0, 0, 245, 426); c.drawImage(P.r.domElement, 2, 24, 241, 377); }
+    requestAnimationFrame(bigLoop);
+  }
+  function bigStart(){ if (!bigOn){ bigOn = true; bigLast = 0; requestAnimationFrame(bigLoop); } }
   Q.taken = [];
   function freeSkin(){ for (var i = 0; i < SKINS.length; i++) if (Q.taken.indexOf(i) < 0) return i; return 0; }
   function paintSkins(){
@@ -80,7 +90,7 @@ var MP = (function(){
   setInterval(function(){ if (Q.lobbyOpen) { takenT = 0; checkTaken(); } }, 5000);
   setTimeout(function(){ SKINS.forEach(function(sk, i){
     var b = document.createElement('button'); b.type = 'button'; var cv = document.createElement('canvas'); cv.width = 192; cv.height = 300; b.appendChild(cv);
-    ['mouseenter', 'focus'].forEach(function(ev){ b.addEventListener(ev, function(){ pvHover(i, true); }); }); ['mouseleave', 'blur'].forEach(function(ev){ b.addEventListener(ev, function(){ pvHover(i, false); }); });
+    ['mouseenter', 'focus'].forEach(function(ev){ b.addEventListener(ev, function(){ if (Q.taken.indexOf(i) < 0) bigHover = i; }); }); ['mouseleave', 'blur'].forEach(function(ev){ b.addEventListener(ev, function(){ if (bigHover === i) bigHover = -1; }); });
     b.setAttribute('aria-label', sk.n); b.title = sk.n; skinBox.appendChild(b); drawSkinPreview(cv, i);
     b.addEventListener('click', function(){ if (Q.taken.indexOf(i) >= 0) return; Q.skin = i; try { localStorage.setItem('jambutek-skin', i); } catch (e) {} paintSkins(); });
   }); paintSkins(); checkTaken(); }, 0);
@@ -358,7 +368,7 @@ var MP = (function(){
     };
   }
   function start(code, spec){
-    var nm = nameIn.value.trim().slice(0, 16); Q.spec = !!spec; if (spec && !nm) nm = 'Spectator';
+    var nm = nameIn.value.trim().slice(0, 10); Q.spec = !!spec; if (spec && !nm) nm = 'Spectator';
     if (!nm){ err.textContent = 'Type a name first.'; nameIn.focus(); return; }
     code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     if (code.length < 4){ err.textContent = 'Room codes are 4 letters or numbers.'; codeIn.focus(); return; }
@@ -413,7 +423,7 @@ var MP = (function(){
   document.addEventListener('mouseover', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (b === uiLast) return; uiLast = b; if (b) uiOver(); });
   document.addEventListener('click', function(e){ if (!Q.lobbyOpen) return; var b = uiBtn(e); if (!b) return;
     if (b.id === 'mpCreate' || b.id === 'mpJoin' || b.id === 'mpSpec') setTimeout(function(){ if (err.textContent) uiErr(); else uiPress(); }, 0);      // refused (no name, bad code): the error sound instead
-    else if (b.id === 'mpSolo') uiPress(); }, true);                                         // only the four ways in make the press sound
+    else if (b.id === 'mpSolo' || b.id === 'mpGo') uiPress(); }, true);                                         // only the four ways in make the press sound
   Q.uiLastSound = null;
   Q.uiSound = function(){ return uiAC ? uiAC.state + (uiClick ? ' click ' + uiClick.duration.toFixed(1) + 's' : '') + (uiHover ? ' hover ' + uiHover.duration.toFixed(2) + 's' : '') : null; };
   /* the credits sheet, opened from the line under the lobby card */
@@ -422,14 +432,31 @@ var MP = (function(){
   document.getElementById('mpCredX').addEventListener('click', function(){ cred.hidden = true; });
   cred.addEventListener('click', function(e){ if (e.target === cred) cred.hidden = true; });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !cred.hidden){ cred.hidden = true; e.stopPropagation(); } }, true);
-  function showLobby(msg){ Q.lobbyOpen = true; menuOn(); lobby.hidden = false; err.textContent = msg || ''; if (msg) uiErr(); releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
+  /* ---- two screens: the first asks who you are and where you are going, the second ("pick your fit") lets you choose a look and
+     then carries on with whatever you asked for. Watching skips the second screen. Esc goes back. ---- */
+  var S1 = document.getElementById('mpS1'), S2 = document.getElementById('mpS2'), err2 = document.getElementById('mpErr2'), fitNext = null, wrapEl = document.getElementById('mpWrap');
+  function lobbyFit(){ if (!wrapEl) return; var z = Math.min(1, (window.innerHeight - 20) / 800, (window.innerWidth - 12) / 672); wrapEl.style.zoom = z < 1 ? z.toFixed(3) : ''; }      // the design is drawn for 1920 x 1080: shrink the whole thing to fit anything smaller
+  window.addEventListener('resize', lobbyFit); lobbyFit();
+  function toMain(){ fitNext = null; S2.hidden = true; S1.hidden = false; }
+  function toFit(next){ err.textContent = ''; err2.textContent = ''; fitNext = next; S1.hidden = true; S2.hidden = false; paintSkins(); bigStart(); setTimeout(function(){ var g = document.getElementById('mpGo'); if (g) g.focus(); }, 30); }
+  function nameOk(){ if (nameIn.value.trim()) return true; err.textContent = 'Type a name first.'; nameIn.focus(); return false; }
+  function codeOk(){ var c = (codeIn.value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (c.length >= 4) return true; err.textContent = 'Room codes are 4 letters or numbers.'; codeIn.focus(); return false; }
+  function showLobby(msg){ Q.lobbyOpen = true; toMain(); lobbyFit(); menuOn(); lobby.hidden = false; err.textContent = msg || ''; if (msg) uiErr(); releaseLock(); refreshLockUi(); setTimeout(function(){ (nameIn.value ? codeIn : nameIn).focus(); }, 50); }
   function hideLobby(){ Q.lobbyOpen = false; lobby.hidden = true; refreshLockUi(); menuOff(); cred.hidden = true; uiSleep(); }
-  document.getElementById('mpCreate').addEventListener('click', function(){ Q.taken = []; start(newCode()); });
-  document.getElementById('mpJoin').addEventListener('click', function(){ start(codeIn.value); });
+  function goCreate(){ err.textContent = ''; if (!nameOk()) return; Q.taken = []; toFit(function(){ start(newCode()); }); }
+  function goJoin(){ err.textContent = ''; if (!nameOk() || !codeOk()) return; takenT = 0; checkTaken(); toFit(function(){ start(codeIn.value); }); }
+  document.getElementById('mpCreate').addEventListener('click', goCreate);
+  document.getElementById('mpJoin').addEventListener('click', goJoin);
   document.getElementById('mpSpec').addEventListener('click', function(){ start(codeIn.value, true); });
-  codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') start(codeIn.value); });
-  nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? start(codeIn.value) : start(newCode())); });
-  document.getElementById('mpSolo').addEventListener('click', function(){ Q.on = false; hideLobby(); });
+  codeIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') goJoin(); });
+  nameIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') (codeIn.value.length >= 4 ? goJoin() : goCreate()); });
+  document.getElementById('mpSolo').addEventListener('click', function(){ err.textContent = ''; Q.taken = []; toFit(function(){ Q.on = false; hideLobby(); }); });
+  document.getElementById('mpGo').addEventListener('click', function(){ var f = fitNext; toMain(); if (f) f(); });
+  /* custom skins by code: the box and the button are here; there are no custom skins to hand out yet, so every code is turned down */
+  function skinCode(){ var c = (document.getElementById('mpSkinCode').value || '').trim(); err2.textContent = c ? 'No skin found for that code.' : 'Type your code first.'; uiErr(); }
+  document.getElementById('mpSkinGo').addEventListener('click', skinCode);
+  document.getElementById('mpSkinCode').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); skinCode(); } });
+  document.addEventListener('keydown', function(e){ if (!Q.lobbyOpen || S2.hidden || !cred.hidden) return; if (e.key === 'Escape'){ toMain(); } else if (e.key === 'Enter' && e.target && e.target.id !== 'mpSkinCode' && e.target.id !== 'mpSkinGo'){ e.preventDefault(); document.getElementById('mpGo').click(); } }, true);
   document.getElementById('mpCopy').addEventListener('click', function(){
     var link = location.origin + location.pathname + '#' + Q.code;
     try { navigator.clipboard.writeText(link).then(function(){ toast('Invite link copied'); }, function(){ toast(link); }); } catch (e) { toast(link); }

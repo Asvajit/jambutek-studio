@@ -21,3 +21,6 @@ Changes: only the two shapes (base ring and cap) are kept, as 16-bit positions; 
 
 # Fonts (`public/fonts/`)
 Anton by Vernon Adams and Kaushan Script by Pablo Impallari, used for the lobby. Both are under the SIL Open Font Licence 1.1. Files taken from the Fontsource packages.
+
+Pixel Game by suhadidesign and Merchant Copy by S. John Ross, supplied by the project owner for the two-screen menu (`pixelgame.otf`, `merchantcopy.ttf`).
+Pixel Game's own file is marked "For Personal Use Only": a licence from the maker is needed before a public release.
