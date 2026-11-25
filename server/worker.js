@@ -4,7 +4,8 @@
    and wipes itself when everyone leaves. */
 const MAX_PLAYERS = 6;
 const MAX_WATCHERS = 24;        // spectators: they see and hear the room, are not in it, and do not count towards the six
-const SKINS = 12;                 // one of each look per room
+const SKINS = 12;                 // one of each look per room (the twelve in the menu's grid)
+const SKINMAX = 64;               // looks beyond the twelve are custom ones, reached by a code
 const COLORS = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
 
 export class Room {
@@ -60,7 +61,7 @@ export class Room {
     if (!others.length) { this.world = {}; await this.ctx.storage.deleteAll(); }      // first one in: a fresh room
     const name = (url.searchParams.get('name') || 'Guest').replace(/[<>]/g, '').trim().slice(0, 16) || 'Guest';
     const takenSkins = others.map((p) => p.a.skin || 0);
-    let skin = Math.max(0, Math.min(SKINS - 1, parseInt(url.searchParams.get('skin') || '0', 10) || 0));
+    let skin = Math.max(0, Math.min(SKINMAX - 1, parseInt(url.searchParams.get('skin') || '0', 10) || 0));
     if (takenSkins.includes(skin)) { for (let i = 0; i < SKINS; i++) if (!takenSkins.includes(i)) { skin = i; break; } }
     const used = others.map((p) => p.a.color);
     const color = COLORS.find((c) => !used.includes(c)) || COLORS[0];

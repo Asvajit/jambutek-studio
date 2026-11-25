@@ -17,7 +17,9 @@ var MP = (function(){
   var nameIn = document.getElementById('mpName'), codeIn = document.getElementById('mpCode'), err = document.getElementById('mpErr'), skinBox = document.getElementById('mpSkins');
   try { nameIn.value = localStorage.getItem('jambutek-name') || ''; } catch (e) {}
   var SKINR = {"head": [[0.15708, 0.15875, 0.21708, 0.22375], [0.03208, 0.15875, 0.09208, 0.22375], [0.09458, 0.09542, 0.15458, 0.15625], [0.09458, 0.22625, 0.15458, 0.28625], [0.09458, 0.15875, 0.15458, 0.22375], [0.21958, 0.15875, 0.27958, 0.22375]], "hat": [[0.46125, 0.16625, 0.52958, 0.18208], [0.32042, 0.16625, 0.38875, 0.18208], [0.39125, 0.09542, 0.45875, 0.16375], [0.39125, 0.18458, 0.45875, 0.25208], [0.39125, 0.16625, 0.45875, 0.18208], [0.53208, 0.16625, 0.59958, 0.18208]], "torso": [[0.79792, 0.15208, 0.85375, 0.29708], [0.64042, 0.15208, 0.69625, 0.29708], [0.69875, 0.09542, 0.79542, 0.14958], [0.69875, 0.29958, 0.79542, 0.35542], [0.69875, 0.15208, 0.79542, 0.29708], [0.85625, 0.15208, 0.95208, 0.29708]], "armL": [[0.08958, 0.46875, 0.11958, 0.60292], [0.03042, 0.46875, 0.06042, 0.60292], [0.06292, 0.43708, 0.08708, 0.46625], [0.06292, 0.60542, 0.08708, 0.63542], [0.06292, 0.46875, 0.08708, 0.60292], [0.12208, 0.46875, 0.14708, 0.60292]], "armR": [[0.32375, 0.46958, 0.35292, 0.60292], [0.26542, 0.46958, 0.29458, 0.60292], [0.29708, 0.43708, 0.32125, 0.46708], [0.29708, 0.60542, 0.32125, 0.63625], [0.29708, 0.46958, 0.32125, 0.60292], [0.35542, 0.46958, 0.37958, 0.60292]], "legL": [[0.57375, 0.47792, 0.61042, 0.57625], [0.50125, 0.47792, 0.53792, 0.57625], [0.54042, 0.43792, 0.57125, 0.47542], [0.54042, 0.57875, 0.57125, 0.61542], [0.54042, 0.47792, 0.57125, 0.57625], [0.61292, 0.47792, 0.64375, 0.57625]], "legR": [[0.80792, 0.47792, 0.84458, 0.57625], [0.73542, 0.47792, 0.77208, 0.57625], [0.77458, 0.43875, 0.80542, 0.47542], [0.77458, 0.57875, 0.80542, 0.61542], [0.77458, 0.47792, 0.80542, 0.57625], [0.84708, 0.47792, 0.87875, 0.57625]], "shinL": [[0.10458, 0.75792, 0.14125, 0.85625], [0.03208, 0.75792, 0.06875, 0.85625], [0.07125, 0.71875, 0.10208, 0.75542], [0.07125, 0.85875, 0.10208, 0.89625], [0.07125, 0.75792, 0.10208, 0.85625], [0.14375, 0.75792, 0.17542, 0.85625]], "shinR": [[0.33958, 0.75792, 0.37625, 0.85625], [0.26625, 0.75792, 0.30292, 0.85625], [0.30542, 0.71792, 0.33708, 0.75542], [0.30542, 0.85875, 0.33708, 0.89792], [0.30542, 0.75792, 0.33708, 0.85625], [0.37875, 0.75792, 0.40958, 0.85625]], "shoeL": [[0.60208, 0.78125, 0.66208, 0.79625], [0.50125, 0.78125, 0.56125, 0.79625], [0.56375, 0.71542, 0.59958, 0.77875], [0.56375, 0.79875, 0.59958, 0.86125], [0.56375, 0.78125, 0.59958, 0.79625], [0.66458, 0.78125, 0.70208, 0.79625]], "shoeR": [[0.84458, 0.78125, 0.90458, 0.79625], [0.74292, 0.78125, 0.80292, 0.79625], [0.80542, 0.71875, 0.84208, 0.77875], [0.80542, 0.79875, 0.84208, 0.85875], [0.80542, 0.78125, 0.84208, 0.79625], [0.90708, 0.78125, 0.94375, 0.79625]]}, skinMats = [];
-  var SKINS = [{ n:'Night Owl', a:'sk0' }, { n:'Diva', a:'sk1' }, { n:'Specs', a:'sk2' }, { n:'Clown', a:'sk3' }, { n:'Overalls', a:'sk4' }, { n:'Boss', a:'sk5' }, { n:'Raver', a:'sk6' }, { n:'Sailor', a:'sk7' }, { n:'Punk', a:'sk8' }, { n:'Astro', a:'sk9' }, { n:'Disco', a:'sk10' }, { n:'Ranger', a:'sk11' }], skinMats = {};
+  var SKINS = [{ n:'Night Owl', a:'sk0' }, { n:'Diva', a:'sk1' }, { n:'Specs', a:'sk2' }, { n:'Clown', a:'sk3' }, { n:'Overalls', a:'sk4' }, { n:'Boss', a:'sk5' }, { n:'Raver', a:'sk6' }, { n:'Sailor', a:'sk7' }, { n:'Punk', a:'sk8' }, { n:'Astro', a:'sk9' }, { n:'Disco', a:'sk10' }, { n:'Ranger', a:'sk11' },
+    /* custom looks: not in the grid, reached by typing their code on the "pick your fit" screen. Add new ones at the end only (a look is known to the room by its place in this list). */
+    { n:'Narni', a:'csNarni', code:'NARNI' }], skinMats = {}, LOOKS = 12;
   Q.skin = 0; try { Q.skin = Math.min(SKINS.length - 1, Math.max(0, +localStorage.getItem('jambutek-skin') || 0)); } catch (e) {}
   var PV = null;
   function pvInit(){
@@ -72,7 +74,7 @@ var MP = (function(){
   }
   function bigStart(){ if (!bigOn){ bigOn = true; bigLast = 0; requestAnimationFrame(bigLoop); } }
   Q.taken = [];
-  function freeSkin(){ for (var i = 0; i < SKINS.length; i++) if (Q.taken.indexOf(i) < 0) return i; return 0; }
+  function freeSkin(){ for (var i = 0; i < LOOKS; i++) if (Q.taken.indexOf(i) < 0) return i; return 0; }
   function paintSkins(){
     if (Q.taken.indexOf(Q.skin) >= 0) Q.skin = freeSkin();
     [].forEach.call(skinBox.children, function(b, i){ var tk = Q.taken.indexOf(i) >= 0; b.classList.toggle('on', i === Q.skin); b.classList.toggle('taken', tk); b.disabled = tk;
@@ -88,11 +90,11 @@ var MP = (function(){
   }
   codeIn.addEventListener('input', checkTaken);
   setInterval(function(){ if (Q.lobbyOpen) { takenT = 0; checkTaken(); } }, 5000);
-  setTimeout(function(){ SKINS.forEach(function(sk, i){
+  setTimeout(function(){ SKINS.forEach(function(sk, i){ if (sk.code) return;
     var b = document.createElement('button'); b.type = 'button'; var cv = document.createElement('canvas'); cv.width = 192; cv.height = 300; b.appendChild(cv);
     ['mouseenter', 'focus'].forEach(function(ev){ b.addEventListener(ev, function(){ if (Q.taken.indexOf(i) < 0) bigHover = i; }); }); ['mouseleave', 'blur'].forEach(function(ev){ b.addEventListener(ev, function(){ if (bigHover === i) bigHover = -1; }); });
     b.setAttribute('aria-label', sk.n); b.title = sk.n; skinBox.appendChild(b); drawSkinPreview(cv, i);
-    b.addEventListener('click', function(){ if (Q.taken.indexOf(i) >= 0) return; Q.skin = i; try { localStorage.setItem('jambutek-skin', i); } catch (e) {} paintSkins(); });
+    b.addEventListener('click', function(){ if (Q.taken.indexOf(i) >= 0) return; Q.skin = i; try { localStorage.setItem('jambutek-skin', i); } catch (e) {} paintSkins(); var e2 = document.getElementById('mpErr2'); if (e2){ e2.textContent = ''; e2.classList.remove('ok'); } });
   }); paintSkins(); checkTaken(); }, 0);
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
   function newCode(){ var AB = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 4; i++) s += AB[(Math.random() * AB.length) | 0]; return s; }
@@ -453,7 +455,14 @@ var MP = (function(){
   document.getElementById('mpSolo').addEventListener('click', function(){ err.textContent = ''; Q.taken = []; toFit(function(){ Q.on = false; hideLobby(); }); });
   document.getElementById('mpGo').addEventListener('click', function(){ var f = fitNext; toMain(); if (f) f(); });
   /* custom skins by code: the box and the button are here; there are no custom skins to hand out yet, so every code is turned down */
-  function skinCode(){ var c = (document.getElementById('mpSkinCode').value || '').trim(); err2.textContent = c ? 'No skin found for that code.' : 'Type your code first.'; uiErr(); }
+  function skinCode(){
+    var c = (document.getElementById('mpSkinCode').value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''), ix = -1; SKINS.forEach(function(sk, i){ if (sk.code && sk.code === c) ix = i; });
+    err2.classList.remove('ok');
+    if (!c){ err2.textContent = 'Type your code first.'; uiErr(); return; }
+    if (ix < 0){ err2.textContent = 'No skin found for that code.'; uiErr(); return; }
+    if (Q.taken.indexOf(ix) >= 0){ err2.textContent = SKINS[ix].n + ' is already in that room.'; uiErr(); return; }
+    Q.skin = ix; bigHover = -1; try { localStorage.setItem('jambutek-skin', ix); } catch (e) {} paintSkins(); err2.textContent = 'Custom skin: ' + SKINS[ix].n; err2.classList.add('ok'); uiPress();
+  }
   document.getElementById('mpSkinGo').addEventListener('click', skinCode);
   document.getElementById('mpSkinCode').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); skinCode(); } });
   document.addEventListener('keydown', function(e){ if (!Q.lobbyOpen || S2.hidden || !cred.hidden) return; if (e.key === 'Escape'){ toMain(); } else if (e.key === 'Enter' && e.target && e.target.id !== 'mpSkinCode' && e.target.id !== 'mpSkinGo'){ e.preventDefault(); document.getElementById('mpGo').click(); } }, true);
