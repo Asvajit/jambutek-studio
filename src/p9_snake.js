@@ -91,6 +91,13 @@ button((PX + 'rand'), 100, 170, 30, 12, 'RANDOM', 'Randomise this lane', 0xFFFFF
 for (var sni = 0; sni < 16; sni++){ (function(i){ var c = knob((PX + 'c') + i, SNGX[i % 4], SNGY[(i / 4) | 0] - 5, 6.4, 'Cell ' + (i + 1), 0, { h:9, sides:12 }); c.cell = i; })(sni); }
 /* gates page: the 16 cell knobs give way to 16 on/off step buttons */
 for (var sgi = 0; sgi < 16; sgi++){ (function(i){ var n0 = HOST.children.length, c = pad((PX + 'g') + i, SNGX[i % 4], SNGY[(i / 4) | 0] + 12, 21, 8.5, SNCOL[1], 'Step ' + (i + 1)); c.gate = i; c.hitM = HOST.children[n0 + 1]; })(sgi); }
+/* each step button wears its cell's value for the lane being shown (the note, the velocity, the chance), so nothing has to be hovered to read a pattern */
+var SNLBL = [];
+(function(){ for (var i = 0; i < 16; i++){ var p = CT[(PX + 'g') + i], cv = mk(128, 52), tx = smoothTex(cv), pg = p.m.geometry.parameters;
+  var pl = new THREE.Mesh(new THREE.PlaneGeometry(pg.width * 0.96, pg.depth * 0.94), new THREE.MeshBasicMaterial({ map:tx, transparent:true, depthWrite:false })); pl.rotation.x = -Math.PI / 2; pl.position.y = pg.height / 2 + 0.0004; pl.userData.noShadow = true; p.m.add(pl);
+  SNLBL.push({ cv:cv, tx:tx, key:'' }); var k = CT[(PX + 'c') + i]; k.ticks = k.rot.children.filter(function(m){ return m.material && m.material.isMeshBasicMaterial; }); } })();
+function snStepLbl(i, txt, on){ var L = SNLBL[i], key = txt + (on ? '|1' : '|0'); if (L.key === key) return; L.key = key; var g = L.cv.getContext('2d'); g.clearRect(0, 0, 128, 52);
+  g.font = 'bold 32px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = on ? '#14161A' : '#D6D4CA'; g.fillText(txt, 64, 28, 120); L.tx.needsUpdate = true; }
 function snShowCells(){ return; var gp = SN.page === 1; for (var i = 0; i < 16; i++){ var k = CT[(PX + 'c') + i], p = CT[(PX + 'g') + i]; k.g.visible = !gp; k.g.position.y = gp ? -9 : 0; p.m.visible = gp; p.m.position.y = gp ? p.y0 : -9; p.hitM.position.y = gp ? 0.009 : -9; p.gone = !gp; } }
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 function snSay(a, b, ms){ SN.msgA = a; SN.msgB = b == null ? '' : String(b); SN.msgUntil = performance.now() + (ms || 1500); SN.dirty = true; }
@@ -251,7 +258,8 @@ function update(now, dt){
   var t = ac ? ac.currentTime : 0, i; SN.run = M.playing;
   if (ac) SN.vis = SN.vis.filter(function(e){ if (e.t > t) return true; if (e.cc != null) snTurnCC(e.cc); else if (e.cv != null) SN.cv = e.cv; else { SN.vcell = SN.vcell || [-1, -1, -1, -1, -1]; SN.vcell[e.l] = e.c; } return false; });
   var vc = M.playing && SN.vcell && SN.playPg === SN.view ? SN.vcell : [-1, -1, -1, -1, -1], g = SN.lanes[1].vals, col = new THREE.Color();
-  for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); CT[(PX + 'c') + i].mat.color.setHex(g[i] ? 0x202226 : 0x121316); }
+  for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); var kc = CT[(PX + 'c') + i]; kc.mat.color.setHex(SNCOL[SN.page]); if (!g[i]) kc.mat.color.multiplyScalar(0.34); var tk = g[i] ? 0x101114 : 0xFFFFFF; if (kc.tk !== tk){ kc.tk = tk; for (var q = 0; q < kc.ticks.length; q++) kc.ticks[q].material.color.setHex(tk); }      /* the 16 knobs wear the colour of the lane they are setting: full where the step is on, dim where it is off */
+    snStepLbl(i, snCellTxt(SN.page, SN.lanes[SN.page].vals[i]), g[i] || vc[0] === i); }
   for (i = 0; i < 16; i++){ var gp = CT[(PX + 'g') + i], gl = (g[i] ? 0.75 : 0) + (vc[0] === i ? 0.3 : 0); if (gl !== gp.lit){ gp.lit = gl; gp.col.copy(gp.base); if (vc[0] === i && !g[i]) gp.col.setHex(0xFFFFFF); gp.paintLit(); } var gy = gp.y0 - (gp.down ? 0.003 : 0); if (gp.m.position.y !== gy) gp.m.position.y = gy; }
   CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15;
     if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : M.playing && SN.playPg === c.ab ? 0.5 : 0.1;
@@ -269,7 +277,9 @@ function patterns(def, jam){ var d0 = snDef(); SN.view = 0; SN.act = [1, 0]; SN.
   }
   snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
-return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update, undo:undo };
+function copyPage(){ SNCLIP = JSON.stringify(SN.pgs[SN.view]); snSay('COPIED', 'page ' + 'AB'[SN.view] + ' · Ctrl+V pastes', 2400); }                                     // Ctrl+C / Ctrl+V: the page being shown, all its lanes; it can be pasted on this Snake's other page or on another Snake
+function pastePage(){ var p = null; try { p = JSON.parse(SNCLIP); } catch (e) {} if (!snLanesOk(p)){ snSay('PASTE', 'nothing copied yet', 1600); return; } snMark(); SN.pgs[SN.view] = p; snSync(); SN.dirty = true; snSay('PASTED', 'to page ' + 'AB'[SN.view], 2200); snSaveSoon(); }
+return { SN:SN, G:SNG, key:DK, hp:HP, copyPage:copyPage, pastePage:pastePage, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update, undo:undo };
 }
 /* one Snake behind every synth, each wired to its own by default (OUT numbers: 1 Synth, 2 Bass, 3 Blip, 4 Ambi, 5 Tape, 6 Shru) */
 var SNAKES = [[MFPOS, 1], [BSPOS, 2], [AMPOS, 4], [TPPOS, 5], [MBPOS, 3], [SHPOS, 6], [ZKPOS, 8], [MCPOS, 7], [SCPOS, 9]].map(function(a, k){ return makeSnake(k, a[0], a[1]); });

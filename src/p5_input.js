@@ -146,6 +146,7 @@ function labelFor(hit){
   if (ia === 'sign') return 'Jambutek';
   return null;
 }
+var SNCLIP = null;      /* a copied Snake page, shared by all the Snakes */
 var hoverCtl = null;
 function setHover(c){ if (c === hoverCtl) return; if (hoverCtl) hoverCtl.hover(false); hoverCtl = c; if (c) c.hover(true); }
 CT.dtime.detents = DIVS.length - 1; CT.fillknob.detents = 5;
@@ -282,6 +283,7 @@ document.addEventListener('keydown', function(e){
     if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi); } return; }      // 1-10 mute, with Shift solo
     if (LEAN.key && LEAN.key.indexOf('sn') === 0){                     // a Snake: 1-8 switch gates 1-8, with Shift gates 9-16
       if ((e.ctrlKey || e.metaKey) && k === 'z'){ e.preventDefault(); if (!e.repeat) for (var ui = 0; ui < SNAKES.length; ui++) if (SNAKES[ui].key === LEAN.key) SNAKES[ui].undo(); return; }      // Ctrl+Z undoes, on this Snake only
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'c' || k === 'v')){ e.preventDefault(); if (!e.repeat) for (var ci = 0; ci < SNAKES.length; ci++) if (SNAKES[ci].key === LEAN.key){ if (k === 'c') SNAKES[ci].copyPage(); else SNAKES[ci].pastePage(); } return; }      // Ctrl+C / Ctrl+V: copy the page being shown, paste it on the other page or on another Snake
       if (e.ctrlKey || e.metaKey || e.altKey) return;                    // every other shortcut is the browser's (Ctrl+R reloads, as usual)
       var gi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8'].indexOf(e.code); if (gi < 0 && !e.shiftKey) gi = '12345678'.indexOf(e.key);
       if (gi >= 0 && !e.repeat){ var gc = CT[LEAN.key + '_g' + (gi + (e.shiftKey ? 8 : 0))]; if (gc){ press(gc); release(gc); } } return; }
@@ -363,7 +365,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.235 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.236 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
