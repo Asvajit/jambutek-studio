@@ -54,7 +54,7 @@ function paintPanel(){
   rr(207, 252, CHX1, 464, 3, line); rr(207, 470, CHX1, 512, 3, line);
   rr(CHX1 + 8, 178, 802, 512, 3, line); rr(92, 520, 802, 606, 3, line);                // the bottom box runs the full width and holds START / STOP as well as the pads
   // brand strip: this is the label's own box, so it wears the label's name
-   T('RHYTHM STATION', 700, 166, 3.2, '#C9C9C4', 'bold', 'right'); T('DRUM-8', 800, 165, 7.2, '#E0193C', 'A', 'right');
+   T('RHYTHM STATION', 700, 166, 3.2, '#C9C9C4', 'bold', 'right'); T('DRUMBU-8', 800, 165, 7.2, '#E0193C', 'A', 'right');
   // top row
   T('VOLUME', 145, 190, 3, null);
   T('ACCENT', TRX(245), 190, 3.2, null); T('LEVEL', TRX(226), 230, 2.6, null);
