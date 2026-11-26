@@ -12,7 +12,7 @@ for f in sorted(os.listdir(os.path.join(here, 'vendor', 'jams'))):
         j = json.loads(rd('vendor', 'jams', f)); j['name'] = re.sub(r'^\d+[ _-]+', '', f[:-5]); jams.append(j)
 js = ''.join(rd('src', f) for f in PARTS)
 out = (rd('src', 'head.html') + '\n' + rd('vendor', 'three-header.html').rstrip('\n') + '\n' + rd('vendor', 'three.min.js').rstrip('\n')
-       + '\n</script>\n<script>\nwindow.JB_ASSETS=' + json.dumps(json.loads(rd('vendor', 'assets.json'))) + ';\nwindow.JB_JAMS=' + json.dumps(jams, separators=(',', ':')) + '' + ';\nwindow.JB_STICKERS=' + rd('vendor', 'stickers.json') + ';\nwindow.JB_DEFAULTS=window.JB_JAMS[0]||null;\nwindow.JB_SPEAKER=' + rd('vendor', 'speaker.json') + ';\nwindow.JB_STAGELIGHT=' + rd('vendor', 'stagelight.json') + ';\nwindow.JB_BUTTON=' + rd('vendor', 'button.json') + ';\n' + rd('vendor', 'patternflow-patterns.js') + '</script>\n<script>\n' + js + '\n</script>\n</html>\n')
+       + '\n</script>\n<script>\nwindow.JB_ASSETS=' + json.dumps(json.loads(rd('vendor', 'assets.json'))) + ';\nwindow.JB_JAMS=' + json.dumps(jams, separators=(',', ':')) + '' + ';\nwindow.JB_STICKERS=' + rd('vendor', 'stickers.json') + ';\nwindow.JB_DEFAULTS=window.JB_JAMS[0]||null;\nwindow.JB_HATS=' + rd('vendor', 'hats.json') + ';\nwindow.JB_SPEAKER=' + rd('vendor', 'speaker.json') + ';\nwindow.JB_STAGELIGHT=' + rd('vendor', 'stagelight.json') + ';\nwindow.JB_BUTTON=' + rd('vendor', 'button.json') + ';\n' + rd('vendor', 'patternflow-patterns.js') + '</script>\n<script>\n' + js + '\n</script>\n</html>\n')
 open(os.path.join(here, 'public', 'index.html'), 'w', encoding='utf-8').write(out)
 print('public/index.html', len(out), 'bytes')
 
@@ -70,7 +70,7 @@ for n in (1, 2):
     sk = 'jambutek-studio-snake-v3-%d' % n; sn = json.loads(tj[0]['state'][sk]); sn['out'] = 1; sn['act'] = [0, 0]; tj[0]['state'][sk] = json.dumps(sn, separators=(',', ':'))      # the two spare Snakes: pointed at the synth, switched off
 head = patch(rd('src', 'head.html'), '<title>Jambutek Studio</title>', '<title>Jambutek Studio · Test room</title>')
 test = (head + '\n' + rd('vendor', 'three-header.html').rstrip('\n') + '\n' + rd('vendor', 'three.min.js').rstrip('\n')
-        + '\n</script>\n<script>\nwindow.JB_ASSETS=' + json.dumps(json.loads(rd('vendor', 'assets.json'))) + ';\nwindow.JB_JAMS=' + json.dumps(tj, separators=(',', ':')) + '' + ';\nwindow.JB_STICKERS=' + rd('vendor', 'stickers.json') + ';\nwindow.JB_DEFAULTS=window.JB_JAMS[0]||null;\nwindow.JB_SPEAKER=' + rd('vendor', 'speaker.json') + ';\nwindow.JB_STAGELIGHT=' + rd('vendor', 'stagelight.json') + ';\nwindow.JB_BUTTON=' + rd('vendor', 'button.json') + ';\n' + rd('vendor', 'patternflow-patterns.js') + '</script>\n<script>\n' + ''.join(js2) + '\n</script>\n</html>\n')
+        + '\n</script>\n<script>\nwindow.JB_ASSETS=' + json.dumps(json.loads(rd('vendor', 'assets.json'))) + ';\nwindow.JB_JAMS=' + json.dumps(tj, separators=(',', ':')) + '' + ';\nwindow.JB_STICKERS=' + rd('vendor', 'stickers.json') + ';\nwindow.JB_DEFAULTS=window.JB_JAMS[0]||null;\nwindow.JB_HATS=' + rd('vendor', 'hats.json') + ';\nwindow.JB_SPEAKER=' + rd('vendor', 'speaker.json') + ';\nwindow.JB_STAGELIGHT=' + rd('vendor', 'stagelight.json') + ';\nwindow.JB_BUTTON=' + rd('vendor', 'button.json') + ';\n' + rd('vendor', 'patternflow-patterns.js') + '</script>\n<script>\n' + ''.join(js2) + '\n</script>\n</html>\n')
 with open(os.path.join(here, 'public', 'test.html'), 'w', encoding='utf-8') as f:
     f.write(test)
 print('built public/test.html', len(test) // 1024, 'KB')

@@ -6,6 +6,13 @@ Baked from "Speaker Welder Part" by Elite Big Speakerman
 licensed CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
 Changes: geometry quantised and scaled, base colour and emissive textures reduced, other textures dropped.
 
+## Flat cap (`hats.json`, key `flatcap`)
+Baked from "Flat Cap" by Fridge
+(https://sketchfab.com/3d-models/flat-cap-bd196ab9e2d8441798177839b9e66e09),
+licensed CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
+Changes: geometry quantised, scaled and fitted to the character's head; base colour texture reduced
+and tinted red; other textures dropped.
+
 ## Stage light (`stagelight.json`)
 Baked from "Stage Light - Fresnel" by Mike Rowley
 (https://sketchfab.com/3d-models/stage-light-fresnel-3554154c724c4cf1b8db4ff26f65b54c),
