@@ -54,23 +54,18 @@ var M = { playing:false, bpm:DEF && DEF.bpm >= 40 && DEF.bpm <= 300 ? DEF.bpm : 
   mutes:[0,0,0,0,0,0,0,0,0,0,0], pat:0, nextPat:-1, varSel:[0], varIx:0, editVar:0, fillOn:false, fxOn:false, menu:null, roll:0, msg:'', msgUntil:0, taps:[] };
 var SEQ = { step:0, nextT:0, bar:0, timer:null, vis:[], visStep:-1, fill:false, fillVar:null, crashNext:false, skip:{}, flash:[0,0,0,0,0,0,0,0,0,0,0], kick:0 };
 
-/* ---- each drum's CTRL knob is a send: to the reverb (yellow) or the delay (green), picked with CTRL SELECT ----
-   a: which one the knob feeds (1 reverb, 2 delay), r and d: the two send amounts (both kept, the knob shows the one it feeds),
-   t: the voice's own character, which the knob used to set. A jam saved before this keeps its sound exactly: its old knob
-   positions become t, and the sends stay at the fixed amounts every drum had then. */
-var TRS = { a:[1,1,1,1,1,1,1,1,1,1,1], r:[0,0,0,0,0,0,0,0,0,0,0], d:[0,0,0,0,0,0,0,0,0,0,0], t:[.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5] }, SMAX = 0.6;
-function trsShow(){ for (var i = 0; i < 11; i++){ var c = CT['ctrl' + i]; c.v = TRS.a[i] === 2 ? TRS.d[i] : TRS.r[i]; c.mat.color.setHex(TRS.a[i] === 2 ? FXGRN : FXYEL); c.show(); } }
+/* ---- each drum has a TONE knob (its own character) and two small send knobs: reverb (yellow) and delay (green) ----
+   r and d: the two send amounts, t: the tone. A jam saved before the send knobs existed keeps its sound exactly: its old CTRL
+   positions are the tone, and the sends stand at the fixed amounts every drum had then. A cleared room starts with every send off. */
+var TRS = { r:[0,0,0,0,0,0,0,0,0,0,0], d:[0,0,0,0,0,0,0,0,0,0,0], t:[.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5] }, SMAX = 0.6;
+function trsShow(){ for (var i = 0; i < 11; i++){ [['ctrl', TRS.t], ['rsend', TRS.r], ['dsend', TRS.d]].forEach(function(k){ var c = CT[k[0] + i]; c.v = k[1][i]; c.show(); }); } }
 function trsLoad(s){
-  var f = s && s.fx, ok = f && [f.a, f.r, f.d, f.t].every(function(x){ return Array.isArray(x) && x.length === 11; }), num = function(v, d){ return typeof v === 'number' && v === v ? clamp(v, 0, 1) : d; };
+  var f = s && s.fx, ok = f && [f.r, f.d, f.t].every(function(x){ return Array.isArray(x) && x.length === 11; }), num = function(v, d){ return typeof v === 'number' && v === v ? clamp(v, 0, 1) : d; };
   for (var i = 0; i < 11; i++){
-    if (ok){ TRS.a[i] = f.a[i] === 2 ? 2 : 1; TRS.r[i] = num(f.r[i], 0); TRS.d[i] = num(f.d[i], 0); TRS.t[i] = num(f.t[i], 0.5); }
-    else { TRS.a[i] = 1; TRS.r[i] = SENDS[i][0] / SMAX; TRS.d[i] = SENDS[i][1] / SMAX; TRS.t[i] = num(s && s.kn && s.kn['ctrl' + i], 0.5); }
+    if (ok){ TRS.r[i] = num(f.r[i], 0); TRS.d[i] = num(f.d[i], 0); TRS.t[i] = num(f.t[i], 0.5); }
+    else { TRS.r[i] = SENDS[i][0] / SMAX; TRS.d[i] = SENDS[i][1] / SMAX; TRS.t[i] = num(s && s.kn && s.kn['ctrl' + i], 0.5); }
   }
   trsShow(); applyMix();
-}
-function ctlAssign(a){                                 // CTRL SELECT, then a click on the reverb or the delay level knob
-  var i = M.sel; TRS.a[i] = a; M.ctlArm = false; trsShow(); CT.reverb.mat.emissive.setHex(0); CT.dlevel.mat.emissive.setHex(0);
-  say(INST[i] + ' CTRL > ' + (a === 2 ? 'DELAY' : 'REVERB') + ' SEND', 2000); dispDirty = true; applyMix(); saveSoon();
 }
 function fillOk(f){ return !!f && typeof f.last === 'number' && Array.isArray(f.acc) && [f.st, f.sb].every(function(x){ return Array.isArray(x) && x.length === 11; }); }
 /* ---- saving: the unit keeps itself in this browser, like the arcade keeps its progress ---- */
@@ -287,14 +282,14 @@ function press(c){
     case 'enter': if (M.shift) tapTempo(); else if (M.menu) M.menu = null; else say('SHIFT + ENTER  tap tempo', 1800); return;
     case 'write': save(); say('WRITE  saved'); return;
     case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
-    case 'ctrlsel': M.ctlArm = !M.ctlArm; if (M.ctlArm) say(INST[M.sel] + ' CTRL  click REVERB or DELAY level', 3200); else { CT.reverb.mat.emissive.setHex(0); CT.dlevel.mat.emissive.setHex(0); } return;
   }
 }
 function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); }
 function onCtl(c){                                 // a knob or fader moved
   c.show();
   if (c.dev){ DEVH[c.dev].ctl(c); return; }
-  if (c.inst != null && c.id.indexOf('ctrl') === 0){ var fa = TRS.a[c.inst]; (fa === 2 ? TRS.d : TRS.r)[c.inst] = c.v; say(INST[c.inst] + (fa === 2 ? ' DELAY' : ' REVERB') + ' SEND  ' + valText(c)); applyMix(); saveSoon(); return; }
+  if (c.inst != null && c.kind === 'knob'){ var sk = c.id.indexOf('ctrl') === 0 ? 't' : c.id.indexOf('rsend') === 0 ? 'r' : c.id.indexOf('dsend') === 0 ? 'd' : '';
+    if (sk){ TRS[sk][c.inst] = c.v; say(INST[c.inst] + (sk === 't' ? ' TONE  ' : sk === 'r' ? ' REVERB SEND  ' : ' DELAY SEND  ') + valText(c)); applyMix(); saveSoon(); return; } }
   say((c.inst != null ? INST[c.inst] + ' ' + c.id.replace(/\d+$/, '').replace('lev', 'level').toUpperCase() : c.name.toUpperCase()) + '  ' + valText(c));
   applyMix(); saveSoon();
 }
@@ -354,8 +349,7 @@ function updateTR(now, dt){
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);
   var lit = { shift:M.shift, clear:M.clearArm && blink, ptn:M.mode === 'ptn', trrec:M.mode === 'trrec', last:M.mode === 'last', sub:M.sub, instplay:M.mode === 'instplay', instrec:M.mode === 'instrec' && (!M.playing || blink),
-    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit, ctrlsel:!!M.ctlArm && blink };
-  if (M.ctlArm){ CT.reverb.mat.emissive.setHex(blink ? 0x6A5200 : 0x1A1400); CT.dlevel.mat.emissive.setHex(blink ? 0x0E5A2A : 0x04160A); }      // CTRL SELECT is waiting: the two level knobs glow, click one
+    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit };
   CTLIST.forEach(function(c){
     if (c.dev || (c.kind !== 'btn' && c.kind !== 'pad')) return;
     var L = 0;

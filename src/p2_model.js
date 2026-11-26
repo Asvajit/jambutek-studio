@@ -3,9 +3,12 @@
    Laid out from the TR-8S reference manual's top-panel drawing. Positions are read off that drawing in its
    own pixels (PX, PY), turned into millimetres on a 401 x 268 mm panel, and built at double size so every
    control is easy to aim at from standing height. */
-var PANEL = { w:401, h:268 }, SC = 0.002;           // metres per panel millimetre (2x life size)
+/* The panel is 30 mm taller than the drawing: a row was let in under the TONE knobs for each drum's two effect sends. Everything
+   the drawing puts below that line (PY > 372) simply sits ROWH lower; the new row itself is placed with VRAW on, in the gap. */
+var ROWH = 52, VRAW = false;
+var PANEL = { w:401, h:268 + ROWH / 1.735 }, SC = 0.002;           // metres per panel millimetre (2x life size)
 function U(px){ return (px - 75) / 1.863; }
-function V(py){ return (py - 155) / 1.735; }
+function V(py){ return ((VRAW || py <= 372 ? py : py + ROWH) - 155) / 1.735; }
 function lx(px){ return (U(px) - PANEL.w / 2) * SC; }
 function lz(py){ return (V(py) - PANEL.h / 2) * SC; }
 var INST = ['BD','SD','LT','MT','HT','RS','HC','CH','OH','CC','RC'];
@@ -57,7 +60,8 @@ function paintPanel(){
   // instrument columns
   COLX.forEach(function(x, i){
     rr(x - 19, 239, x + 19, 250, 0.8, COLCOL[i], '#23262C'); T(INAME[i].toUpperCase().replace('HI-HAT', 'HIHAT'), x, 245, 3.3, '#F4F4F0', 'A');
-    T('TUNE', x, 287, 3, null); T('DECAY', x, 326, 3, null); T('CTRL', x, 365, 3, null);
+    T('TUNE', x, 287, 3, null); T('DECAY', x, 326, 3, null); T('TONE', x, 365, 3, null);
+    VRAW = true; T('REV', x - 9.5, 410, 2.4, '#E8C63A'); T('DLY', x + 9.5, 410, 2.4, '#35C46B'); VRAW = false;      // the two sends, in the let-in row
     stops(x, 268, 9.5); stops(x, 307, 9.5); stops(x, 347, 9.5);
     rr(x - 7.5, 378, x + 7.5, 458, 1.6, COLCOL[i], '#07080A');
     g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.3;
@@ -168,7 +172,7 @@ function pad(id, px, py, w, h, col, name){
 }
 
 /* ---- every control on the panel ---- */
-var FXYEL = 0xE8C63A, FXGRN = 0x35C46B;      // the reverb level knob is yellow and the delay level knob green; each drum's CTRL knob wears the colour of the one it feeds
+var FXYEL = 0xE8C63A, FXGRN = 0x35C46B;      // the reverb level knob is yellow and the delay level knob green; each drum has a small send knob in each colour
 knob('volume', 145, 213, 6.5, 'Volume', 0.8);
 knob('accent', 226, 212, 6.5, 'Accent level', 0.6); knob('reverb', 306, 212, 6.5, 'Reverb level', 0.3, { color:FXYEL, tick:0x15130A });
 knob('dlevel', 346, 212, 6.5, 'Delay level', 0.2, { color:FXGRN, tick:0x0A150E }); knob('dtime', 386, 212, 6.5, 'Delay time', 0.5, { step:0.1 }); knob('dfb', 427, 212, 6.5, 'Delay feedback', 0.4);
@@ -176,7 +180,8 @@ knob('fxctrl', 508, 212, 6.5, 'Master FX', 0.5); knob('fillknob', 588, 212, 6.5,
 COLX.forEach(function(x, i){
   knob('tune' + i, x, 268, 6.5, INAME[i] + ' tune', 0.5).inst = i;
   knob('decay' + i, x, 307, 6.5, INAME[i] + ' decay', 0.5).inst = i;
-  knob('ctrl' + i, x, 347, 6.5, INAME[i] + ' ctrl', 0, { color:FXYEL, tick:0x15130A }).inst = i;
+  knob('ctrl' + i, x, 347, 6.5, INAME[i] + ' tone', 0.5).inst = i;                  // the voice's own character (this knob was labelled CTRL)
+  VRAW = true; knob('rsend' + i, x - 9.5, 394, 4.3, INAME[i] + ' reverb send', 0, { h:7, color:FXYEL, tick:0x15130A }).inst = i; knob('dsend' + i, x + 9.5, 394, 4.3, INAME[i] + ' delay send', 0, { h:7, color:FXGRN, tick:0x0A150E }).inst = i; VRAW = false;
   fader(i);
 });
 knob('value', 766, 265, 8, 'Value', 0, { endless:true, step:1 / 24, sides:14 });
@@ -197,7 +202,7 @@ button('fillon', 548, 208, 11, 8.5, 'ON', 'Auto fill-in on', GRN); button('fille
 COLX.forEach(function(x, i){ button('sel' + i, x, 483, 12, 8.5, INST[i], INAME[i], new THREE.Color(COLCOL[i]).getHex()).inst = i; button('mt' + i, x, 501, 12, 7, 'MUTE', INAME[i] + ' mute', ORG).mi = i; });
 button('write', 686, 265, 12, 8.5, 'WRITE', 'Write (save)', RED); button('enter', 726, 265, 12, 8.5, 'ENTER', 'Enter', WHT);
 button('kit', 686, 301, 12, 8.5, 'KIT', 'Kit', GRN); button('inst', 726, 301, 12, 8.5, 'INST', 'Instrument tone', GRN);
-button('ctrlsel', 686, 338, 12, 8.5, 'CTRL\nSELECT', 'Ctrl select: send this drum to the reverb or the delay', GRN); button('copy', 726, 338, 12, 8.5, 'COPY', 'Copy', GRN);
+button('copy', 726, 338, 12, 8.5, 'COPY', 'Copy', GRN);
 pad('instpad', 766, 478, 19, 20, 0xF4F4F4, 'Inst pad');
 PADX.forEach(function(x, i){ pad('pad' + i, x, 555, 15.5, 19, PADCOL[i], 'Pad ' + (i + 1)).pi = i; });
 var HALFBAR = [0, 1].map(function(h){                          // a thin bar over pads 1-8 or 9-16: the half the number keys switch in step record

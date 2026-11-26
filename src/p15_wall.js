@@ -69,7 +69,7 @@ RESTORE[SAVE_KEY] = function(){                                // the drum machi
   PAT = s.PAT; if (typeof s.bpm === 'number') setBpm(clamp(s.bpm, 40, 300)); M.pat = clamp(s.pat | 0, 0, 15); M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; trVars(s);
   if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
   Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number'){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
-  trsLoad(s); M.fillEdit = false; M.ctlArm = false;
+  trsLoad(s); M.fillEdit = false;
   applyMix(); dispDirty = true;
 };
 function roomLoad(st){

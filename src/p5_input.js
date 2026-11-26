@@ -23,7 +23,7 @@ var xh = document.getElementById('xh'), xhLab = document.getElementById('xhLab')
 
 /* ================= leaning over an instrument ================= */
 var DEVS = {
-  tr:{ key:'tr', g:TRG, name:'drum machine', stand:devStand(TRPOS), yaw:TRPOS.r, pitch:-0.42, d:0.71, asp:1.6, off:0.06, lookz:0.03, hud:'hudTr' },
+  tr:{ key:'tr', g:TRG, name:'drum machine', stand:devStand(TRPOS), yaw:TRPOS.r, pitch:-0.42, d:0.78, asp:1.6, off:0.06, lookz:0.03, hud:'hudTr' },
   mf:{ key:'mf', g:MFG, name:'synth', stand:devStand(MFPOS), yaw:MFPOS.r, pitch:-0.42, d:0.69, asp:1.78, off:0.04, lookz:0.02, hud:'hudMf', keys:{ down:mfKbDown, up:mfKbUp, play:function(){ press(CT.mfplay); release(CT.mfplay); } } },
   bs:{ key:'bs', g:BSG, name:'bass synth', stand:devStand(BSPOS), yaw:BSPOS.r, pitch:-0.42, d:0.66, asp:1.6, off:0.05, lookz:0.025, hud:'hudBs', keys:{ down:bsKbDown, up:bsKbUp, play:function(){ press(CT.bson); release(CT.bson); } } },
   zk:{ key:'zk', g:ZKG, name:'Kit synth', stand:devStand(ZKPOS), yaw:ZKPOS.r, pitch:-0.42, d:0.42, asp:1.35, off:0.04, lookz:0.005, hud:'hudZk', keys:{ down:zkKbDown, up:zkKbUp, play:function(){ toggleSeq(); } } },
@@ -155,7 +155,6 @@ CT.dtime.detents = DIVS.length - 1; CT.fillknob.detents = 5;
 var drag = null, pressed = null;
 function startCtl(c, e, h){
   if (c.kind === 'knob' || c.kind === 'fader'){
-    if (M.ctlArm && !c.dev && (c.id === 'reverb' || c.id === 'dlevel')){ ctlAssign(c.id === 'dlevel' ? 2 : 1); return; }      /* CTRL SELECT is waiting for one of these two */
     if (SNLEARN){ SNLEARN(c); if (!SNLEARN) return; }                 // a sequencer is listening: clicking the control is enough to pick it
     var tNow = performance.now(), dbl = e.detail >= 2 || (startCtl.last === c && tNow - startCtl.at < 400); startCtl.last = c; startCtl.at = tNow;      /* a pointerdown carries no click count, so two presses on the same control within 0.4 s are counted here */
     if (dbl && !c.endless && !c.click){ startCtl.last = null; setCtl(c, c.def); toast(c.name + ' reset'); return; }
@@ -365,7 +364,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.236 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.237 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
