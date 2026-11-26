@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.251</span>
+    <span id="verFps">studio v0.252</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.251</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.252</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -4960,7 +4960,7 @@ button('ptn', 120, 296, 16, 16, 'PTN\nSELECT', 'Pattern select', GRN); button('t
 button('last', 120, 330, 16, 16, 'LAST', 'Last step', GRN); button('sub', 170, 330, 16, 16, 'SUB', 'Sub steps', GRN);
 VRAW = true; button('moton', 120, 392, 16, 16, 'ON', 'Motion on', GRN); button('motrec', 170, 392, 16, 16, 'REC', 'Motion rec', RED);
 button('instplay', 120, 426, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 426, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED);
-button('fxrpt', 120, 468, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 468, 16, 16, 'WARP', 'Warp · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
+button('fxrpt', 120, 468, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 468, 16, 16, 'ROLL', 'Roll · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
 'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
 pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
@@ -5017,14 +5017,7 @@ function unlock(){
     var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 0.7;
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 10; hp.Q.value = 0.7;
     lp.connect(hp); hp.connect(vol); AU.lp = lp; AU.hp = hp;
-    var bus = ac.createGain(); AU.bus = bus;
-    /* WARP (an instant effect on the drums): the drum bus splits into a dry path and a wobbling one - a short delay whose time swings
-       fast and deep (the pitch bends up and down like a chewed tape), through a drive and a resonant low-pass. Holding the button
-       crossfades to the wobbling path; letting go fades straight back. */
-    var wd = ac.createGain(), ww = ac.createGain(), wdl = ac.createDelay(0.1), wlfo = ac.createOscillator(), wdep = ac.createGain(), wsh = ac.createWaveShaper(), wlp = ac.createBiquadFilter();
-    wd.gain.value = 1; ww.gain.value = 0; wdl.delayTime.value = 0.012; wlfo.frequency.value = 5.2; wdep.gain.value = 0.0075; wlfo.connect(wdep); wdep.connect(wdl.delayTime); wlfo.start();
-    var wc = new Float32Array(1025); for (var wi = 0; wi < 1025; wi++){ var wx = wi / 512 - 1; wc[wi] = Math.tanh(wx * 3) / Math.tanh(3); } wsh.curve = wc; wlp.type = 'lowpass'; wlp.frequency.value = 2200; wlp.Q.value = 5;
-    bus.connect(wd); wd.connect(lp); bus.connect(wdl); wdl.connect(wsh); wsh.connect(wlp); wlp.connect(ww); ww.connect(lp); AU.warp = { dry:wd, wet:ww, lp:wlp, lfo:wlfo };
+    var bus = ac.createGain(); bus.connect(lp); AU.bus = bus;
     // reverb: a generated room
     var conv = ac.createConvolver(), len = Math.round(ac.sampleRate * 2.1), ir = ac.createBuffer(2, len, ac.sampleRate);
     for (var ch = 0; ch < 2; ch++){ var d = ir.getChannelData(ch), lpv = 0; for (var i = 0; i < len; i++){ var t = i / len, w = (Math.random() * 2 - 1) * Math.pow(1 - t, 3.2) * (i < 400 ? i / 400 : 1); lpv += (w - lpv) * (0.75 - t * 0.5); d[i] = lpv; } }
@@ -5236,18 +5229,19 @@ function trsLoad(s){
   trsShow(); applyMix();
 }
 /* ---- the two instant effects (held buttons under INST PLAY / INST REC), drums only ----
-   BEAT REPEAT: from the next step, the drums loop the eighth note they are on (two steps) until it is let go; the bar keeps counting
-   underneath, so on release the pattern carries on exactly where it would have been. WARP: see AU.warp.
+   BEAT REPEAT: from the next step, the drums loop the eighth note they are on (two steps) until it is let go. ROLL: the drums hold the one
+   sixteenth they are on and play it twice per step, a thirty-second-note stutter that builds in level. In both the bar keeps counting
+   underneath, so on release the pattern carries on exactly where it would have been. ROLL wins if both are held.
    Held here or by anyone in the room (they arrive as events and are kept alive while held, so a dropped player cannot leave one on). */
-var IFX = { r:{ me:false, them:0 }, w:{ me:false, them:0 }, a:-1, sentAt:0 };
+var IFX = { r:{ me:false, them:0 }, w:{ me:false, them:0 }, a:-1, b:-1, k:0, sentAt:0 };
 function ifxOn(k){ var f = IFX[k]; return f.me || f.them > performance.now(); }
 function ifxApply(){
   if (!ifxOn('r')) IFX.a = -1;
-  if (AU.ready && AU.warp){ var t = ac.currentTime, on = ifxOn('w'); AU.warp.wet.gain.setTargetAtTime(on ? 1 : 0, t, 0.02); AU.warp.dry.gain.setTargetAtTime(on ? 0.12 : 1, t, 0.02); AU.warp.lp.frequency.setTargetAtTime(on ? 1100 : 2200, t, 0.25); }
+  if (!ifxOn('w')){ IFX.b = -1; IFX.k = 0; }
 }
 function ifxSet(k, on, remote){
   if (remote){ IFX[k].them = on ? performance.now() + 3000 : 0; } else { IFX[k].me = on; if (MPON && MPNET.ifx) MPNET.ifx(k, on); IFX.sentAt = performance.now(); }
-  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT' : 'WARP') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'WARP  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
+  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT  1/8' : 'ROLL  1/32') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'ROLL  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
 }
 function ifxTick(now){                                   // while held, remind the room every second and a half; let go of anyone who stopped saying so
   if ((IFX.r.me || IFX.w.me) && now - IFX.sentAt > 1500){ IFX.sentAt = now; if (MPON && MPNET.ifx){ if (IFX.r.me) MPNET.ifx('r', true); if (IFX.w.me) MPNET.ifx('w', true); } }
@@ -5356,12 +5350,14 @@ function schedStep(t){
   if (SEQ.fill){ var cf = pat().fill;                              // this pattern's own fill-in if one has been written (EDIT under AUTO FILL IN), otherwise one made up from what is playing
     if (fillOk(cf) && cf.st.some(function(r){ return r.some(function(x){ return x; }); })) v = cf; else { if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; } }
   var s = SEQ.step;
-  if (ifxOn('r') && M.playing){ if (IFX.a < 0) IFX.a = s - (s % 2); s = IFX.a + (((s - IFX.a) % 2) + 2) % 2; if (s >= v.last) s = 0; }      // BEAT REPEAT: the drums go round the held eighth note
+  var roll = 0;
+  if (ifxOn('w') && M.playing){ if (IFX.b < 0) IFX.b = s; s = IFX.b < v.last ? IFX.b : 0; roll = Math.min(1, 0.55 + 0.05 * IFX.k++); }      // ROLL: the held sixteenth, twice a step, rising
+  else if (ifxOn('r') && M.playing){ if (IFX.a < 0) IFX.a = s - (s % 2); s = IFX.a + (((s - IFX.a) % 2) + 2) % 2; if (s >= v.last) s = 0; }      // BEAT REPEAT: the drums go round the held eighth note
   var sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
   for (var i = 0; i < 11; i++){
     var st = v.st[i][s]; if (!st) continue;
     if (SEQ.skip[i + '_' + s]){ delete SEQ.skip[i + '_' + s]; continue; }
-    var vel = (st === 2 ? 0.4 : 0.8) * acc, n = v.sb[i][s] || 1;
+    var vel = (st === 2 ? 0.4 : 0.8) * acc * (roll || 1), n = roll ? Math.max(2, v.sb[i][s] || 1) : v.sb[i][s] || 1;
     for (var k = 0; k < n; k++) trig(i, tt + k * sd / n, vel * (k ? 0.82 : 1));
     if (!M.mutes[i]){ hits.push(i); if (i === 1) sv = vel; }
   }
@@ -9873,7 +9869,7 @@ var MP = (function(){
   }
   MPNET.regrid = function(){ var v = Q.anchor; if (!v || !Q.ws || Math.abs(v.bpm - M.bpm) > 0.01) return false; var sd = stepDur(), t0 = ac.currentTime + (v.t0 - serverNow()) / 1000, k = Math.max(0, Math.ceil((ac.currentTime + 0.03 - t0) / sd)); SEQ.n16 = (v.n0 | 0) + k; SEQ.step = SEQ.n16 % Math.max(1, playV().last); SEQ.nextT = t0 + k * sd; return true; };
   function anchor(){ return { on:1, t0:Math.round(serverNow() + (SEQ.nextT - ac.currentTime) * 1000), n0:SEQ.n16, bpm:M.bpm }; }
-  MPNET.ifx = function(k, on){ send({ t:'ev', e:['fx', k, on ? 1 : 0] }); };      // BEAT REPEAT and WARP, held by this player
+  MPNET.ifx = function(k, on){ send({ t:'ev', e:['fx', k, on ? 1 : 0] }); };      // BEAT REPEAT and ROLL, held by this player
   MPNET.start = function(){ var v = { on:1, t0:Math.round(serverNow() + 350), n0:0, bpm:M.bpm }; if (!send({ t:'set', k:'transport', v:v })){ startSeq(null, true); return; } transport(v); };
   MPNET.stop = function(){ send({ t:'set', k:'transport', v:{ on:0 } }); };
   MPNET.tempo = function(){ if (!M.playing || Q.applying) return; clearTimeout(Q.tempoT); Q.tempoT = setTimeout(function(){ if (M.playing && ac){ var v = anchor(); Q.anchor = v; send({ t:'set', k:'transport', v:v }); } }, 120); };
@@ -10769,7 +10765,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.251 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.252 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

@@ -203,7 +203,7 @@ button('ptn', 120, 296, 16, 16, 'PTN\nSELECT', 'Pattern select', GRN); button('t
 button('last', 120, 330, 16, 16, 'LAST', 'Last step', GRN); button('sub', 170, 330, 16, 16, 'SUB', 'Sub steps', GRN);
 VRAW = true; button('moton', 120, 392, 16, 16, 'ON', 'Motion on', GRN); button('motrec', 170, 392, 16, 16, 'REC', 'Motion rec', RED);
 button('instplay', 120, 426, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 426, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED);
-button('fxrpt', 120, 468, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 468, 16, 16, 'WARP', 'Warp · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
+button('fxrpt', 120, 468, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 468, 16, 16, 'ROLL', 'Roll · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
 'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
 pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);

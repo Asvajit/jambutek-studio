@@ -68,18 +68,19 @@ function trsLoad(s){
   trsShow(); applyMix();
 }
 /* ---- the two instant effects (held buttons under INST PLAY / INST REC), drums only ----
-   BEAT REPEAT: from the next step, the drums loop the eighth note they are on (two steps) until it is let go; the bar keeps counting
-   underneath, so on release the pattern carries on exactly where it would have been. WARP: see AU.warp.
+   BEAT REPEAT: from the next step, the drums loop the eighth note they are on (two steps) until it is let go. ROLL: the drums hold the one
+   sixteenth they are on and play it twice per step, a thirty-second-note stutter that builds in level. In both the bar keeps counting
+   underneath, so on release the pattern carries on exactly where it would have been. ROLL wins if both are held.
    Held here or by anyone in the room (they arrive as events and are kept alive while held, so a dropped player cannot leave one on). */
-var IFX = { r:{ me:false, them:0 }, w:{ me:false, them:0 }, a:-1, sentAt:0 };
+var IFX = { r:{ me:false, them:0 }, w:{ me:false, them:0 }, a:-1, b:-1, k:0, sentAt:0 };
 function ifxOn(k){ var f = IFX[k]; return f.me || f.them > performance.now(); }
 function ifxApply(){
   if (!ifxOn('r')) IFX.a = -1;
-  if (AU.ready && AU.warp){ var t = ac.currentTime, on = ifxOn('w'); AU.warp.wet.gain.setTargetAtTime(on ? 1 : 0, t, 0.02); AU.warp.dry.gain.setTargetAtTime(on ? 0.12 : 1, t, 0.02); AU.warp.lp.frequency.setTargetAtTime(on ? 1100 : 2200, t, 0.25); }
+  if (!ifxOn('w')){ IFX.b = -1; IFX.k = 0; }
 }
 function ifxSet(k, on, remote){
   if (remote){ IFX[k].them = on ? performance.now() + 3000 : 0; } else { IFX[k].me = on; if (MPON && MPNET.ifx) MPNET.ifx(k, on); IFX.sentAt = performance.now(); }
-  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT' : 'WARP') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'WARP  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
+  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT  1/8' : 'ROLL  1/32') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'ROLL  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
 }
 function ifxTick(now){                                   // while held, remind the room every second and a half; let go of anyone who stopped saying so
   if ((IFX.r.me || IFX.w.me) && now - IFX.sentAt > 1500){ IFX.sentAt = now; if (MPON && MPNET.ifx){ if (IFX.r.me) MPNET.ifx('r', true); if (IFX.w.me) MPNET.ifx('w', true); } }
@@ -188,12 +189,14 @@ function schedStep(t){
   if (SEQ.fill){ var cf = pat().fill;                              // this pattern's own fill-in if one has been written (EDIT under AUTO FILL IN), otherwise one made up from what is playing
     if (fillOk(cf) && cf.st.some(function(r){ return r.some(function(x){ return x; }); })) v = cf; else { if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; } }
   var s = SEQ.step;
-  if (ifxOn('r') && M.playing){ if (IFX.a < 0) IFX.a = s - (s % 2); s = IFX.a + (((s - IFX.a) % 2) + 2) % 2; if (s >= v.last) s = 0; }      // BEAT REPEAT: the drums go round the held eighth note
+  var roll = 0;
+  if (ifxOn('w') && M.playing){ if (IFX.b < 0) IFX.b = s; s = IFX.b < v.last ? IFX.b : 0; roll = Math.min(1, 0.55 + 0.05 * IFX.k++); }      // ROLL: the held sixteenth, twice a step, rising
+  else if (ifxOn('r') && M.playing){ if (IFX.a < 0) IFX.a = s - (s % 2); s = IFX.a + (((s - IFX.a) % 2) + 2) % 2; if (s >= v.last) s = 0; }      // BEAT REPEAT: the drums go round the held eighth note
   var sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
   for (var i = 0; i < 11; i++){
     var st = v.st[i][s]; if (!st) continue;
     if (SEQ.skip[i + '_' + s]){ delete SEQ.skip[i + '_' + s]; continue; }
-    var vel = (st === 2 ? 0.4 : 0.8) * acc, n = v.sb[i][s] || 1;
+    var vel = (st === 2 ? 0.4 : 0.8) * acc * (roll || 1), n = roll ? Math.max(2, v.sb[i][s] || 1) : v.sb[i][s] || 1;
     for (var k = 0; k < n; k++) trig(i, tt + k * sd / n, vel * (k ? 0.82 : 1));
     if (!M.mutes[i]){ hits.push(i); if (i === 1) sv = vel; }
   }

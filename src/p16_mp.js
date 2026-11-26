@@ -195,7 +195,7 @@ var MP = (function(){
   }
   MPNET.regrid = function(){ var v = Q.anchor; if (!v || !Q.ws || Math.abs(v.bpm - M.bpm) > 0.01) return false; var sd = stepDur(), t0 = ac.currentTime + (v.t0 - serverNow()) / 1000, k = Math.max(0, Math.ceil((ac.currentTime + 0.03 - t0) / sd)); SEQ.n16 = (v.n0 | 0) + k; SEQ.step = SEQ.n16 % Math.max(1, playV().last); SEQ.nextT = t0 + k * sd; return true; };
   function anchor(){ return { on:1, t0:Math.round(serverNow() + (SEQ.nextT - ac.currentTime) * 1000), n0:SEQ.n16, bpm:M.bpm }; }
-  MPNET.ifx = function(k, on){ send({ t:'ev', e:['fx', k, on ? 1 : 0] }); };      // BEAT REPEAT and WARP, held by this player
+  MPNET.ifx = function(k, on){ send({ t:'ev', e:['fx', k, on ? 1 : 0] }); };      // BEAT REPEAT and ROLL, held by this player
   MPNET.start = function(){ var v = { on:1, t0:Math.round(serverNow() + 350), n0:0, bpm:M.bpm }; if (!send({ t:'set', k:'transport', v:v })){ startSeq(null, true); return; } transport(v); };
   MPNET.stop = function(){ send({ t:'set', k:'transport', v:{ on:0 } }); };
   MPNET.tempo = function(){ if (!M.playing || Q.applying) return; clearTimeout(Q.tempoT); Q.tempoT = setTimeout(function(){ if (M.playing && ac){ var v = anchor(); Q.anchor = v; send({ t:'set', k:'transport', v:v }); } }, 120); };
