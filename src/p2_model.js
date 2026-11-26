@@ -28,7 +28,7 @@ var CT = {}, CTLIST = [];                            // every control, by id
 
 /* ---- the printed panel ---- */
 var panelC = mk(3072, 2284), panelTex = null;      // about 7.7 px per panel millimetre each way: the small print has to stay readable when you lean in
-var TRPLATE = { on:true, dark:0.68, img:null };
+var TRPLATE = { on:true, dark:0, img:null };      /* the artwork is stored already as a ghost print (two close dark tones, softened), so it needs no darkening here */
 (function(){ var src = window.JB_ASSETS && JB_ASSETS.trPlate; if (!src) return; var im = new Image(); im.onload = function(){ TRPLATE.img = im; paintPanel(); }; im.src = src; })();
 function paintPanel(){
   var g = panelC.getContext('2d');
