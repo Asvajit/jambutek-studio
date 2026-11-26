@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.255</span>
+    <span id="verFps">studio v0.256</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.255</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.256</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -6747,7 +6747,7 @@ MXX.forEach(function(x, i){
   knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
   if (i) knob('mxsc' + i, x + 3, 9.6, 3.9, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc, { h:6, color:0x3A1216 }).ch = i;
   knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B (reverb)', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
-  button('mxmute' + i, x - 9.6, 213.5, 17.5, 16, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 213.5, 17.5, 16, 'SOLO', MXN[i] + ' solo', 0xFFE15A); so.ch = i; so.solo = true;
+  button('mxmute' + i, x - 9.6, 213.5, 17.5, 16, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 213.5, 17.5, 16, 'SOLO', MXN[i] + ' solo', 0x3A8BFF); /* blue, like a soloed channel's meter */ so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
 });
 FACE = { bg:'#F2B544', fg:'#141005' }; button('mxclra', MXMX, 157, 26, 10, 'CLEAR', 'Clear send A on every channel', 0xF2B544).clr = 'sa';
@@ -6822,7 +6822,8 @@ function mxUpdate(now, dt){
   }
   ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ var b = CT[id], bl = b.down ? 0.9 : 0.25; if (bl !== b.lit){ b.lit = bl; b.paintLit(); } var by = b.y0 - (b.down ? 0.003 : 0); if (b.m.position.y !== by) b.m.position.y = by; });
   for (i = 0; i < MXNC; i++){ ['fh', 'fl'].forEach(function(w){ var fb = CT['mx' + w + i], FL = MX[w][i] ? 1.9 : 0; if (fb.down) FL = Math.max(FL, 0.8); if (FL !== fb.lit){ fb.lit = FL; fb.paintLit(); } var fy = fb.y0 - (fb.down ? 0.002 : 0); if (fb.m.position.y !== fy) fb.m.position.y = fy; }); }
-  for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], L = MX.ch[i].mute ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
+  for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], mu = !!MX.ch[i].mute, L = mu ? 1 : 0.5; if (c.down) L = Math.max(L, 0.8);      /* MUTE: green while the channel is open, red while it is muted */
+    if (c.mu !== mu){ c.mu = mu; c.col.setHex(mu ? 0xFF2A3C : 0x3BFF6A); c.lit = -1; } if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
     var so = CT['mxsolo' + i], SL = MX.ch[i].solo ? 1 : 0; if (so.down) SL = Math.max(SL, 0.8); if (SL !== so.lit){ so.lit = SL; so.paintLit(); } var sy = so.y0 - (so.down ? 0.003 : 0); if (so.m.position.y !== sy) so.m.position.y = sy; }
 }
 var NOP = function(){};
@@ -7898,14 +7899,14 @@ var ecSaveT = null; function ecSaveNow(){ store('jambutek-studio-echo-v1', JSON.
 var ecC = mk(ECW * 6, ECD * 6), ecTex = null;
 function paintEC(){
   var g = ecC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  g.fillStyle = '#20382F'; g.fillRect(0, 0, ECW, ECD);
-  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '170,200,180') + ',' + rnd(.02, .06) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#EDE6CF'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#EDE6CF'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('ECHO', 10, 15, 11, '#EDE6CF', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#F2B544', false, 'right');
-  g.fillStyle = '#EDE6CF'; g.fillRect(10, 24, ECW - 20, 0.6);
+  g.fillStyle = '#35C46B'; g.fillRect(0, 0, ECW, ECD);      // the green of the drum machine's delay knobs: every delay in the room is green
+  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '230,255,235') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
+  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#0B1F12'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  g.strokeStyle = '#0B1F12'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
+  T('ECHO', 10, 15, 11, '#0B1F12', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#0B1F12', false, 'right');
+  g.fillStyle = '#0B1F12'; g.fillRect(10, 24, ECW - 20, 0.6);
   [['TIME', 30], ['REPEAT', 67], ['TONE', 104], ['LEVEL', 141]].forEach(function(a){
-    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(237,230,207,.7)'; g.lineWidth = 0.4;
+    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(11,31,18,.75)'; g.lineWidth = 0.4;
     for (var k = 0; k <= 10; k++){ var an = (-135 + k * 27) * Math.PI / 180, r0 = 11.2, r1 = k % 5 ? 12.6 : 13.6; g.beginPath(); g.moveTo(a[1] + Math.sin(an) * r0, 48 - Math.cos(an) * r0); g.lineTo(a[1] + Math.sin(an) * r1, 48 - Math.cos(an) * r1); g.stroke(); }
   });
   T('TEMPO SYNC', 30, 99.5, 3.6); T('PEAK', 85, 99.5, 3.6); T('ON', 141, 99.5, 3.6);
@@ -7917,7 +7918,7 @@ var ECLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:ecTex, emissive:0xffffff, emissiveMap:ecTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; ECG.add(top);
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x15241E, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -ECTH / 2 - 0.0015; ECG.add(body);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1E7A43, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -ECTH / 2 - 0.0015; ECG.add(body);
   devBody(ECY, 'ec');
 })();
 HOST = ECG; LX = ecx; LZ = ecz; DEV = 'ec';
@@ -7983,12 +7984,12 @@ var rvSaveT = null; function rvSaveNow(){ store('jambutek-studio-reverb-v1', JSO
 var rvC = mk(ECW * 6, ECD * 6), rvTex = null;
 function paintRV(){
   var g = rvC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  var gr = g.createLinearGradient(0, 0, ECW, ECD); gr.addColorStop(0, '#141A3A'); gr.addColorStop(1, '#2A1846'); g.fillStyle = gr; g.fillRect(0, 0, ECW, ECD);
-  for (var i = 0; i < 160; i++){ g.fillStyle = 'rgba(255,255,255,' + rnd(.08, .5) + ')'; var r = rnd(.12, .42); g.beginPath(); g.arc(Math.random() * ECW, Math.random() * ECD, r, 0, 7); g.fill(); }     // a few stars
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E4F2'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#E6E4F2'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('REVERB', 10, 14, 10, '#E6E4F2', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#7FD0FF', false, 'right'); g.fillStyle = '#E6E4F2'; g.fillRect(10, 22, ECW - 20, 0.6);
-  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#7FD0FF' : null); });
+  g.fillStyle = '#E8C63A'; g.fillRect(0, 0, ECW, ECD);      // the yellow of the drum machine's reverb knobs: every reverb in the room is yellow
+  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '40,30,0' : '255,250,220') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
+  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#1E1803'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  g.strokeStyle = '#1E1803'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
+  T('REVERB', 10, 14, 10, '#1E1803', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#1E1803', false, 'right'); g.fillStyle = '#1E1803'; g.fillRect(10, 22, ECW - 20, 0.6);
+  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#0F3E66' : null); });
   T('MODE', 141, 54, 3.6); T('ON', 141, 84, 3.6); T('PEAK', 141, 100.5, 3.2);
   g.setTransform(1, 0, 0, 1, 0, 0); if (rvTex) rvTex.needsUpdate = true;
 }
@@ -7998,7 +7999,7 @@ var RVLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:rvTex, emissive:0xffffff, emissiveMap:rvTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; top.position.z = RVOFF; ECG.add(top);
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x14122A, shininess:30, specular:0x222222, flatShading:true })); body.position.set(0, -ECTH / 2 - 0.0015, RVOFF); ECG.add(body);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x8A7114, shininess:30, specular:0x222222, flatShading:true })); body.position.set(0, -ECTH / 2 - 0.0015, RVOFF); ECG.add(body);
   top.userData.dev = body.userData.dev = 'ec';
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';
@@ -9275,7 +9276,7 @@ function fxStep(dt, F){                                     // F: what the music
   } else if (m === 3){                                      // Cymatics: sand on a vibrating plate, settling on the lines that stand still
     var md = FXCH[Math.min(8, Math.floor(clamp(A + (F.band[1] - F.band[4]) * 0.06, 0, 0.999) * 9))], pull = 0.6 + B * 5, rot = t * (C - 0.5) * 0.8, cr = Math.cos(rot), sr = Math.sin(rot), jit = 0.12 + F.rms * 1.2 + F.kick * 1.6, eps = 0.01;
     for (i = 0; i < n; i++){ x = px[i]; y = py[i]; var v = fxChl(x, y, md), gx = (fxChl(x + eps, y, md) - v) / eps, gy = (fxChl(x, y + eps, md) - v) / eps;
-      var st = pull * dt * 0.09, mx2 = clamp(-v * gx * st, -0.02, 0.02), my2 = clamp(-v * gy * st, -0.02, 0.02); x += mx2 + (fxRnd() - 0.5) * jit * dt * 0.35; y += my2 + (fxRnd() - 0.5) * jit * dt * 0.35;      // slide downhill toward the still lines; the music shakes the sand loose if (x < -1 || x > 1) { x = fxRnd() * 2 - 1; } if (y < -1 || y > 1){ y = fxRnd() * 2 - 1; } px[i] = x; py[i] = y;
+      var st = pull * dt * 0.09, mx2 = clamp(-v * gx * st, -0.02, 0.02), my2 = clamp(-v * gy * st, -0.02, 0.02); x += mx2 + (fxRnd() - 0.5) * jit * dt * 0.35; y += my2 + (fxRnd() - 0.5) * jit * dt * 0.35;      /* slide downhill toward the still lines; the music shakes the sand loose */ if (x < -1 || x > 1) { x = fxRnd() * 2 - 1; } if (y < -1 || y > 1){ y = fxRnd() * 2 - 1; } px[i] = x; py[i] = y;
       fxPal(Math.sqrt(x * x + y * y) * 0.5 + t * 0.04, F.cent, 0.1, c); fxDot((x * cr - y * sr) * 0.72, (x * sr + y * cr) * 0.72, c[0] * 0.14, c[1] * 0.14, c[2] * 0.14); }
   } else if (m === 4){                                      // Morph: particles spring from one outline to the next, changing every two bars
     var shp = Math.floor(F.bar / 2) % 6, ks = 6 + A * 40, tb = B * (0.4 + F.rms * 3), o = FXV;
@@ -10501,7 +10502,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.255 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.256 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

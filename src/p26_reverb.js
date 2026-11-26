@@ -14,12 +14,12 @@ var rvSaveT = null; function rvSaveNow(){ store('jambutek-studio-reverb-v1', JSO
 var rvC = mk(ECW * 6, ECD * 6), rvTex = null;
 function paintRV(){
   var g = rvC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  var gr = g.createLinearGradient(0, 0, ECW, ECD); gr.addColorStop(0, '#141A3A'); gr.addColorStop(1, '#2A1846'); g.fillStyle = gr; g.fillRect(0, 0, ECW, ECD);
-  for (var i = 0; i < 160; i++){ g.fillStyle = 'rgba(255,255,255,' + rnd(.08, .5) + ')'; var r = rnd(.12, .42); g.beginPath(); g.arc(Math.random() * ECW, Math.random() * ECD, r, 0, 7); g.fill(); }     // a few stars
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E4F2'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#E6E4F2'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('REVERB', 10, 14, 10, '#E6E4F2', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#7FD0FF', false, 'right'); g.fillStyle = '#E6E4F2'; g.fillRect(10, 22, ECW - 20, 0.6);
-  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#7FD0FF' : null); });
+  g.fillStyle = '#E8C63A'; g.fillRect(0, 0, ECW, ECD);      // the yellow of the drum machine's reverb knobs: every reverb in the room is yellow
+  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '40,30,0' : '255,250,220') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
+  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#1E1803'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  g.strokeStyle = '#1E1803'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
+  T('REVERB', 10, 14, 10, '#1E1803', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#1E1803', false, 'right'); g.fillStyle = '#1E1803'; g.fillRect(10, 22, ECW - 20, 0.6);
+  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#0F3E66' : null); });
   T('MODE', 141, 54, 3.6); T('ON', 141, 84, 3.6); T('PEAK', 141, 100.5, 3.2);
   g.setTransform(1, 0, 0, 1, 0, 0); if (rvTex) rvTex.needsUpdate = true;
 }
@@ -29,7 +29,7 @@ var RVLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:rvTex, emissive:0xffffff, emissiveMap:rvTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; top.position.z = RVOFF; ECG.add(top);
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x14122A, shininess:30, specular:0x222222, flatShading:true })); body.position.set(0, -ECTH / 2 - 0.0015, RVOFF); ECG.add(body);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x8A7114, shininess:30, specular:0x222222, flatShading:true })); body.position.set(0, -ECTH / 2 - 0.0015, RVOFF); ECG.add(body);
   top.userData.dev = body.userData.dev = 'ec';
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';

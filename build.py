@@ -2,6 +2,8 @@
 """Stitch src/ and vendor/ into the single page public/index.html. Run from the repo root: python3 build.py"""
 import json, os, re
 here = os.path.dirname(os.path.abspath(__file__))
+import subprocess, sys
+if subprocess.run([sys.executable, os.path.join(here, 'tools', 'check_comments.py')]).returncode: sys.exit('build stopped: fix the lines above first')      # code hidden behind a // comment has broken the room before
 rd = lambda *p: open(os.path.join(here, *p), encoding='utf-8').read()
 PARTS = ['p1_room.js', 'p2_model.js', 'p3_audio.js', 'p4_machine.js', 'p6a_synth_model.js', 'p6b_synth_engine.js', 'p7_shared.js', 'p7b_bass.js',
          'p8_mixer.js', 'p11_ambika.js', 'p12_tape.js', 'p13_blip.js', 'p14_shru.js', 'p18_chord.js', 'p19_scratch.js', 'p22_echo.js', 'p26_reverb.js', 'p28_scenes.js', 'p25_kit.js', 'p9_snake.js', 'p24_tables.js', 'p29_lounge.js', 'p27_scope.js', 'p15_wall.js', 'p20_lights.js', 'p17_flow.js', 'p23_video.js', 'p16_mp.js', 'p5_input.js']

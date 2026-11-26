@@ -14,14 +14,14 @@ var ecSaveT = null; function ecSaveNow(){ store('jambutek-studio-echo-v1', JSON.
 var ecC = mk(ECW * 6, ECD * 6), ecTex = null;
 function paintEC(){
   var g = ecC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  g.fillStyle = '#20382F'; g.fillRect(0, 0, ECW, ECD);
-  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '170,200,180') + ',' + rnd(.02, .06) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#EDE6CF'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#EDE6CF'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('ECHO', 10, 15, 11, '#EDE6CF', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#F2B544', false, 'right');
-  g.fillStyle = '#EDE6CF'; g.fillRect(10, 24, ECW - 20, 0.6);
+  g.fillStyle = '#35C46B'; g.fillRect(0, 0, ECW, ECD);      // the green of the drum machine's delay knobs: every delay in the room is green
+  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '230,255,235') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
+  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#0B1F12'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  g.strokeStyle = '#0B1F12'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
+  T('ECHO', 10, 15, 11, '#0B1F12', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#0B1F12', false, 'right');
+  g.fillStyle = '#0B1F12'; g.fillRect(10, 24, ECW - 20, 0.6);
   [['TIME', 30], ['REPEAT', 67], ['TONE', 104], ['LEVEL', 141]].forEach(function(a){
-    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(237,230,207,.7)'; g.lineWidth = 0.4;
+    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(11,31,18,.75)'; g.lineWidth = 0.4;
     for (var k = 0; k <= 10; k++){ var an = (-135 + k * 27) * Math.PI / 180, r0 = 11.2, r1 = k % 5 ? 12.6 : 13.6; g.beginPath(); g.moveTo(a[1] + Math.sin(an) * r0, 48 - Math.cos(an) * r0); g.lineTo(a[1] + Math.sin(an) * r1, 48 - Math.cos(an) * r1); g.stroke(); }
   });
   T('TEMPO SYNC', 30, 99.5, 3.6); T('PEAK', 85, 99.5, 3.6); T('ON', 141, 99.5, 3.6);
@@ -33,7 +33,7 @@ var ECLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:ecTex, emissive:0xffffff, emissiveMap:ecTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; ECG.add(top);
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x15241E, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -ECTH / 2 - 0.0015; ECG.add(body);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1E7A43, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -ECTH / 2 - 0.0015; ECG.add(body);
   devBody(ECY, 'ec');
 })();
 HOST = ECG; LX = ecx; LZ = ecz; DEV = 'ec';
