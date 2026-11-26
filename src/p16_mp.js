@@ -518,9 +518,16 @@ var MP = (function(){
     if (Q.ws && Q.ws.readyState === 1){
       if (now - Q.sendAt > 66){
         Q.sendAt = now; var lean = mode === 'tr' && LEAN, px = lean ? LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0) : cam.x, pz = lean ? LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0) : cam.z;
+        var lyaw = lean ? (LEAN.yaw || 0) : 0, lix = lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0;
+        if (lean){                                                    /* sharing a machine: whoever is already at it keeps the middle, and to everyone else we lean in from its side. Our own view does not change. */
+          var fx = -Math.sin(lyaw), fz = -Math.cos(lyaw), rx = Math.cos(lyaw), rz = -Math.sin(lyaw), taken = {}, clash = false;
+          Object.keys(Q.peers).forEach(function(id){ var o = Q.peers[id].s; if (!o || o[6] !== lix) return; var off = (o[0] - px) * rx + (o[1] - pz) * rz, sl = off > 0.2 ? 1 : off < -0.2 ? 2 : 0; taken[sl] = 1; if (sl === Q.leanSlot && String(id) < String(Q.id)) clash = true; });
+          if (Q.leanKey !== LEAN.key || Q.leanSlot == null || clash || (Q.leanSlot > 0 && !taken[0])){ Q.leanKey = LEAN.key; Q.leanSlot = !taken[0] ? 0 : !taken[1] ? 1 : !taken[2] ? 2 : 1; }
+          if (Q.leanSlot){ var sd = Q.leanSlot === 1 ? 1 : -1; px += rx * 0.52 * sd - fx * 0.06; pz += rz * 0.52 * sd - fz * 0.06; var tx = LEAN.stand.x + fx * 0.75, tz = LEAN.stand.z + fz * 0.75; lyaw = Math.atan2(-(tx - px), -(tz - pz)); }
+        } else { Q.leanKey = null; Q.leanSlot = null; }
         var em = !lean && EM.id ? EM.id : 0, st8 = 0, st9 = 0;
         if (SIT.on && !lean){ var SS = SEATS[SIT.seat], hd = cam.yaw - SS.yaw; st8 = 1 + SIT.seat * 3 + SIT.pose; st9 = +Math.atan2(Math.sin(hd), Math.cos(hd)).toFixed(3); px = SS.x; pz = SS.z; }      // seated: which seat and pose, and how far the head is turned
-        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : st8 ? SEATS[SIT.seat].yaw : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0, em, st8, st9] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
+        send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? lyaw : st8 ? SEATS[SIT.seat].yaw : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lix, em, st8, st9] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
       if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)) ping();
@@ -529,7 +536,7 @@ var MP = (function(){
     glowTick(now); pingTick(now);
     var k = 1 - Math.exp(-dt * 12);
     Object.keys(Q.peers).forEach(function(id){
-      var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = true;
+      var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = !(mode === 'tr' && LEAN && s[6] === 1 + Object.keys(DEVS).indexOf(LEAN.key));      /* leaning over a machine someone else is on: they are not drawn for us, or they would stand in our view */
       P.x = lerp(P.x, s[0], k); P.z = lerp(P.z, s[1], k); var dy = s[2] - P.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); P.yaw += dy * k;
       P.pitch = lerp(P.pitch, s[3], k); P.c = lerp(P.c, s[4], k); P.j = lerp(P.j, s[5], 0.5); P.lean = lerp(P.lean, s[6] ? 1 : 0, k);
       var sp = Math.hypot(P.x - P.lastX, P.z - P.lastZ) / Math.max(dt, 0.001); P.lastX = P.x; P.lastZ = P.z;
