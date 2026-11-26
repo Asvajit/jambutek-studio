@@ -13,6 +13,13 @@ licensed CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
 Changes: geometry quantised, scaled and fitted to the character's head; base colour texture reduced
 and tinted red; other textures dropped.
 
+## Propeller cap (`hats.json`, key `propcap`)
+Baked from "propeller cap" by noitamina_
+(https://sketchfab.com/3d-models/propeller-cap-39bf95ca02654177bcb82d2c63e27f7e),
+licensed CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
+Changes: parts joined into one mesh, geometry quantised, scaled and fitted to the character's head;
+textures and flat colours reduced to one small sheet.
+
 ## Stage light (`stagelight.json`)
 Baked from "Stage Light - Fresnel" by Mike Rowley
 (https://sketchfab.com/3d-models/stage-light-fresnel-3554154c724c4cf1b8db4ff26f65b54c),
