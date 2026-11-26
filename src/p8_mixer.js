@@ -24,11 +24,11 @@ function paintMX(){
     if (i){ T('SIDE', x - 13, 7.4, 2.7, '#B8B8B4'); T('CHAIN', x - 13, 11.2, 2.7, '#B8B8B4'); g.fillStyle = '#FF2A3C'; g.fillRect(x + 2.7, 2.6, 0.6, 1.4); }
     g.fillStyle = '#E6E6E2'; g.fillRect(x - 17, 25, 34, 11); T(MXN[i], x, 30.8, 6.2, '#111318', true); T(String(i + 1), x - 15, 313, 7, MXCOL[i], true);
     [['HI', 52], ['MID', 88], ['LOW', 124]].forEach(function(a){ T(a[0], x, a[1] + 15, 4.2); g.fillStyle = '#B8B8B4'; g.fillRect(x - 0.3, a[1] - 13, 0.6, 2); });
-    [['A', 157, '#F2B544'], ['B', 186, '#7FD0FF']].forEach(function(a){ T('SEND', x - 12.5, a[1] - 3, 2.9, '#B8B8B4'); T(a[0], x - 12.5, a[1] + 2.6, 5.4, a[2], true); g.fillStyle = a[2]; g.fillRect(x - 0.3, a[1] - 9.6, 0.6, 1.6); });
+    [['A', 157, '#35C46B'], ['B', 186, '#E8C63A']].forEach(function(a){ T('SEND', x - 12.5, a[1] - 3, 2.9, '#B8B8B4'); T(a[0], x - 12.5, a[1] + 2.6, 5.4, a[2], true); g.fillStyle = a[2]; g.fillRect(x - 0.3, a[1] - 9.6, 0.6, 1.6); });
     g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k = 0; k <= 10; k++){ var yy = 234 + k * 7.6; g.beginPath(); g.moveTo(x - 10, yy); g.lineTo(x - (k % 5 ? 5.5 : 4), yy); g.stroke(); }
     T('0', x - 13.5, 234 + 2.5 * 7.6, 3.4, '#B8B8B4');
   });
-  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('HPF', MXMX, 37.6, 3.4, '#FF9A5A'); T('LPF', MXMX, 89.6, 3.4, '#7FD0FF'); T('SEND A', MXMX, 147.5, 3.2, '#F2B544'); T('SEND B', MXMX, 176.5, 3.2, '#7FD0FF'); T('OUT', MXMX, 220, 4);
+  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('HPF', MXMX, 37.6, 3.4, '#FF9A5A'); T('LPF', MXMX, 89.6, 3.4, '#7FD0FF'); T('SEND A', MXMX, 147.5, 3.2, '#35C46B'); T('SEND B', MXMX, 176.5, 3.2, '#E8C63A'); T('OUT', MXMX, 220, 4);
   g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k2 = 0; k2 <= 10; k2++){ var y2 = 234 + k2 * 7.6; g.beginPath(); g.moveTo(MXMX - 10, y2); g.lineTo(MXMX - (k2 % 5 ? 5.5 : 4), y2); g.stroke(); }
   g.setTransform(1, 0, 0, 1, 0, 0); if (mxTex) mxTex.needsUpdate = true;
 }
@@ -52,12 +52,12 @@ HOST = MXG; LX = qx; LZ = qz; DEV = 'mx';
 MXX.forEach(function(x, i){
   knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
   if (i) knob('mxsc' + i, x + 3, 9.6, 3.9, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc, { h:6, color:0x3A1216 }).ch = i;
-  knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x3A2C10 }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B (reverb)', MX.ch[i].sb, { h:7, color:0x12303F }).ch = i;
+  knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x35C46B, tick:0x0A150E }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B (reverb)', MX.ch[i].sb, { h:7, color:0xE8C63A, tick:0x15130A }).ch = i;
   button('mxmute' + i, x - 9.6, 213.5, 17.5, 16, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 213.5, 17.5, 16, 'SOLO', MXN[i] + ' solo', 0x3A8BFF); /* blue, like a soloed channel's meter */ so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
 });
-FACE = { bg:'#F2B544', fg:'#141005' }; button('mxclra', MXMX, 157, 26, 10, 'CLEAR', 'Clear send A on every channel', 0xF2B544).clr = 'sa';
-FACE = { bg:'#7FD0FF', fg:'#06131B' }; button('mxclrb', MXMX, 186, 26, 10, 'CLEAR', 'Clear send B on every channel', 0x7FD0FF).clr = 'sb';
+FACE = { bg:'#35C46B', fg:'#0A150E' }; button('mxclra', MXMX, 157, 26, 10, 'CLEAR', 'Clear send A on every channel', 0x35C46B).clr = 'sa';      /* send A feeds the echo: green, like every delay in the room */
+FACE = { bg:'#E8C63A', fg:'#15130A' }; button('mxclrb', MXMX, 186, 26, 10, 'CLEAR', 'Clear send B on every channel', 0xE8C63A).clr = 'sb';      /* send B feeds the reverb: yellow, like every reverb */
 /* the two master filters, above the sends: a knob each, and under it two rows of five small numbered buttons that switch the filter in
    for those channels */
 knob('mxhpf', MXMX - 7, 48.5, 5.6, 'Master high-pass', MX.hpf, { h:7, color:0x3A2010 }); knob('mxlpf', MXMX - 7, 100.5, 5.6, 'Master low-pass', MX.lpf, { h:7, color:0x12303F });
