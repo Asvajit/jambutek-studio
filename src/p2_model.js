@@ -13,7 +13,10 @@ function lx(px){ return (U(px) - PANEL.w / 2) * SC; }
 function lz(py){ return (V(py) - PANEL.h / 2) * SC; }
 var INST = ['BD','SD','LT','MT','HT','RS','HC','CH','OH','CC','RC'];
 var INAME = ['Bass Drum','Snare Drum','Low Tom','Mid Tom','High Tom','Rim Shot','Hand Clap','Closed Hi-hat','Open Hi-hat','Crash Cymbal','Ride Cymbal'];
-var COLX = [225, 265, 306, 346, 386, 427, 467, 507, 548, 588, 628];
+/* The drawing's right-hand block is rebuilt as one narrow column (screen, VALUE, COPY, KIT, INST, tempo, shuffle), which leaves the
+   eleven drums 47 px more room: their columns are spread to a 44.3 px pitch and the top row above them is stretched to match (TRX). */
+var COLX = [229, 273, 318, 362, 406, 451, 495, 539, 583, 628, 672], CHX1 = 694, SIDEX = 752;
+function TRX(x){ return 207 + (x - 207) * (CHX1 - 207) / 440; }
 var PADX = [199, 236, 273, 311, 349, 386, 424, 461, 499, 537, 574, 612, 650, 687, 725, 762];
 var PADCOL = [0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF8A2A, 0xFF8A2A, 0xFF8A2A, 0xFF8A2A, 0xFFE15A, 0xFFE15A, 0xFFE15A, 0xFFE15A, 0xF4F4F4, 0xF4F4F4, 0xF4F4F4, 0xF4F4F4];
 var COLCOL = ['#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FFE15A', '#FFE15A', '#FFE15A'];
@@ -41,35 +44,36 @@ function paintPanel(){
   }
   var line = 'rgba(216,216,216,.55)';
   // section frames
-  rr(92, 178, 198, 606, 3, line); rr(207, 178, 284, 236, 3, line); rr(290, 178, 323, 236, 3, line); rr(329, 178, 444, 236, 3, line);
-  rr(450, 178, 525, 236, 3, line); rr(531, 178, 647, 236, 3, line); rr(207, 252, 647, 464, 3, line); rr(207, 470, 647, 512, 3, line);
-  rr(655, 178, 802, 512, 3, line); rr(172, 520, 802, 606, 3, line);
+  rr(92, 178, 198, 512, 3, line); [[207, 284], [290, 323], [329, 444], [450, 525], [531, 647]].forEach(function(b){ rr(TRX(b[0]), 178, TRX(b[1]), 236, 3, line); });
+  rr(207, 252, CHX1, 464, 3, line); rr(207, 470, CHX1, 512, 3, line);
+  rr(CHX1 + 8, 178, 802, 512, 3, line); rr(92, 520, 802, 606, 3, line);                // the bottom box runs the full width and holds START / STOP as well as the pads
   // brand strip: this is the label's own box, so it wears the label's name
    T('RHYTHM STATION', 700, 166, 3.2, '#C9C9C4', 'bold', 'right'); T('DRUM-8', 800, 165, 7.2, '#E0193C', 'A', 'right');
   // top row
   T('VOLUME', 145, 190, 3, null);
-  T('ACCENT', 245, 190, 3.2, null); T('LEVEL', 226, 230, 2.6, null);
-  T('REVERB', 306, 190, 3.2, null); T('LEVEL', 306, 230, 2.6, null);
-  T('DELAY', 386, 190, 3.2, null); T('LEVEL', 346, 230, 2.6, null); T('TIME', 386, 230, 2.6, null); T('FEEDBACK', 427, 230, 2.6, null);
-  T('MASTER FX', 487, 190, 3.2, null); T('CTRL', 508, 230, 2.6, null);
-  T('AUTO FILL IN', 588, 190, 3.2, null);
-  [['2', 566, 222], ['4', 569, 204], ['8', 580, 193], ['12', 596, 193], ['16', 607, 204], ['32', 611, 222]].forEach(function(m){ T(m[0], m[1], m[2], 2.3, '#B8B8B4'); });
+  T('ACCENT', TRX(245), 190, 3.2, null); T('LEVEL', TRX(226), 230, 2.6, null);
+  T('REVERB', TRX(306), 190, 3.2, null); T('LEVEL', TRX(306), 230, 2.6, null);
+  T('DELAY', TRX(386), 190, 3.2, null); T('LEVEL', TRX(346), 230, 2.6, null); T('TIME', TRX(386), 230, 2.6, null); T('FEEDBACK', TRX(427), 230, 2.6, null);
+  T('MASTER FX', TRX(487), 190, 3.2, null); T('CTRL', TRX(508), 230, 2.6, null);
+  T('AUTO FILL IN', TRX(588), 190, 3.2, null);
+  [['2', 566, 222], ['4', 569, 204], ['8', 580, 193], ['12', 596, 193], ['16', 607, 204], ['32', 611, 222]].forEach(function(m){ T(m[0], TRX(588) + m[1] - 588, m[2], 2.3, '#B8B8B4'); });
   // knob end-stops
   function stops(px, py, r){ g.fillStyle = '#B8B8B4'; [-1, 1].forEach(function(s){ g.beginPath(); g.arc(U(px) + s * r * 0.76, V(py) + r * 0.72, 0.5, 0, 7); g.fill(); }); }
-  [[145, 213], [226, 212], [306, 212], [346, 212], [386, 212], [427, 212], [508, 212], [766, 400]].forEach(function(p){ stops(p[0], p[1], 9.5); });
+  [[145, 213], [TRX(226), 212], [TRX(306), 212], [TRX(346), 212], [TRX(386), 212], [TRX(427), 212], [TRX(508), 212]].forEach(function(p){ stops(p[0], p[1], 9.5); });
+  VRAW = true; stops(SIDEX, 470, 9.5); VRAW = false;
   // instrument columns
   COLX.forEach(function(x, i){
     rr(x - 19, 239, x + 19, 250, 0.8, COLCOL[i], '#23262C'); T(INAME[i].toUpperCase().replace('HI-HAT', 'HIHAT'), x, 245, 3.3, '#F4F4F0', 'A');
     T('TUNE', x, 287, 3, null); T('DECAY', x, 326, 3, null); T('TONE', x, 365, 3, null);
-    VRAW = true; T('REV', x - 9.5, 410, 2.4, '#E8C63A'); T('DLY', x + 9.5, 410, 2.4, '#35C46B'); VRAW = false;      // the two sends, in the let-in row
+    VRAW = true; T('REV', x - 11.3, 411, 2.5, '#E8C63A'); T('DLY', x + 11.3, 411, 2.5, '#35C46B'); VRAW = false;      // the two sends, in the let-in row
     stops(x, 268, 9.5); stops(x, 307, 9.5); stops(x, 347, 9.5);
     rr(x - 7.5, 378, x + 7.5, 458, 1.6, COLCOL[i], '#07080A');
     g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.3;
     for (var k = 0; k <= 10; k++){ var yy = V(386 + k * 6.5); g.beginPath(); g.moveTo(U(x) - 7.6, yy); g.lineTo(U(x) - (k % 5 ? 5.6 : 4.8), yy); g.stroke(); g.beginPath(); g.moveTo(U(x) + 7.6, yy); g.lineTo(U(x) + (k % 5 ? 5.6 : 4.8), yy); g.stroke(); }
-    if (i < 10){ g.strokeStyle = 'rgba(216,216,216,.22)'; g.lineWidth = 0.3; g.beginPath(); g.moveTo(U(x + 20), V(256)); g.lineTo(U(x + 20), V(460)); g.stroke(); }
+    if (i < 10){ g.strokeStyle = 'rgba(216,216,216,.22)'; g.lineWidth = 0.3; g.beginPath(); g.moveTo(U(x + 22.15), V(256)); g.lineTo(U(x + 22.15), V(460)); g.stroke(); }
   });
   // common section 2
-  T('VALUE', 766, 243, 2.8, null); T('TAP TEMPO', 726, 281, 2.2, '#B8B8B4'); T('TEMPO', 708, 395, 3.2, null); T('SHUFFLE', 766, 380, 2.8, null);
+  T('VALUE', SIDEX - 22, 246, 2.8, null); VRAW = true; T('TEMPO', SIDEX, 366, 3.2, null); T('SHUFFLE', SIDEX, 450, 2.8, null); VRAW = false;      // the side column: placed by hand (VRAW), top to bottom
   T('MOTION', 146, 359, 2.4, '#B8B8B4');
   // pads
   PADX.forEach(function(x, i){ T(String(i + 1), x - 12, 529, 3.4, '#E6E6E2', 'bold', 'left'); });
@@ -174,19 +178,19 @@ function pad(id, px, py, w, h, col, name){
 /* ---- every control on the panel ---- */
 var FXYEL = 0xE8C63A, FXGRN = 0x35C46B;      // the reverb level knob is yellow and the delay level knob green; each drum has a small send knob in each colour
 knob('volume', 145, 213, 6.5, 'Volume', 0.8);
-knob('accent', 226, 212, 6.5, 'Accent level', 0.6); knob('reverb', 306, 212, 6.5, 'Reverb level', 0.3, { color:FXYEL, tick:0x15130A });
-knob('dlevel', 346, 212, 6.5, 'Delay level', 0.2, { color:FXGRN, tick:0x0A150E }); knob('dtime', 386, 212, 6.5, 'Delay time', 0.5, { step:0.1 }); knob('dfb', 427, 212, 6.5, 'Delay feedback', 0.4);
-knob('fxctrl', 508, 212, 6.5, 'Master FX', 0.5); knob('fillknob', 588, 212, 6.5, 'Auto fill-in', 0.2, { step:0.2 });
+knob('accent', TRX(226), 212, 6.5, 'Accent level', 0.6); knob('reverb', TRX(306), 212, 6.5, 'Reverb level', 0.3, { color:FXYEL, tick:0x15130A });
+knob('dlevel', TRX(346), 212, 6.5, 'Delay level', 0.2, { color:FXGRN, tick:0x0A150E }); knob('dtime', TRX(386), 212, 6.5, 'Delay time', 0.5, { step:0.1 }); knob('dfb', TRX(427), 212, 6.5, 'Delay feedback', 0.4);
+knob('fxctrl', TRX(508), 212, 6.5, 'Master FX', 0.5); knob('fillknob', TRX(588), 212, 6.5, 'Auto fill-in', 0.2, { step:0.2 });
 COLX.forEach(function(x, i){
   knob('tune' + i, x, 268, 6.5, INAME[i] + ' tune', 0.5).inst = i;
   knob('decay' + i, x, 307, 6.5, INAME[i] + ' decay', 0.5).inst = i;
   knob('ctrl' + i, x, 347, 6.5, INAME[i] + ' tone', 0.5).inst = i;                  // the voice's own character (this knob was labelled CTRL)
-  VRAW = true; knob('rsend' + i, x - 9.5, 394, 4.3, INAME[i] + ' reverb send', 0, { h:7, color:FXYEL, tick:0x15130A }).inst = i; knob('dsend' + i, x + 9.5, 394, 4.3, INAME[i] + ' delay send', 0, { h:7, color:FXGRN, tick:0x0A150E }).inst = i; VRAW = false;
+  VRAW = true; knob('rsend' + i, x - 11.3, 394, 4.8, INAME[i] + ' reverb send', 0, { h:7, color:FXYEL, tick:0x15130A }).inst = i; knob('dsend' + i, x + 11.3, 394, 4.8, INAME[i] + ' delay send', 0, { h:7, color:FXGRN, tick:0x0A150E }).inst = i; VRAW = false;
   fader(i);
 });
-knob('value', 766, 265, 8, 'Value', 0, { endless:true, step:1 / 24, sides:14 });
-knob('tempo', 708, 428, 13.5, 'Tempo', 0, { endless:true, step:1 / 60, sides:16, h:10, ring:0x3BFF6A });
-knob('shuffle', 766, 400, 6.5, 'Shuffle', 0.5);
+knob('value', SIDEX - 22, 268, 8, 'Value', 0, { endless:true, step:1 / 24, sides:14 });
+VRAW = true; knob('tempo', SIDEX, 402, 13.5, 'Tempo', 0, { endless:true, step:1 / 60, sides:16, h:10, ring:0x3BFF6A });
+knob('shuffle', SIDEX, 470, 6.5, 'Shuffle', 0.5); VRAW = false;
 
 var RED = 0xFF2A3C, GRN = 0x3BFF6A, WHT = 0xFFFFFF, ORG = 0xFF8A2A;
 button('shift', 126, 267, 11, 11, 'SHIFT', 'Shift', WHT); button('clear', 167, 267, 11, 11, 'CLEAR', 'Clear', WHT);
@@ -196,14 +200,13 @@ button('moton', 126, 375, 12, 8.5, 'ON', 'Motion on', GRN); button('motrec', 167
 button('instplay', 122, 410, 14, 10, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 171, 410, 14, 10, 'INST\nREC', 'Inst rec · record the pads', RED);
 'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
 pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
-button('accstep', 266, 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
-button('fxon', 467, 212, 11, 8.5, 'ON', 'Master FX on', ORG);
-button('fillon', 548, 208, 11, 8.5, 'ON', 'Auto fill-in on', GRN); button('filledit', 548, 224, 11, 7.5, 'EDIT', 'Edit the fill-in', WHT); button('filltrig', 628, 212, 11, 9.5, 'MANUAL\nTRIG', 'Fill-in now', WHT);
-COLX.forEach(function(x, i){ button('sel' + i, x, 483, 12, 8.5, INST[i], INAME[i], new THREE.Color(COLCOL[i]).getHex()).inst = i; button('mt' + i, x, 501, 12, 7, 'MUTE', INAME[i] + ' mute', ORG).mi = i; });
-button('write', 686, 265, 12, 8.5, 'WRITE', 'Write (save)', RED); button('enter', 726, 265, 12, 8.5, 'ENTER', 'Enter', WHT);
-button('kit', 686, 301, 12, 8.5, 'KIT', 'Kit', GRN); button('inst', 726, 301, 12, 8.5, 'INST', 'Instrument tone', GRN);
-button('copy', 726, 338, 12, 8.5, 'COPY', 'Copy', GRN);
-pad('instpad', 766, 478, 19, 20, 0xF4F4F4, 'Inst pad');
+button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
+button('fxon', TRX(467), 212, 11, 8.5, 'ON', 'Master FX on', ORG);
+button('fillon', TRX(548), 208, 11, 8.5, 'ON', 'Auto fill-in on', GRN); button('filledit', TRX(548), 224, 11, 7.5, 'EDIT', 'Edit the fill-in', WHT); button('filltrig', TRX(628), 212, 11, 9.5, 'MANUAL\nTRIG', 'Fill-in now', WHT);
+COLX.forEach(function(x, i){ button('sel' + i, x, 483, 12, 8.5, INST[i], INAME[i], GRN).inst = i; button('mt' + i, x, 501, 12, 7, 'MUTE', INAME[i] + ' mute', RED).mi = i; });      // the selected drum lights green; a mute is red when on
+button('copy', SIDEX + 22, 268, 12, 8.5, 'COPY', 'Copy', GRN);
+button('kit', SIDEX - 22, 305, 12, 8.5, 'KIT', 'Kit', GRN); button('inst', SIDEX + 22, 305, 12, 8.5, 'INST', 'Instrument tone', GRN);
+VRAW = true; pad('instpad', SIDEX, 524, 19, 20, 0xF4F4F4, 'Inst pad'); VRAW = false;
 PADX.forEach(function(x, i){ pad('pad' + i, x, 555, 15.5, 19, PADCOL[i], 'Pad ' + (i + 1)).pi = i; });
 var HALFBAR = [0, 1].map(function(h){                          // a thin bar over pads 1-8 or 9-16: the half the number keys switch in step record
   var x0 = LX(PADX[h * 8] - 8), x1 = LX(PADX[h * 8 + 7] + 8), m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.003, Math.abs(LZ(523.4) - LZ(521.4))), new THREE.MeshBasicMaterial({ color:0x202226 }));
@@ -214,10 +217,10 @@ var HALFBAR = [0, 1].map(function(h){                          // a thin bar ove
 var dispC = mk(512, 144), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
 var tempoC = mk(192, 96), tempoT = canvasTex(tempoC); tempoT.minFilter = THREE.LinearFilter; tempoT.magFilter = THREE.LinearFilter;
 (function(){
-  var bez = new THREE.Mesh(new THREE.BoxGeometry(0.128, 0.004, 0.04), blackMat); bez.position.set(lx(725), 0.002, lz(212)); TRG.add(bez);
-  var d = new THREE.Mesh(new THREE.PlaneGeometry(0.122, 0.0343), new THREE.MeshBasicMaterial({ map:dispT })); d.rotation.x = -Math.PI / 2; d.position.set(lx(725), 0.0045, lz(212)); TRG.add(d);
-  var bez2 = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.004, 0.031), blackMat); bez2.position.set(lx(708), 0.002, lz(373)); TRG.add(bez2);
-  var t = new THREE.Mesh(new THREE.PlaneGeometry(0.054, 0.027), new THREE.MeshBasicMaterial({ map:tempoT })); t.rotation.x = -Math.PI / 2; t.position.set(lx(708), 0.0045, lz(373)); TRG.add(t);
+  var bez = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.004, 0.033), blackMat); bez.position.set(lx(SIDEX), 0.002, lz(212)); TRG.add(bez);                                       // narrower than it was, to sit at the head of the side column
+  var d = new THREE.Mesh(new THREE.PlaneGeometry(0.096, 0.027), new THREE.MeshBasicMaterial({ map:dispT })); d.rotation.x = -Math.PI / 2; d.position.set(lx(SIDEX), 0.0045, lz(212)); TRG.add(d);
+  var bez2 = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.004, 0.031), blackMat); bez2.position.set(lx(SIDEX), 0.002, lz(340)); TRG.add(bez2);
+  var t = new THREE.Mesh(new THREE.PlaneGeometry(0.054, 0.027), new THREE.MeshBasicMaterial({ map:tempoT })); t.rotation.x = -Math.PI / 2; t.position.set(lx(SIDEX), 0.0045, lz(340)); TRG.add(t);
   [bez, d, bez2, t].forEach(function(m){ m.userData.ia = 'trbody'; m.userData.noShadow = true; solids.push(m); });
 })();
 // a glow thrown up from the lit pads onto whoever is standing over them

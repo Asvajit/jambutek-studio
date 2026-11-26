@@ -279,8 +279,6 @@ function press(c){
     case 'filltrig': if (M.playing){ SEQ.fill = true; SEQ.fillVar = null; say('FILL IN'); } else say('FILL IN  press START first'); return;
     case 'kit': M.menu = M.menu === 'kit' ? null : 'kit'; return;
     case 'inst': M.menu = M.menu === 'inst' ? null : 'inst'; return;
-    case 'enter': if (M.shift) tapTempo(); else if (M.menu) M.menu = null; else say('SHIFT + ENTER  tap tempo', 1800); return;
-    case 'write': save(); say('WRITE  saved'); return;
     case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
   }
 }
