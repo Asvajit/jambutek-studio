@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.249</span>
+    <span id="verFps">studio v0.250</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.249</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.250</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -10066,21 +10066,29 @@ var MP = (function(){
   document.getElementById('gear').addEventListener('click', function(){ optMenu(); this.blur(); });
   document.addEventListener('keydown', function(e){ if (e.key === 'F1'){ e.preventDefault(); if (!e.repeat) optMenu(); } else if (e.key === 'Escape' && optEl && !optEl.hidden) optMenu(false); }, true);
   Q.opt = optMenu;
+  /* a look for the next test player: one nobody in the room is wearing (you, real players or other test players), the hidden looks included;
+     only once every look is out does one come round again */
+  var dbgNext = 0;
+  function dbgSkin(){
+    var n = SKINS.length, used = {}; used[Q.skin | 0] = 1; Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; if (P) used[P.skin | 0] = 1; });
+    for (var k = 0; k < n; k++){ var i = (dbgNext + k) % n; if (!used[i]){ dbgNext = i + 1; return i; } }
+    return (dbgNext++) % n;
+  }
   function dbgPlayers(on, remote){                           // a player who switches them on shows them to the whole room, spectators included
     if (!remote && Q.ws && !Q.spec) send({ t:'set', k:'dbg', v:on ? '1' : '0' });
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on){ if (Q.ws) paintHud(); return; }
-    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(k)), 0]; P.x = x; P.z = z; P.yaw = yaw; });
+    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), dbgSkin()); P.s = [x, z, yaw, -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(k)), 0]; P.x = x; P.z = z; P.yaw = yaw; });
     if (Q.ws) paintHud();
   }
   function dbgShare(on){                                      // three test players sharing the machine nearest to you (not a Snake): to see how a shared machine looks. This browser only
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('shr') === 0) removePeer(id); }); Q.dbgShare = !!on; if (!on) return;
     var best = null, bd = 1e9; Object.keys(DEVS).forEach(function(k){ var D = DEVS[k]; if (!D.stand || k.indexOf('sn') === 0 || k === 'wall') return; var d = Math.hypot(D.stand.x - cam.x, D.stand.z - cam.z); if (d < bd){ bd = d; best = k; } });
     if (!best) return; var D = DEVS[best]; Q.dbgShareAt = D.name || best;
-    [0, 1, 2].forEach(function(sl){ var L = leanSpot(D, sl), P = Q.peers['shr' + sl] = avatar(DBGCOL[sl], ['Middle', 'Right', 'Left'][sl], [4, 7, 9][sl]); P.s = [L[0], L[1], L[2], -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(best)), 0]; P.x = L[0]; P.z = L[1]; P.yaw = L[2]; });
+    [0, 1, 2].forEach(function(sl){ var L = leanSpot(D, sl), P = Q.peers['shr' + sl] = avatar(DBGCOL[sl], ['Middle', 'Right', 'Left'][sl], dbgSkin()); P.s = [L[0], L[1], L[2], -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(best)), 0]; P.x = L[0]; P.z = L[1]; P.yaw = L[2]; });
   }
   function dbgSit(on){                                        // test players on every couch seat, one in each pose in turn: for this browser only
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('sit') === 0) removePeer(id); }); Q.dbgSit = !!on; if (!on) return;
-    SEATS.forEach(function(S, i){ var P = Q.peers['sit' + i] = avatar(DBGCOL[i % 6], 'Sit ' + (i + 1), (i * 5 + 2) % 12); P.s = [S.x, S.z, S.yaw, 0, 0, 0, 0, 0, 1 + i * 3 + (i % 3), [0, 0.7, -0.6, 0.3][i % 4]]; P.x = S.x; P.z = S.z; P.yaw = S.yaw; });
+    SEATS.forEach(function(S, i){ var P = Q.peers['sit' + i] = avatar(DBGCOL[i % 6], 'Sit ' + (i + 1), dbgSkin()); P.s = [S.x, S.z, S.yaw, 0, 0, 0, 0, 0, 1 + i * 3 + (i % 3), [0, 0.7, -0.6, 0.3][i % 4]]; P.x = S.x; P.z = S.z; P.yaw = S.yaw; });
   }
   function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgC').textContent = (Q.dbgSit ? '☑' : '☐') + '  Sitting test players on every couch'; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgT').textContent = (Q.dbgShare ? '☑' : '☐') + '  Three test players sharing the nearest machine' + (Q.dbgShare && Q.dbgShareAt ? ' (' + Q.dbgShareAt + ')' : ''); dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–0 and −)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
   function dbgMenu(){
@@ -10462,7 +10470,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.249 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.250 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

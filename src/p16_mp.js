@@ -683,21 +683,29 @@ var MP = (function(){
   document.getElementById('gear').addEventListener('click', function(){ optMenu(); this.blur(); });
   document.addEventListener('keydown', function(e){ if (e.key === 'F1'){ e.preventDefault(); if (!e.repeat) optMenu(); } else if (e.key === 'Escape' && optEl && !optEl.hidden) optMenu(false); }, true);
   Q.opt = optMenu;
+  /* a look for the next test player: one nobody in the room is wearing (you, real players or other test players), the hidden looks included;
+     only once every look is out does one come round again */
+  var dbgNext = 0;
+  function dbgSkin(){
+    var n = SKINS.length, used = {}; used[Q.skin | 0] = 1; Object.keys(Q.peers).forEach(function(id){ var P = Q.peers[id]; if (P) used[P.skin | 0] = 1; });
+    for (var k = 0; k < n; k++){ var i = (dbgNext + k) % n; if (!used[i]){ dbgNext = i + 1; return i; } }
+    return (dbgNext++) % n;
+  }
   function dbgPlayers(on, remote){                           // a player who switches them on shows them to the whole room, spectators included
     if (!remote && Q.ws && !Q.spec) send({ t:'set', k:'dbg', v:on ? '1' : '0' });
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('dbg') === 0) removePeer(id); }); Q.dbg = !!on; if (!on){ if (Q.ws) paintHud(); return; }
-    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), i); P.s = [x, z, yaw, -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(k)), 0]; P.x = x; P.z = z; P.yaw = yaw; });
+    DBGDEV.forEach(function(k, i){ var D = DEVS[k]; if (!D) return; var yaw = D.yaw || 0, x = D.stand.x - 0.25 * Math.sin(yaw), z = D.stand.z - 0.25 * Math.cos(yaw), P = Q.peers['dbg' + i] = avatar(DBGCOL[i], 'Test ' + (i + 1), dbgSkin()); P.s = [x, z, yaw, -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(k)), 0]; P.x = x; P.z = z; P.yaw = yaw; });
     if (Q.ws) paintHud();
   }
   function dbgShare(on){                                      // three test players sharing the machine nearest to you (not a Snake): to see how a shared machine looks. This browser only
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('shr') === 0) removePeer(id); }); Q.dbgShare = !!on; if (!on) return;
     var best = null, bd = 1e9; Object.keys(DEVS).forEach(function(k){ var D = DEVS[k]; if (!D.stand || k.indexOf('sn') === 0 || k === 'wall') return; var d = Math.hypot(D.stand.x - cam.x, D.stand.z - cam.z); if (d < bd){ bd = d; best = k; } });
     if (!best) return; var D = DEVS[best]; Q.dbgShareAt = D.name || best;
-    [0, 1, 2].forEach(function(sl){ var L = leanSpot(D, sl), P = Q.peers['shr' + sl] = avatar(DBGCOL[sl], ['Middle', 'Right', 'Left'][sl], [4, 7, 9][sl]); P.s = [L[0], L[1], L[2], -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(best)), 0]; P.x = L[0]; P.z = L[1]; P.yaw = L[2]; });
+    [0, 1, 2].forEach(function(sl){ var L = leanSpot(D, sl), P = Q.peers['shr' + sl] = avatar(DBGCOL[sl], ['Middle', 'Right', 'Left'][sl], dbgSkin()); P.s = [L[0], L[1], L[2], -0.45, 0, 0, 1 + Math.max(0, Object.keys(DEVS).indexOf(best)), 0]; P.x = L[0]; P.z = L[1]; P.yaw = L[2]; });
   }
   function dbgSit(on){                                        // test players on every couch seat, one in each pose in turn: for this browser only
     Object.keys(Q.peers).forEach(function(id){ if (id.indexOf('sit') === 0) removePeer(id); }); Q.dbgSit = !!on; if (!on) return;
-    SEATS.forEach(function(S, i){ var P = Q.peers['sit' + i] = avatar(DBGCOL[i % 6], 'Sit ' + (i + 1), (i * 5 + 2) % 12); P.s = [S.x, S.z, S.yaw, 0, 0, 0, 0, 0, 1 + i * 3 + (i % 3), [0, 0.7, -0.6, 0.3][i % 4]]; P.x = S.x; P.z = S.z; P.yaw = S.yaw; });
+    SEATS.forEach(function(S, i){ var P = Q.peers['sit' + i] = avatar(DBGCOL[i % 6], 'Sit ' + (i + 1), dbgSkin()); P.s = [S.x, S.z, S.yaw, 0, 0, 0, 0, 0, 1 + i * 3 + (i % 3), [0, 0.7, -0.6, 0.3][i % 4]]; P.x = S.x; P.z = S.z; P.yaw = S.yaw; });
   }
   function dbgPaint(){ if (!dbgEl) return; dbgEl.querySelector('#dbgC').textContent = (Q.dbgSit ? '☑' : '☐') + '  Sitting test players on every couch'; dbgEl.querySelector('#dbgP').textContent = (Q.dbg ? '☑' : '☐') + '  Six test players at six machines'; dbgEl.querySelector('#dbgT').textContent = (Q.dbgShare ? '☑' : '☐') + '  Three test players sharing the nearest machine' + (Q.dbgShare && Q.dbgShareAt ? ' (' + Q.dbgShareAt + ')' : ''); dbgEl.querySelector('#dbgS').textContent = (SPEC.on ? '☑' : '☐') + '  Spectator cameras (keys 1–0 and −)'; dbgEl.querySelector('#dbgS').disabled = !!Q.spec; }
   function dbgMenu(){
