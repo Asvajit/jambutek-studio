@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.254</span>
+    <span id="verFps">studio v0.255</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.254</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.255</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -5003,7 +5003,7 @@ function unlock(){
     var vol = ac.createGain(); AU.vol = vol;
     AU.ch = []; AU.tap = ac.createGain(); AU.sendA = ac.createGain(); AU.sendB = ac.createGain(); for (var ci = 0; ci < 10; ci++){ var C = { sa:ac.createGain(), sb:ac.createGain(), inp:ac.createGain(), lo:ac.createBiquadFilter(), mid:ac.createBiquadFilter(), hi:ac.createBiquadFilter(), fad:ac.createGain(), duck:ac.createGain(), hp:ac.createBiquadFilter(), lp:ac.createBiquadFilter(), an:ac.createAnalyser(), pre:ac.createAnalyser() };
       C.lo.type = 'lowshelf'; C.lo.frequency.value = 110; C.mid.type = 'peaking'; C.mid.frequency.value = 1000; C.mid.Q.value = 0.8; C.hi.type = 'highshelf'; C.hi.frequency.value = 7000; C.an.fftSize = 256;
-      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.pre.fftSize = 256; C.hi.connect(C.pre); C.fad.connect(C.duck);      // pre: the channel before its fader and mute, so a silenced channel's meter still moves C.hp.type = 'highpass'; C.hp.frequency.value = 10; C.hp.Q.value = 0.9; C.lp.type = 'lowpass'; C.lp.frequency.value = 21000; C.lp.Q.value = 0.9; C.duck.connect(C.hp); C.hp.connect(C.lp);      /* the mixer's two master filters, one pair per channel, wide open unless the channel is picked */
+      C.inp.connect(C.lo); C.lo.connect(C.mid); C.mid.connect(C.hi); C.hi.connect(C.fad); C.pre.fftSize = 256; C.hi.connect(C.pre); /* pre: the channel before its fader and mute, so a silenced channel's meter still moves */ C.fad.connect(C.duck); C.hp.type = 'highpass'; C.hp.frequency.value = 10; C.hp.Q.value = 0.9; C.lp.type = 'lowpass'; C.lp.frequency.value = 21000; C.lp.Q.value = 0.9; C.duck.connect(C.hp); C.hp.connect(C.lp);      /* the mixer's two master filters, one pair per channel, wide open unless the channel is picked */
       C.lp.connect(C.an); C.lp.connect(comp); if (ci !== 5) C.lp.connect(AU.tap); C.sa.gain.value = C.sb.gain.value = 0; C.lp.connect(C.sa); C.sa.connect(AU.sendA); C.lp.connect(C.sb); C.sb.connect(AU.sendB); AU.ch.push(C); }       // sends are post-fader: A feeds the echo, B the reverb
     vol.connect(AU.ch[0].inp); AU.master = ac.createGain();
     var an = ac.createAnalyser(); an.fftSize = 256; an.smoothingTimeConstant = 0.5; AU.comp = comp; comp.connect(AU.master); AU.master.connect(an); an.connect(out); AU.an = an;
@@ -10501,7 +10501,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.254 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.255 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
