@@ -7,9 +7,9 @@ var RVOFF = 0.25;                                  // how far below the echo it 
 function rvx(u){ return (u - ECW / 2) * SC; }
 function rvz(u){ return (u - ECD / 2) * SC + RVOFF; }
 ECG.position.z = -0.2;                             // the echo moves up: the reverb sits under it and the scenes box under that, the three centred on the table
-var RV = { p:{ size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, mode:0, on:1 }, lv:0 };
+var RV = { p:{ size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1, mode:0, on:1 }, lv:0 };      /* hpf 0 and lpf 1 are fully open: a jam saved before these two knobs existed sounds as it did */
 var RVMODES = [['HALL', [1, 1.31, 1.73, 2.19], 0.22], ['CLOUD', [1, 1.47, 2.11, 2.83], 0.5], ['VOID', [1, 1.62, 2.41, 3.37], 0.85]];
-function rvRestore(){ try { var s = JSON.parse(store('jambutek-studio-reverb-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(RV.p).forEach(function(k){ if (typeof s.p[k] !== 'number') return; RV.p[k] = k === 'mode' ? clamp(s.p[k] | 0, 0, 2) : k === 'on' ? (s.p[k] ? 1 : 0) : clamp(s.p[k], 0, 1); }); } catch (e) {} } rvRestore();
+function rvRestore(){ try { var s = JSON.parse(store('jambutek-studio-reverb-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(RV.p).forEach(function(k){ if (typeof s.p[k] !== 'number'){ if (k === 'hpf') RV.p.hpf = 0; else if (k === 'lpf') RV.p.lpf = 1; return; } RV.p[k] = k === 'mode' ? clamp(s.p[k] | 0, 0, 2) : k === 'on' ? (s.p[k] ? 1 : 0) : clamp(s.p[k], 0, 1); }); } catch (e) {} } rvRestore();
 var rvSaveT = null; function rvSaveNow(){ store('jambutek-studio-reverb-v1', JSON.stringify({ v:1, p:RV.p })); } function rvSaveSoon(){ clearTimeout(rvSaveT); rvSaveT = setTimeout(rvSaveNow, saveMs(800)); }
 var rvC = mk(ECW * 6, ECD * 6), rvTex = null;
 function paintRV(){
@@ -19,7 +19,7 @@ function paintRV(){
   function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E4F2'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
   g.strokeStyle = '#E6E4F2'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
   T('REVERB', 10, 14, 10, '#E6E4F2', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#7FD0FF', false, 'right'); g.fillStyle = '#E6E4F2'; g.fillRect(10, 22, ECW - 20, 0.6);
-  [['SIZE', 28, 42], ['DECAY', 64, 42], ['DENSITY', 100, 42], ['MOD', 28, 80], ['TONE', 64, 80], ['LEVEL', 100, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4); });
+  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#7FD0FF' : null); });
   T('MODE', 141, 54, 3.6); T('ON', 141, 84, 3.6); T('PEAK', 141, 100.5, 3.2);
   g.setTransform(1, 0, 0, 1, 0, 0); if (rvTex) rvTex.needsUpdate = true;
 }
@@ -33,8 +33,8 @@ var RVLED = {};
   top.userData.dev = body.userData.dev = 'ec';
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';
-[['size', 28, 42, 'Reverb size'], ['dec', 64, 42, 'Decay'], ['dens', 100, 42, 'Density'], ['mod', 28, 80, 'Modulation'], ['tone', 64, 80, 'Tone'], ['level', 100, 80, 'Reverb level']]
-  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:0xDAD8E8, tick:0x1A1440 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7 }[a[0]]; });
+[['size', 22, 42, 'Reverb size'], ['dec', 50, 42, 'Decay'], ['dens', 78, 42, 'Density'], ['hpf', 106, 42, 'Reverb HPF'], ['mod', 22, 80, 'Modulation'], ['tone', 50, 80, 'Tone'], ['level', 78, 80, 'Reverb level'], ['lpf', 106, 80, 'Reverb LPF']]
+  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:a[0] === 'hpf' || a[0] === 'lpf' ? 0x9CCBEA : 0xDAD8E8, tick:0x1A1440 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
 var rvB1 = button('rvmode', 141, 42, 22, 11, 'HALL', 'Reverb mode', 0xB48CFF); rvB1.rv = true; rvB1.rk = 'mode';
 var rvB2 = button('rvon', 141, 72, 22, 11, 'ON', 'Reverb on / off', 0x3BFF6A); rvB2.rv = true; rvB2.rk = 'on';
 ledAt(RVLED, 'pk', 141, 94, 0.003, 0xFF2A3C);
@@ -45,7 +45,8 @@ function rvAudio(){
   if (RVA) return true; if (!ac || !AU.ready || !AU.sendB) return false;
   var A = RVA = {}, G = function(v){ var g = ac.createGain(); g.gain.value = v; return g; }, i, j;
   A.inp = G(1); A.hp = ac.createBiquadFilter(); A.hp.type = 'highpass'; A.hp.frequency.value = 130; A.hp.Q.value = 0.5; A.wet = G(0); A.an = ac.createAnalyser(); A.an.fftSize = 256; A.mrg = ac.createChannelMerger(2);
-  AU.sendB.connect(A.inp); A.inp.connect(A.hp); A.mrg.connect(A.wet); A.wet.connect(AU.comp); A.wet.connect(A.an);
+  A.ohp = ac.createBiquadFilter(); A.ohp.type = 'highpass'; A.ohp.Q.value = 0.707; A.olp = ac.createBiquadFilter(); A.olp.type = 'lowpass'; A.olp.Q.value = 0.707;      // the HPF and LPF knobs: on the wet sound, after the tank
+  AU.sendB.connect(A.inp); A.inp.connect(A.hp); A.mrg.connect(A.ohp); A.ohp.connect(A.olp); A.olp.connect(A.wet); A.wet.connect(AU.comp); A.wet.connect(A.an);
   A.L = [0, 1, 2, 3].map(function(k){                                  // each line: sum -> delay -> damping -> out
     var L = { sum:G(1), dl:ac.createDelay(3.2), lp:ac.createBiquadFilter(), lfo:ac.createOscillator(), lg:G(0), out:G(0.5) }; L.lp.type = 'lowpass'; L.lp.Q.value = 0.3;
     A.hp.connect(L.sum); L.sum.connect(L.dl); L.dl.connect(L.lp); L.lp.connect(L.out); L.out.connect(A.mrg, 0, k % 2);
@@ -63,10 +64,12 @@ function rvApply(jump){
     // low density: a ring, one line into the next, so you hear the repeats. High: the full mix, a wash. Any blend of the two stays stable
     for (j = 0; j < 4; j++) A.fb[i][j].gain.setTargetAtTime(fb * ((1 - P.dens) * (j === (i + 1) % 4 ? 1 : 0) + P.dens * RVHAD[i][j] * 0.5), t, 0.03);
   }
+  A.ohp.frequency.setTargetAtTime(mxHz('h', P.hpf), t, 0.03); A.olp.frequency.setTargetAtTime(mxHz('l', P.lpf), t, 0.03);
   A.wet.gain.setTargetAtTime(Math.pow(P.level, 1.5) * 1.5, t, 0.03); A.inp.gain.setTargetAtTime(P.on ? 1 : 0, t, 0.015);         // switching it off stops feeding it; the tail rings out
 }
 function rvLabel(c){
   if (c.id === 'rvmode') return 'Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase() + ' · click'; if (c.id === 'rvon') return 'Reverb ' + (RV.p.on ? 'on' : 'off') + ' · click';
+  if (c.rk === 'hpf' || c.rk === 'lpf'){ var hz = mxHz(c.rk === 'hpf' ? 'h' : 'l', c.v), off = c.rk === 'hpf' ? c.v < 0.01 : c.v > 0.99; return c.name + ' ' + (off ? 'off' : hz >= 1000 ? (hz / 1000).toFixed(1) + ' kHz' : Math.round(hz) + ' Hz') + ' · scroll or drag'; }
   return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
 }
 function rvPress(c){

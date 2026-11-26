@@ -263,7 +263,11 @@ function update(now, dt){
 DEVH[DK] = { label:snLabel, press:snPress, release:snRelease, ctl:snCtl, turn:snTurn };
 function patterns(def, jam){ var d0 = snDef(); SN.view = 0; SN.act = [1, 0]; SN.copy = null; SN.pgs = [d0.lanes, snDefaults().lanes]; if (!def) SN.pgs[1][1].vals = SN.pgs[1][1].vals.map(function(){ return 0; }); if (def){ SN.root = d0.root; SN.scale = d0.scale; SN.swing = d0.swing; }
   var jx = jam && DEF && DEF.snakes && DEF.snakes[K]; if (jx && typeof jx.out === 'number'){ SN.out = clamp(jx.out | 0, 0, 9); SN.cv = 0; }      // a saved jam also says which synth each Snake plays
-  if (!def) SN.lanes[1].vals = SN.lanes[1].vals.map(function(){ return 0; }); snSync(); snSaveSoon(); }
+  if (!def){                                                        // cleared: both pages empty with every knob at 12 o'clock (notes and velocity in the middle, gates off; probability stays at always), and the Snake's own settings back to how it starts
+    var blank = function(){ var l = snDefaults().lanes, f = function(v){ return l[0].vals.map(function(){ return v; }); }; l[0].vals = f(42); l[1].vals = f(0); l[2].vals = f(64); l[3].vals = f(127); l[4].vals = f(64); return l; };
+    SN.pgs = [blank(), blank()]; SN.root = 0; SN.scale = 2; SN.swing = 0; SN.page = 0;
+  }
+  snSync(); snSaveSoon(); }
 RESTORE['jambutek-studio-snake-v3-' + K] = function(){ snRestore(); snSync(); }; SAVENOW.push(snSaveNow);
 return { SN:SN, G:SNG, key:DK, hp:HP, patterns:patterns, x:HP.x, z:HP.z, clock:clock, onStop:onStop, update:update, undo:undo };
 }

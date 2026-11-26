@@ -160,7 +160,8 @@ function wallUpdate(now){
   WALLBTN.forEach(function(c){
     var ring = c.down ? 1 : 0, wk = c.wk;
     if (wk === 'clear' || wk === 'def' || wk === 'load'){ ring = 0;
-      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (wk === 'load'){ WALL.c = null; c.down = false; jamOpen(); } else if (wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { allPatterns(wk === 'def'); jamNamed(wk === 'def' ? (DEF && DEF.name) || 'Demo jam' : 'New jam'); } } ring = WALL.done ? 1 : clamp(k, 0, 1); } }      // held: the ring fills clockwise from the top
+      if (WALL.c === c){ var k = (now - WALL.t0) / WALLHOLD; if (k >= 1 && !WALL.done){ WALL.done = true; if (wk === 'load'){ WALL.c = null; c.down = false; jamOpen(); } else if (wk === 'def' && JAMS[0] && JAMS[0].state) loadJam(JAMS[0], JAMS[0].name); else { if (wk === 'clear' && window.JB_INIT){ try { roomLoad(window.JB_INIT); } catch (e) {} }      /* CLEAR: first every machine goes back to how it starts (vendor/init.json: every knob at its default, sequencer knobs at noon), then the patterns are emptied */
+        allPatterns(wk === 'def'); jamNamed(wk === 'def' ? (DEF && DEF.name) || 'Demo jam' : 'New jam'); } } ring = WALL.done ? 1 : clamp(k, 0, 1); } }      // held: the ring fills clockwise from the top
     else if (wk === 'key'){ ring = RK.on || c.down ? 1 : 0; var kc = RK.on ? '#177D32' : '#D9590B'; if (c.capCol !== kc){ c.capCol = kc; c.capText = null; } rbCap(c, 'KEY\n' + (RK.on ? 'ON' : 'OFF')); }      // green when the room key is on, deep orange when it is off
     else if (wk === 'note') rbCap(c, NOTEN[RK.root]); else if (wk === 'scale') rbCap(c, SCALES[RK.scale][0]);
     rbRing(c, ring); if (c.cap){ var ty = c.down ? -0.007 : 0; if (c.cap.position.y !== ty) c.cap.position.y = ty; }

@@ -142,13 +142,13 @@ function hatSrc(t, dur, p, tone){
   return out;
 }
 function vCH(dst, t, vel, p, tone){
-  if (AU.openHat){ try { AU.openHat.gain.cancelScheduledValues(t); AU.openHat.gain.setTargetAtTime(0.0001, t, 0.006); } catch (e) {} AU.openHat = null; }
+  if (AU.openHat){ try { AU.openHat.gain.setTargetAtTime(0.0001, t, 0.006); } catch (e) {} AU.openHat = null; }      /* a closed hat cuts the open one: on the open hat's own choke gain, so its decay keeps its shape up to the cut (cancelling the envelope here used to leave it at full level until then) */
   var dec = 0.022 + p.decay * p.decay * 0.16, s = hatSrc(t, dec, p, tone), bp = filt('bandpass', tone === '606' ? 7200 : 10000, 0.7), hp = filt('highpass', 4500 + p.ctrl * 5500), e = envG(t, vel * 0.75, dec);
   s.connect(bp); bp.connect(hp); hp.connect(e); e.connect(dst);
 }
 function vOH(dst, t, vel, p, tone){
   var dec = 0.12 + p.decay * p.decay * 1.3, s = hatSrc(t, dec, p, tone), bp = filt('bandpass', tone === '606' ? 7200 : 10000, 0.7), hp = filt('highpass', 4500 + p.ctrl * 5500), e = envG(t, vel * 0.7, dec);
-  s.connect(bp); bp.connect(hp); hp.connect(e); e.connect(dst); AU.openHat = e;
+  var ck = ac.createGain(); s.connect(bp); bp.connect(hp); hp.connect(e); e.connect(ck); ck.connect(dst); AU.openHat = ck;
 }
 function vCC(dst, t, vel, p, tone){
   var dec = 0.5 + p.decay * p.decay * 2.6, mul = semis(p.tune, 6);
