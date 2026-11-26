@@ -117,11 +117,14 @@ function mxPress(c){
 }
 function mxUpdate(now, dt){
   var buf = mxUpdate.buf || (mxUpdate.buf = new Float32Array(256)), i, k;
+  /* meters: a muted channel (or one silenced because others are soloed) still shows what is coming in, all red; a soloed channel shows blue */
+  var anySolo = MX.ch.some(function(c){ return c.solo; });
   for (i = 0; i <= MXNC; i++){
-    var pk = 0; if (AU.ready){ (i < MXNC ? AU.ch[i].an : AU.an).getFloatTimeDomainData(buf); for (k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } }
+    var h = i < MXNC ? MX.ch[i] : null, off = !!h && (h.mute || (anySolo && !h.solo)), solo = !!h && anySolo && h.solo && !h.mute, pk = 0;
+    if (AU.ready){ (i < MXNC ? (off ? AU.ch[i].pre : AU.ch[i].an) : AU.an).getFloatTimeDomainData(buf); for (k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } if (off) pk *= Math.pow(h.vol, 1.7) * 1.63; }
     MX.lv[i] = Math.max(pk, MX.lv[i] - dt * 1.6);
     var db = MX.lv[i] > 0.0005 ? 20 * Math.log10(MX.lv[i]) : -90, n = clamp(Math.round((db + 42) / 4.2), 0, 10), segs = MXMET[i];
-    for (k = 0; k < 10; k++) segs[k].color.setHex(k < n ? (k >= 9 ? 0xFF2A3C : k >= 7 ? 0xFFE15A : 0x3BFF6A) : 0x15171C);
+    for (k = 0; k < 10; k++) segs[k].color.setHex(k < n ? (off ? 0xFF2A3C : solo ? 0x3A8BFF : k >= 9 ? 0xFF2A3C : k >= 7 ? 0xFFE15A : 0x3BFF6A) : 0x15171C);
   }
   ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ var b = CT[id], bl = b.down ? 0.9 : 0.25; if (bl !== b.lit){ b.lit = bl; b.paintLit(); } var by = b.y0 - (b.down ? 0.003 : 0); if (b.m.position.y !== by) b.m.position.y = by; });
   for (i = 0; i < MXNC; i++){ ['fh', 'fl'].forEach(function(w){ var fb = CT['mx' + w + i], FL = MX[w][i] ? 1.9 : 0; if (fb.down) FL = Math.max(FL, 0.8); if (FL !== fb.lit){ fb.lit = FL; fb.paintLit(); } var fy = fb.y0 - (fb.down ? 0.002 : 0); if (fb.m.position.y !== fy) fb.m.position.y = fy; }); }
