@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.243</span>
+    <span id="verFps">studio v0.244</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.243</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.244</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -9904,7 +9904,8 @@ var MP = (function(){
         var lyaw = lean ? (LEAN.yaw || 0) : 0, lix = lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0;
         if (lean){                                                    /* sharing a machine: whoever is already at it keeps the middle, and to everyone else we lean in from its side. Our own view does not change. */
           var fx = -Math.sin(lyaw), fz = -Math.cos(lyaw), rx = Math.cos(lyaw), rz = -Math.sin(lyaw), taken = {}, clash = false;
-          Object.keys(Q.peers).forEach(function(id){ var o = Q.peers[id].s; if (!o || o[6] !== lix) return; var off = (o[0] - px) * rx + (o[1] - pz) * rz, sl = off > 0.2 ? 1 : off < -0.2 ? 2 : 0; taken[sl] = 1; if (sl === Q.leanSlot && String(id) < String(Q.id)) clash = true; });
+          Object.keys(Q.peers).forEach(function(id){ var o = Q.peers[id].s; if (!o || !o[6]) return; var off = (o[0] - px) * rx + (o[1] - pz) * rz, fwd = (o[0] - px) * fx + (o[1] - pz) * fz; if (Math.abs(off) > 0.85 || Math.abs(fwd) > 0.5) return;      /* anyone leaning at this spot counts, whichever machine they are on: a Snake and its synth share one standing place */
+            var sl = off > 0.2 ? 1 : off < -0.2 ? 2 : 0; taken[sl] = 1; if (sl === Q.leanSlot && String(id) < String(Q.id)) clash = true; });
           if (Q.leanKey !== LEAN.key || Q.leanSlot == null || clash || (Q.leanSlot > 0 && !taken[0])){ Q.leanKey = LEAN.key; Q.leanSlot = !taken[0] ? 0 : !taken[1] ? 1 : !taken[2] ? 2 : 1; }
           if (Q.leanSlot){ var sd = Q.leanSlot === 1 ? 1 : -1; px += rx * 0.52 * sd - fx * 0.06; pz += rz * 0.52 * sd - fz * 0.06; var tx = LEAN.stand.x + fx * 0.75, tz = LEAN.stand.z + fz * 0.75; lyaw = Math.atan2(-(tx - px), -(tz - pz)); }
         } else { Q.leanKey = null; Q.leanSlot = null; }
@@ -9919,7 +9920,7 @@ var MP = (function(){
     glowTick(now); pingTick(now);
     var k = 1 - Math.exp(-dt * 12);
     Object.keys(Q.peers).forEach(function(id){
-      var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = !(mode === 'tr' && LEAN && s[6] === 1 + Object.keys(DEVS).indexOf(LEAN.key));      /* leaning over a machine someone else is on: they are not drawn for us, or they would stand in our view */
+      var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = !(mode === 'tr' && LEAN && s[6] && Math.hypot(s[0] - (LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0)), s[1] - (LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0))) < 0.9);      /* leaning over a machine someone else is on: they are not drawn for us, or they would stand in our view */
       P.x = lerp(P.x, s[0], k); P.z = lerp(P.z, s[1], k); var dy = s[2] - P.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); P.yaw += dy * k;
       P.pitch = lerp(P.pitch, s[3], k); P.c = lerp(P.c, s[4], k); P.j = lerp(P.j, s[5], 0.5); P.lean = lerp(P.lean, s[6] ? 1 : 0, k);
       var sp = Math.hypot(P.x - P.lastX, P.z - P.lastZ) / Math.max(dt, 0.001); P.lastX = P.x; P.lastZ = P.z;
@@ -10448,7 +10449,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.243 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.244 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

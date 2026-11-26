@@ -521,7 +521,8 @@ var MP = (function(){
         var lyaw = lean ? (LEAN.yaw || 0) : 0, lix = lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0;
         if (lean){                                                    /* sharing a machine: whoever is already at it keeps the middle, and to everyone else we lean in from its side. Our own view does not change. */
           var fx = -Math.sin(lyaw), fz = -Math.cos(lyaw), rx = Math.cos(lyaw), rz = -Math.sin(lyaw), taken = {}, clash = false;
-          Object.keys(Q.peers).forEach(function(id){ var o = Q.peers[id].s; if (!o || o[6] !== lix) return; var off = (o[0] - px) * rx + (o[1] - pz) * rz, sl = off > 0.2 ? 1 : off < -0.2 ? 2 : 0; taken[sl] = 1; if (sl === Q.leanSlot && String(id) < String(Q.id)) clash = true; });
+          Object.keys(Q.peers).forEach(function(id){ var o = Q.peers[id].s; if (!o || !o[6]) return; var off = (o[0] - px) * rx + (o[1] - pz) * rz, fwd = (o[0] - px) * fx + (o[1] - pz) * fz; if (Math.abs(off) > 0.85 || Math.abs(fwd) > 0.5) return;      /* anyone leaning at this spot counts, whichever machine they are on: a Snake and its synth share one standing place */
+            var sl = off > 0.2 ? 1 : off < -0.2 ? 2 : 0; taken[sl] = 1; if (sl === Q.leanSlot && String(id) < String(Q.id)) clash = true; });
           if (Q.leanKey !== LEAN.key || Q.leanSlot == null || clash || (Q.leanSlot > 0 && !taken[0])){ Q.leanKey = LEAN.key; Q.leanSlot = !taken[0] ? 0 : !taken[1] ? 1 : !taken[2] ? 2 : 1; }
           if (Q.leanSlot){ var sd = Q.leanSlot === 1 ? 1 : -1; px += rx * 0.52 * sd - fx * 0.06; pz += rz * 0.52 * sd - fz * 0.06; var tx = LEAN.stand.x + fx * 0.75, tz = LEAN.stand.z + fz * 0.75; lyaw = Math.atan2(-(tx - px), -(tz - pz)); }
         } else { Q.leanKey = null; Q.leanSlot = null; }
@@ -536,7 +537,7 @@ var MP = (function(){
     glowTick(now); pingTick(now);
     var k = 1 - Math.exp(-dt * 12);
     Object.keys(Q.peers).forEach(function(id){
-      var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = !(mode === 'tr' && LEAN && s[6] === 1 + Object.keys(DEVS).indexOf(LEAN.key));      /* leaning over a machine someone else is on: they are not drawn for us, or they would stand in our view */
+      var P = Q.peers[id], s = P.s; if (!s){ P.g.visible = false; return; } P.g.visible = !(mode === 'tr' && LEAN && s[6] && Math.hypot(s[0] - (LEAN.stand.x - 0.25 * Math.sin(LEAN.yaw || 0)), s[1] - (LEAN.stand.z - 0.25 * Math.cos(LEAN.yaw || 0))) < 0.9);      /* leaning over a machine someone else is on: they are not drawn for us, or they would stand in our view */
       P.x = lerp(P.x, s[0], k); P.z = lerp(P.z, s[1], k); var dy = s[2] - P.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); P.yaw += dy * k;
       P.pitch = lerp(P.pitch, s[3], k); P.c = lerp(P.c, s[4], k); P.j = lerp(P.j, s[5], 0.5); P.lean = lerp(P.lean, s[6] ? 1 : 0, k);
       var sp = Math.hypot(P.x - P.lastX, P.z - P.lastZ) / Math.max(dt, 0.001); P.lastX = P.x; P.lastZ = P.z;
