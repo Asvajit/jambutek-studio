@@ -74,7 +74,7 @@ function paintPanel(){
   });
   // common section 2
   T('VALUE', SIDEX - 22, 246, 2.8, null); VRAW = true; T('TEMPO', SIDEX, 366, 3.2, null); T('SHUFFLE', SIDEX, 450, 2.8, null); VRAW = false;      // the side column: placed by hand (VRAW), top to bottom
-  T('MOTION', 146, 359, 2.4, '#B8B8B4');
+  T('MOTION', 145, 370, 2.4, '#B8B8B4');
   // pads
   PADX.forEach(function(x, i){ T(String(i + 1), x - 12, 529, 3.4, '#E6E6E2', 'bold', 'left'); });
   INST.forEach(function(n, i){ T(n, PADX[i], 592, 3.6, 'rgba(230,230,226,.8)', 'A'); });
@@ -193,11 +193,12 @@ VRAW = true; knob('tempo', SIDEX, 402, 13.5, 'Tempo', 0, { endless:true, step:1 
 knob('shuffle', SIDEX, 470, 6.5, 'Shuffle', 0.5); VRAW = false;
 
 var RED = 0xFF2A3C, GRN = 0x3BFF6A, WHT = 0xFFFFFF, ORG = 0xFF8A2A;
-button('shift', 126, 267, 11, 11, 'SHIFT', 'Shift', WHT); button('clear', 167, 267, 11, 11, 'CLEAR', 'Clear', WHT);
-button('ptn', 122, 307, 14, 10, 'PTN\nSELECT', 'Pattern select', GRN); button('trrec', 171, 307, 14, 10, 'TR-REC', 'TR-REC · step recording', RED);
-button('last', 126, 344, 12, 8.5, 'LAST', 'Last step', GRN); button('sub', 167, 344, 12, 8.5, 'SUB', 'Sub steps', GRN);
-button('moton', 126, 375, 12, 8.5, 'ON', 'Motion on', GRN); button('motrec', 167, 375, 12, 8.5, 'REC', 'Motion rec', RED);
-button('instplay', 122, 410, 14, 10, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 171, 410, 14, 10, 'INST\nREC', 'Inst rec · record the pads', RED);
+/* the left column: ten square 16 mm buttons in two groups (editing above, motion and inst below), with a gap between the groups */
+button('shift', 120, 262, 16, 16, 'SHIFT', 'Shift', WHT); button('clear', 170, 262, 16, 16, 'CLEAR', 'Clear', WHT);
+button('ptn', 120, 296, 16, 16, 'PTN\nSELECT', 'Pattern select', GRN); button('trrec', 170, 296, 16, 16, 'TR-REC', 'TR-REC · step recording', RED);
+button('last', 120, 330, 16, 16, 'LAST', 'Last step', GRN); button('sub', 170, 330, 16, 16, 'SUB', 'Sub steps', GRN);
+VRAW = true; button('moton', 120, 392, 16, 16, 'ON', 'Motion on', GRN); button('motrec', 170, 392, 16, 16, 'REC', 'Motion rec', RED);
+button('instplay', 120, 426, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 426, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED); VRAW = false;
 'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
 pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
