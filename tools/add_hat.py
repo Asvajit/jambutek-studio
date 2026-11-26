@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Bake a .glb hat into vendor/hats.json so a skin can wear it (SKINS entry: hat:'<key>').
 
-  python3 tools/add_hat.py <key> <model.glb> <#rrggbb> [width] [sink] [credit]
+  python3 tools/add_hat.py <key> <model.glb> <#rrggbb> [width] [sink] [credit] [tilt] [forward]
 
 The mesh is scaled so it is <width> metres across (default 0.39; the head is a 0.27 cube), centred on the head,
 brim to the front (+z), and dropped <sink> metres over the top of the head (default 0.03). Its texture is kept
-only as light and shade, tinted with the given colour.  Positions are relative to the bottom of the head."""
+only as light and shade, tinted with the given colour.  <tilt> (degrees, default 0) tips the brim down over the
+forehead; <forward> (metres, default 0) slides the hat toward the face.  Positions are relative to the bottom of the head."""
 import sys, os, json, struct, base64, io
 import numpy as np
 from PIL import Image
@@ -14,6 +15,8 @@ key, path, col = sys.argv[1], sys.argv[2], sys.argv[3]
 width = float(sys.argv[4]) if len(sys.argv) > 4 else 0.39
 sink = float(sys.argv[5]) if len(sys.argv) > 5 else 0.03
 credit = sys.argv[6] if len(sys.argv) > 6 else ''
+tilt = np.radians(float(sys.argv[7])) if len(sys.argv) > 7 else 0.0
+fwd = float(sys.argv[8]) if len(sys.argv) > 8 else 0.0
 b = open(path, 'rb').read(); n = struct.unpack('<I', b[12:16])[0]; j = json.loads(b[20:20 + n]); bin_ = b[20 + n + 8:]
 def acc(i):
     a = j['accessors'][i]; bv = j['bufferViews'][a['bufferView']]; off = bv.get('byteOffset', 0) + a.get('byteOffset', 0)
@@ -33,6 +36,7 @@ s = width / (W[:, 0].max() - W[:, 0].min()); W = W * s
 W[:, 0] -= (W[:, 0].max() + W[:, 0].min()) / 2
 band = W[W[:, 1] < np.percentile(W[:, 1], 35)]; W[:, 2] -= (band[:, 2].min() + np.percentile(band[:, 2], 70)) / 2 - 0.01      # centre the band, not the brim, on the head
 W[:, 1] += 0.27 - sink - np.percentile(W[:, 1], 12)
+y, z = W[:, 1] - 0.27, W[:, 2] + fwd; W[:, 1] = 0.27 + y * np.cos(tilt) - z * np.sin(tilt); W[:, 2] = y * np.sin(tilt) + z * np.cos(tilt)      # tip it about the top of the head
 assert len(W) < 65536
 def q(a):
     lo, hi = a.min(0), a.max(0); return lo.round(5).tolist(), hi.round(5).tolist(), base64.b64encode(np.round((a - lo) / (hi - lo) * 65535).astype('<u2').tobytes()).decode()
