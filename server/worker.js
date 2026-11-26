@@ -9,11 +9,13 @@ const GUESTKEYS = { 'jambutek-studio-stickers-v1': 1 };   // the only shared sta
 const MAX_WATCHERS = 24;        // spectators: they see and hear the room, are not in it, and do not count towards the six
 const SKINS = 12;                 // one of each look per room (the twelve in the menu's grid)
 const SKINMAX = 64;               // looks beyond the twelve are custom ones, reached by a code
+const STALE = 150 * 1000;        // a connection that has said nothing for this long is dead (a phone that locked, a laptop that slept): its player is taken out of the room
 const COLORS = ['#FF2A6A', '#30A8F0', '#90F0A8', '#F5D547', '#B05AFF', '#FF8A3A'];
 
 export class Room {
   constructor(ctx, env) {
     this.ctx = ctx; this.env = env;
+    this.heard = new Map(); // connection -> when it last said anything (kept in memory only; after a sleep everyone starts fresh)
     this.told = {};         // name -> when Discord was last told about them, so reconnects don't spam
     this.world = {};        // shared room state, key -> value (one machine or one drum pattern per key)
     ctx.blockConcurrencyWhile(async () => {
@@ -33,6 +35,21 @@ export class Room {
     const s = JSON.stringify(msg);
     for (const p of this.everyone(except)) { try { p.ws.send(s); } catch (e) {} }
   }
+  async sweep(cid) {                                 // take out the dead: connections long silent, and any earlier connection from the same browser tab (it has come back)
+    const now = Date.now(); let back = false;
+    for (const p of this.everyone()) {
+      const h = this.heard.get(p.ws);
+      if (h === undefined) this.heard.set(p.ws, now);
+      const same = cid && p.a.cid === cid;
+      if (same || (h !== undefined && now - h > STALE)) {
+        if (same && !p.a.spec) back = true;
+        await this.leave(p.ws, same);
+        try { p.ws.close(same ? 4002 : 4003, same ? 'replaced' : 'silent'); } catch (e) {}
+        this.heard.delete(p.ws);
+      }
+    }
+    return back;
+  }
   async fetch(req) {
     if (new URL(req.url).pathname.startsWith('/room/')) {    // which looks are already being worn here
       const ps = this.players();
@@ -42,12 +59,14 @@ export class Room {
     const url = new URL(req.url);
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
+    const cid = (url.searchParams.get('cid') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 24);
+    const back = await this.sweep(cid);              // their own earlier self, if it is still standing here, goes first
     const others = this.players();
     if (url.searchParams.get('spec') === '1') {              // a spectator: gets everything the players send, sends nothing, takes no seat
       const w = this.watchers();
       if (w.length >= MAX_WATCHERS) { server.accept(); server.send(JSON.stringify({ t: 'full', spec: 1 })); server.close(4001, 'Room full'); return new Response(null, { status: 101, webSocket: client }); }
-      this.ctx.acceptWebSocket(server);
-      server.serializeAttachment({ id: crypto.randomUUID().slice(0, 8), spec: 1 });
+      this.ctx.acceptWebSocket(server); this.heard.set(server, Date.now());
+      server.serializeAttachment({ id: crypto.randomUUID().slice(0, 8), spec: 1, cid });
       server.send(JSON.stringify({
         t: 'welcome', spec: 1, max: MAX_PLAYERS, now: Date.now(), watching: w.length + 1,
         players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s, guest: p.a.guest ? 1 : 0 })),
@@ -63,7 +82,7 @@ export class Room {
       server.close(4001, 'Room full');
       return new Response(null, { status: 101, webSocket: client });
     }
-    if (!others.length) { this.world = {}; await this.ctx.storage.deleteAll(); }      // first one in: a fresh room
+    if (!others.length && !back) { this.world = {}; await this.ctx.storage.deleteAll(); }      // first one in: a fresh room (unless it is the only player coming back after a dropped connection)
     const name = (url.searchParams.get('name') || 'Guest').replace(/[<>]/g, '').trim().slice(0, 16) || 'Guest';
     const takenSkins = others.map((p) => p.a.skin || 0);
     let skin = Math.max(0, Math.min(SKINMAX - 1, parseInt(url.searchParams.get('skin') || '0', 10) || 0));
@@ -71,8 +90,8 @@ export class Room {
     const used = six.map((p) => p.a.color);
     const color = guest ? GUESTCOLOR : (COLORS.find((c) => !used.includes(c)) || COLORS[0]);
     const id = crypto.randomUUID().slice(0, 8);
-    this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id, name, color, skin, s: null, guest, at: Date.now() });
+    this.ctx.acceptWebSocket(server); this.heard.set(server, Date.now());
+    server.serializeAttachment({ id, name, color, skin, s: null, guest, at: Date.now(), cid });
     server.send(JSON.stringify({
       t: 'welcome', id, color, skin, guest, max: MAX_PLAYERS, now: Date.now(), watching: this.watchers().length,
       players: others.map((p) => ({ id: p.a.id, name: p.a.name, color: p.a.color, skin: p.a.skin || 0, s: p.a.s, guest: p.a.guest ? 1 : 0 })),
@@ -97,6 +116,7 @@ export class Room {
     if (typeof raw !== 'string' || raw.length > 200000) return;
     let m; try { m = JSON.parse(raw); } catch (e) { return; }
     const a = ws.deserializeAttachment(); if (!a || a.gone) return;
+    this.heard.set(ws, Date.now());
     if (a.spec && m.t !== 'ping') return;                // spectators only keep time with the room
     switch (m.t) {
       case 's':                                   // where a player is and where they're looking
@@ -123,17 +143,19 @@ export class Room {
         return;
       case 'ping':                                // also how clients agree on one clock
         try { ws.send(JSON.stringify({ t: 'pong', at: m.at, now: Date.now() })); } catch (e) {}
+        await this.sweep();                       // every ping from the living is a chance to clear out the dead
         return;
     }
   }
   async webSocketClose(ws, code) { await this.leave(ws); try { ws.close(code === 1005 ? 1000 : code, 'bye'); } catch (e) {} }
   async webSocketError(ws) { await this.leave(ws); }
-  async leave(ws) {
+  async leave(ws, replaced) {                       // replaced: the same person is coming straight back in, so their place and the room are kept for them
     let a; try { a = ws.deserializeAttachment(); } catch (e) {}
     if (!a || a.gone) return;
     a.gone = true; try { ws.serializeAttachment(a); } catch (e) {}
     if (a.spec) { this.broadcast({ t: 'watch', n: this.watchers(ws).length }, ws); return; }
-    this.broadcast({ t: 'leave', id: a.id, name: a.name }, ws);
+    this.broadcast({ t: 'leave', id: a.id, name: a.name, back: replaced ? 1 : 0 }, ws);
+    if (replaced) return;
     if (!a.guest) {                                 // one of the six left: whoever has waited longest as a guest takes the place
       const g = this.players(ws).filter((p) => p.a.guest).sort((x, y) => (x.a.at || 0) - (y.a.at || 0))[0];
       if (g && this.seated(ws).length < MAX_PLAYERS) {

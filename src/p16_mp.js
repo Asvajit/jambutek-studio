@@ -339,10 +339,18 @@ var MP = (function(){
   ['keydown', 'pointerdown', 'wheel'].forEach(function(t){ document.addEventListener(t, function(){ Q.inputAt = performance.now(); }, true); });
 
   // ---- connection ----
+  Q.cid = ''; (function(){ var ch = 'abcdefghijklmnopqrstuvwxyz0123456789'; for (var i = 0; i < 16; i++) Q.cid += ch[Math.floor(Math.random() * 36)]; })();
+  function ping(){ Q.pingAt = performance.now(); if (send({ t:'ping', at:performance.now() }) !== false) Q.pingOut = (Q.pingOut | 0) + 1; }
+  /* keep saying we are here even when the tab is in the background (the room takes out anyone silent for a long while), and notice a dead line ourselves: four pings in a row with no answer and we reconnect */
+  setInterval(function(){
+    var ws = Q.ws; if (!Q.on || !ws || ws.readyState !== 1) return;
+    if (Q.pingOut >= 4 && !document.hidden){ Q.pingOut = 0; try { ws.close(); } catch (e) {} if (ws.onclose) ws.onclose(); return; }
+    if (performance.now() - Q.pingAt > 15000) ping();
+  }, 20000);
   function connect(){
     var proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + (Q.spec ? '?spec=1' : '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : '')));
-    Q.ws = ws; Q.closedByUs = false;
+    var ws = new WebSocket(proto + location.host + '/ws/' + Q.code + (Q.spec ? '?spec=1' : '?name=' + encodeURIComponent(Q.name) + '&skin=' + (Q.skin | 0) + (MPME ? '&me=1' : '')) + '&cid=' + Q.cid);      /* cid: this tab's own tag, so if we drop and come back the room takes our old self out at once */
+    Q.ws = ws; Q.closedByUs = false; Q.pingOut = 0;
     ws.onmessage = function(ev){
       var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
       if (m.t === 'welcome' && Q.spec){                      // watching: take the room as it is, own nothing in it
@@ -375,12 +383,12 @@ var MP = (function(){
         else { var G = Q.peers[m.id]; if (G){ var gs = G.s, gn = G.name, gk = G.skinI != null ? G.skinI : G.skin; removePeer(m.id); var N = Q.peers[m.id] = avatar(m.color, gn, gk | 0); N.guest = !!m.guest; if (gs){ N.s = gs; N.x = gs[0]; N.z = gs[1]; } paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(gn) + '</b> has a place now', true); } } }
       else if (m.t === 'watch'){ Q.watch = m.n | 0; paintHud(); }
       else if (m.t === 'join'){ if (!Q.peers[m.id]) Q.peers[m.id] = avatar(m.color, m.name, m.skin); Q.peers[m.id].guest = !!m.guest; paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + '</b> joined' + (m.guest ? ' as a guest' : ''), true); toast(m.name + ' joined' + (m.guest ? ' as a guest' : '')); }
-      else if (m.t === 'leave'){ var P = Q.peers[m.id]; if (P) line('<b style="color:' + esc(P.color) + '">' + esc(P.name) + '</b> left', true); removePeer(m.id); }
+      else if (m.t === 'leave'){ var P = Q.peers[m.id]; if (P && !m.back) line('<b style="color:' + esc(P.color) + '">' + esc(P.name) + '</b> left', true); removePeer(m.id); }
       else if (m.t === 's'){ var R = Q.peers[m.id]; if (R){ if (!R.s){ R.x = m.s[0]; R.z = m.s[1]; } R.s = m.s; } }
       else if (m.t === 'chat'){ line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + ':</b> ' + esc(m.text)); var S = Q.peers[m.id]; if (S){ S.say = m.text; S.sayUntil = performance.now() + 6000; paintTag(S); } }
       else if (m.t === 'set') applySet(m.k, m.v);
       else if (m.t === 'ev') onEv(m.id, m.e);
-      else if (m.t === 'pong'){ var rtt = performance.now() - m.at; if (rtt <= Q.rtt){ Q.rtt = rtt; Q.off = m.now + rtt / 2 - Date.now(); } else Q.rtt *= 1.03; Q.pings++; }   // trust only the quickest round trips; let the bar drift up slowly so the clock can still be corrected
+      else if (m.t === 'pong'){ Q.pingOut = 0; var rtt = performance.now() - m.at; if (rtt <= Q.rtt){ Q.rtt = rtt; Q.off = m.now + rtt / 2 - Date.now(); } else Q.rtt *= 1.03; Q.pings++; }   // trust only the quickest round trips; let the bar drift up slowly so the clock can still be corrected
     };
     ws.onclose = function(){
       if (Q.ws !== ws) return; Q.ws = null;
@@ -515,7 +523,7 @@ var MP = (function(){
         send({ t:'s', s:[+px.toFixed(3), +pz.toFixed(3), +(lean ? (LEAN.yaw || 0) : st8 ? SEATS[SIT.seat].yaw : em ? EM.face : cam.yaw).toFixed(3), +(lean ? -0.45 : em ? EM.pitch : cam.pitch).toFixed(3), +crouch.k.toFixed(2), +JUMP.y.toFixed(3), lean ? 1 + Math.max(0, Object.keys(DEVS).indexOf(LEAN.key)) : 0, em, st8, st9] });      // the seventh number is 0 when walking, else which machine (so the room can show who is where)
       }
       if (now - Q.cqAt > 50){ var ids = Object.keys(Q.cq); if (ids.length){ Q.cqAt = now; send({ t:'ev', e:['c', ids.map(function(id){ return [id, Q.cq[id]]; })] }); Q.cq = {}; } }
-      if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)){ Q.pingAt = now; send({ t:'ping', at:performance.now() }); }
+      if (now - Q.pingAt > (Q.pings < 6 ? 1500 : 9000)) ping();
       if (Q.pendT && ac && AU.ready) transport(Q.pendT);
     }
     glowTick(now); pingTick(now);
