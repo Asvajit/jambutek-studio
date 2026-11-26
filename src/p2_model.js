@@ -28,10 +28,16 @@ var CT = {}, CTLIST = [];                            // every control, by id
 
 /* ---- the printed panel ---- */
 var panelC = mk(3072, 2284), panelTex = null;      // about 7.7 px per panel millimetre each way: the small print has to stay readable when you lean in
+var TRPLATE = { on:true, dark:0.5, img:null };
+(function(){ var src = window.JB_ASSETS && JB_ASSETS.trPlate; if (!src) return; var im = new Image(); im.onload = function(){ TRPLATE.img = im; paintPanel(); }; im.src = src; })();
 function paintPanel(){
   var g = panelC.getContext('2d');
   g.setTransform(panelC.width / PANEL.w, 0, 0, panelC.height / PANEL.h, 0, 0);          // draw in millimetres
   g.fillStyle = '#14161A'; g.fillRect(0, 0, PANEL.w, PANEL.h);
+  if (TRPLATE.on && TRPLATE.img){                                  /* the baseplate artwork, cover-fitted, then darkened so the print and the controls on it stay readable. TRPLATE.on = false brings back the plain plate */
+    var pi = TRPLATE.img, sc = Math.max(PANEL.w / pi.width, PANEL.h / pi.height), dw = pi.width * sc, dh = pi.height * sc;
+    g.drawImage(pi, (PANEL.w - dw) / 2, (PANEL.h - dh) / 2, dw, dh); g.fillStyle = 'rgba(12,6,12,' + TRPLATE.dark + ')'; g.fillRect(0, 0, PANEL.w, PANEL.h);
+  } else
   for (var i = 0; i < 5000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * PANEL.w, Math.random() * PANEL.h, .5, .3); }
   function rr(x0, y0, x1, y1, r, stroke, fill){
     var a = U(x0), b = V(y0), c = U(x1), d = V(y1); g.beginPath();
