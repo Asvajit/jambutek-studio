@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.250</span>
+    <span id="verFps">studio v0.251</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.250</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.251</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -4834,7 +4834,7 @@ function paintPanel(){
   });
   // common section 2
   T('VALUE', SIDEX - 22, 246, 2.8, null); VRAW = true; T('TEMPO', SIDEX, 366, 3.2, null); T('SHUFFLE', SIDEX, 450, 2.8, null); VRAW = false;      // the side column: placed by hand (VRAW), top to bottom
-  T('MOTION', 145, 370, 2.4, '#B8B8B4');
+  T('MOTION', 145, 370, 2.4, '#B8B8B4'); VRAW = true; T('INSTANT FX · HOLD', 145, 451, 2.3, '#B8B8B4'); VRAW = false;
   // pads
   PADX.forEach(function(x, i){ T(String(i + 1), x - 12, 529, 3.4, '#E6E6E2', 'bold', 'left'); });
   INST.forEach(function(n, i){ T(n, PADX[i], 592, 3.6, 'rgba(230,230,226,.8)', 'A'); });
@@ -4959,7 +4959,8 @@ button('shift', 120, 262, 16, 16, 'SHIFT', 'Shift', WHT); button('clear', 170, 2
 button('ptn', 120, 296, 16, 16, 'PTN\nSELECT', 'Pattern select', GRN); button('trrec', 170, 296, 16, 16, 'TR-REC', 'TR-REC · step recording', RED);
 button('last', 120, 330, 16, 16, 'LAST', 'Last step', GRN); button('sub', 170, 330, 16, 16, 'SUB', 'Sub steps', GRN);
 VRAW = true; button('moton', 120, 392, 16, 16, 'ON', 'Motion on', GRN); button('motrec', 170, 392, 16, 16, 'REC', 'Motion rec', RED);
-button('instplay', 120, 426, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 426, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED); VRAW = false;
+button('instplay', 120, 426, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 426, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED);
+button('fxrpt', 120, 468, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 468, 16, 16, 'WARP', 'Warp · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
 'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
 pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
@@ -5016,7 +5017,14 @@ function unlock(){
     var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 0.7;
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 10; hp.Q.value = 0.7;
     lp.connect(hp); hp.connect(vol); AU.lp = lp; AU.hp = hp;
-    var bus = ac.createGain(); bus.connect(lp); AU.bus = bus;
+    var bus = ac.createGain(); AU.bus = bus;
+    /* WARP (an instant effect on the drums): the drum bus splits into a dry path and a wobbling one - a short delay whose time swings
+       fast and deep (the pitch bends up and down like a chewed tape), through a drive and a resonant low-pass. Holding the button
+       crossfades to the wobbling path; letting go fades straight back. */
+    var wd = ac.createGain(), ww = ac.createGain(), wdl = ac.createDelay(0.1), wlfo = ac.createOscillator(), wdep = ac.createGain(), wsh = ac.createWaveShaper(), wlp = ac.createBiquadFilter();
+    wd.gain.value = 1; ww.gain.value = 0; wdl.delayTime.value = 0.012; wlfo.frequency.value = 5.2; wdep.gain.value = 0.0075; wlfo.connect(wdep); wdep.connect(wdl.delayTime); wlfo.start();
+    var wc = new Float32Array(1025); for (var wi = 0; wi < 1025; wi++){ var wx = wi / 512 - 1; wc[wi] = Math.tanh(wx * 3) / Math.tanh(3); } wsh.curve = wc; wlp.type = 'lowpass'; wlp.frequency.value = 2200; wlp.Q.value = 5;
+    bus.connect(wd); wd.connect(lp); bus.connect(wdl); wdl.connect(wsh); wsh.connect(wlp); wlp.connect(ww); ww.connect(lp); AU.warp = { dry:wd, wet:ww, lp:wlp, lfo:wlfo };
     // reverb: a generated room
     var conv = ac.createConvolver(), len = Math.round(ac.sampleRate * 2.1), ir = ac.createBuffer(2, len, ac.sampleRate);
     for (var ch = 0; ch < 2; ch++){ var d = ir.getChannelData(ch), lpv = 0; for (var i = 0; i < len; i++){ var t = i / len, w = (Math.random() * 2 - 1) * Math.pow(1 - t, 3.2) * (i < 400 ? i / 400 : 1); lpv += (w - lpv) * (0.75 - t * 0.5); d[i] = lpv; } }
@@ -5227,6 +5235,24 @@ function trsLoad(s){
   }
   trsShow(); applyMix();
 }
+/* ---- the two instant effects (held buttons under INST PLAY / INST REC), drums only ----
+   BEAT REPEAT: from the next step, the drums loop the eighth note they are on (two steps) until it is let go; the bar keeps counting
+   underneath, so on release the pattern carries on exactly where it would have been. WARP: see AU.warp.
+   Held here or by anyone in the room (they arrive as events and are kept alive while held, so a dropped player cannot leave one on). */
+var IFX = { r:{ me:false, them:0 }, w:{ me:false, them:0 }, a:-1, sentAt:0 };
+function ifxOn(k){ var f = IFX[k]; return f.me || f.them > performance.now(); }
+function ifxApply(){
+  if (!ifxOn('r')) IFX.a = -1;
+  if (AU.ready && AU.warp){ var t = ac.currentTime, on = ifxOn('w'); AU.warp.wet.gain.setTargetAtTime(on ? 1 : 0, t, 0.02); AU.warp.dry.gain.setTargetAtTime(on ? 0.12 : 1, t, 0.02); AU.warp.lp.frequency.setTargetAtTime(on ? 1100 : 2200, t, 0.25); }
+}
+function ifxSet(k, on, remote){
+  if (remote){ IFX[k].them = on ? performance.now() + 3000 : 0; } else { IFX[k].me = on; if (MPON && MPNET.ifx) MPNET.ifx(k, on); IFX.sentAt = performance.now(); }
+  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT' : 'WARP') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'WARP  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
+}
+function ifxTick(now){                                   // while held, remind the room every second and a half; let go of anyone who stopped saying so
+  if ((IFX.r.me || IFX.w.me) && now - IFX.sentAt > 1500){ IFX.sentAt = now; if (MPON && MPNET.ifx){ if (IFX.r.me) MPNET.ifx('r', true); if (IFX.w.me) MPNET.ifx('w', true); } }
+  ['r', 'w'].forEach(function(k){ var f = IFX[k]; if (f.them && f.them < now){ f.them = 0; ifxApply(); } });
+}
 function fillOk(f){ return !!f && typeof f.last === 'number' && Array.isArray(f.acc) && [f.st, f.sb].every(function(x){ return Array.isArray(x) && x.length === 11; }); }
 /* ---- saving: the unit keeps itself in this browser, like the arcade keeps its progress ---- */
 var SAVE_KEY = 'jambutek-studio-tr-v1', saveT = null;
@@ -5329,7 +5355,9 @@ function schedStep(t){
   var cur = playV(), v = cur;
   if (SEQ.fill){ var cf = pat().fill;                              // this pattern's own fill-in if one has been written (EDIT under AUTO FILL IN), otherwise one made up from what is playing
     if (fillOk(cf) && cf.st.some(function(r){ return r.some(function(x){ return x; }); })) v = cf; else { if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; } }
-  var s = SEQ.step, sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
+  var s = SEQ.step;
+  if (ifxOn('r') && M.playing){ if (IFX.a < 0) IFX.a = s - (s % 2); s = IFX.a + (((s - IFX.a) % 2) + 2) % 2; if (s >= v.last) s = 0; }      // BEAT REPEAT: the drums go round the held eighth note
+  var sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
   for (var i = 0; i < 11; i++){
     var st = v.st[i][s]; if (!st) continue;
     if (SEQ.skip[i + '_' + s]){ delete SEQ.skip[i + '_' + s]; continue; }
@@ -5432,6 +5460,8 @@ function press(c){
     case 'copy': M.copyArm = !M.copyArm; if (M.copyArm) say('COPY ' + 'ABCDEFGH'[M.editVar] + '  press A-H', 2600); return;
     case 'fxon': M.fxOn = !M.fxOn; applyMix(); say('MASTER FX  ' + (M.fxOn ? 'ON  ' + valText(CT.fxctrl) : 'OFF')); saveSoon(); return;
     case 'fillon': M.fillOn = !M.fillOn; say('AUTO FILL  ' + (M.fillOn ? fillEvery() + ' BARS' : 'OFF')); saveSoon(); return;
+    case 'fxrpt': ifxSet('r', true); return;
+    case 'fxwarp': ifxSet('w', true); return;
     case 'filledit':
       if (M.fillEdit){ M.fillEdit = false; say('FILL EDIT  OFF'); return; }
       if (!fillOk(pat().fill)){ pat().fill = makeFill(pat().vars[M.editVar]); saveSoon(); }      // first time: start from the fill the machine would have made, so there is something to change
@@ -5442,7 +5472,7 @@ function press(c){
     case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
   }
 }
-function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); }
+function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); if (c.id === 'fxrpt') ifxSet('r', false); else if (c.id === 'fxwarp') ifxSet('w', false); }
 function onCtl(c){                                 // a knob or fader moved
   c.show();
   if (c.dev){ DEVH[c.dev].ctl(c); return; }
@@ -5511,7 +5541,8 @@ function updateTR(now, dt){
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);
   var lit = { shift:M.shift, clear:M.clearArm && blink, ptn:M.mode === 'ptn', trrec:M.mode === 'trrec', last:M.mode === 'last', sub:M.sub, instplay:M.mode === 'instplay', instrec:M.mode === 'instrec' && (!M.playing || blink),
-    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit };
+    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit, fxrpt:ifxOn('r') && fast, fxwarp:ifxOn('w') && fast };
+  ifxTick(now);
   CTLIST.forEach(function(c){
     if (c.dev || (c.kind !== 'btn' && c.kind !== 'pad')) return;
     var L = 0;
@@ -9842,6 +9873,7 @@ var MP = (function(){
   }
   MPNET.regrid = function(){ var v = Q.anchor; if (!v || !Q.ws || Math.abs(v.bpm - M.bpm) > 0.01) return false; var sd = stepDur(), t0 = ac.currentTime + (v.t0 - serverNow()) / 1000, k = Math.max(0, Math.ceil((ac.currentTime + 0.03 - t0) / sd)); SEQ.n16 = (v.n0 | 0) + k; SEQ.step = SEQ.n16 % Math.max(1, playV().last); SEQ.nextT = t0 + k * sd; return true; };
   function anchor(){ return { on:1, t0:Math.round(serverNow() + (SEQ.nextT - ac.currentTime) * 1000), n0:SEQ.n16, bpm:M.bpm }; }
+  MPNET.ifx = function(k, on){ send({ t:'ev', e:['fx', k, on ? 1 : 0] }); };      // BEAT REPEAT and WARP, held by this player
   MPNET.start = function(){ var v = { on:1, t0:Math.round(serverNow() + 350), n0:0, bpm:M.bpm }; if (!send({ t:'set', k:'transport', v:v })){ startSeq(null, true); return; } transport(v); };
   MPNET.stop = function(){ send({ t:'set', k:'transport', v:{ on:0 } }); };
   MPNET.tempo = function(){ if (!M.playing || Q.applying) return; clearTimeout(Q.tempoT); Q.tempoT = setTimeout(function(){ if (M.playing && ac){ var v = anchor(); Q.anchor = v; send({ t:'set', k:'transport', v:v }); } }, 120); };
@@ -9974,6 +10006,7 @@ var MP = (function(){
     try {
       if (e[0] === 'c' && Array.isArray(e[1])) e[1].forEach(function(a){ var c = CT[a[0]]; if (c && (c.kind === 'knob' || c.kind === 'fader') && !c.endless && typeof a[1] === 'number'){ setCtl0(c, a[1]); if (c.show) c.show(); if (P) glow(c, P.color); } });
       else if (e[0] === 'b'){ if (P && typeof e[1] === 'string' && CT[e[1]]) glow(CT[e[1]], P.color); }
+      else if (e[0] === 'fx'){ if (P && (e[1] === 'r' || e[1] === 'w')) ifxSet(e[1], !!e[2], true); }
       else if (e[0] === 'p'){ if (e[1] === 'p' || e[1] === 'd' || e[1] === 'w') pingShow(id, e[1], e[2], e[3], e[4], e[5]); }
       else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } (function(dev, nn, on, vel){ snapRun(id + dev + ':' + nn, on, function(){ NOTE[dev][on ? 0 : 1](nn, vel == null ? undefined : vel); }); })(e[1], e[2], e[3], e[4]); }
       else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) (function(a, b, on){ snapRun(id + 'mc' + a + ':' + b, on, function(){ mcChord0(a, b, on); }); })(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
@@ -10736,7 +10769,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.250 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.251 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

@@ -67,6 +67,24 @@ function trsLoad(s){
   }
   trsShow(); applyMix();
 }
+/* ---- the two instant effects (held buttons under INST PLAY / INST REC), drums only ----
+   BEAT REPEAT: from the next step, the drums loop the eighth note they are on (two steps) until it is let go; the bar keeps counting
+   underneath, so on release the pattern carries on exactly where it would have been. WARP: see AU.warp.
+   Held here or by anyone in the room (they arrive as events and are kept alive while held, so a dropped player cannot leave one on). */
+var IFX = { r:{ me:false, them:0 }, w:{ me:false, them:0 }, a:-1, sentAt:0 };
+function ifxOn(k){ var f = IFX[k]; return f.me || f.them > performance.now(); }
+function ifxApply(){
+  if (!ifxOn('r')) IFX.a = -1;
+  if (AU.ready && AU.warp){ var t = ac.currentTime, on = ifxOn('w'); AU.warp.wet.gain.setTargetAtTime(on ? 1 : 0, t, 0.02); AU.warp.dry.gain.setTargetAtTime(on ? 0.12 : 1, t, 0.02); AU.warp.lp.frequency.setTargetAtTime(on ? 1100 : 2200, t, 0.25); }
+}
+function ifxSet(k, on, remote){
+  if (remote){ IFX[k].them = on ? performance.now() + 3000 : 0; } else { IFX[k].me = on; if (MPON && MPNET.ifx) MPNET.ifx(k, on); IFX.sentAt = performance.now(); }
+  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT' : 'WARP') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'WARP  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
+}
+function ifxTick(now){                                   // while held, remind the room every second and a half; let go of anyone who stopped saying so
+  if ((IFX.r.me || IFX.w.me) && now - IFX.sentAt > 1500){ IFX.sentAt = now; if (MPON && MPNET.ifx){ if (IFX.r.me) MPNET.ifx('r', true); if (IFX.w.me) MPNET.ifx('w', true); } }
+  ['r', 'w'].forEach(function(k){ var f = IFX[k]; if (f.them && f.them < now){ f.them = 0; ifxApply(); } });
+}
 function fillOk(f){ return !!f && typeof f.last === 'number' && Array.isArray(f.acc) && [f.st, f.sb].every(function(x){ return Array.isArray(x) && x.length === 11; }); }
 /* ---- saving: the unit keeps itself in this browser, like the arcade keeps its progress ---- */
 var SAVE_KEY = 'jambutek-studio-tr-v1', saveT = null;
@@ -169,7 +187,9 @@ function schedStep(t){
   var cur = playV(), v = cur;
   if (SEQ.fill){ var cf = pat().fill;                              // this pattern's own fill-in if one has been written (EDIT under AUTO FILL IN), otherwise one made up from what is playing
     if (fillOk(cf) && cf.st.some(function(r){ return r.some(function(x){ return x; }); })) v = cf; else { if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; } }
-  var s = SEQ.step, sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
+  var s = SEQ.step;
+  if (ifxOn('r') && M.playing){ if (IFX.a < 0) IFX.a = s - (s % 2); s = IFX.a + (((s - IFX.a) % 2) + 2) % 2; if (s >= v.last) s = 0; }      // BEAT REPEAT: the drums go round the held eighth note
+  var sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
   for (var i = 0; i < 11; i++){
     var st = v.st[i][s]; if (!st) continue;
     if (SEQ.skip[i + '_' + s]){ delete SEQ.skip[i + '_' + s]; continue; }
@@ -272,6 +292,8 @@ function press(c){
     case 'copy': M.copyArm = !M.copyArm; if (M.copyArm) say('COPY ' + 'ABCDEFGH'[M.editVar] + '  press A-H', 2600); return;
     case 'fxon': M.fxOn = !M.fxOn; applyMix(); say('MASTER FX  ' + (M.fxOn ? 'ON  ' + valText(CT.fxctrl) : 'OFF')); saveSoon(); return;
     case 'fillon': M.fillOn = !M.fillOn; say('AUTO FILL  ' + (M.fillOn ? fillEvery() + ' BARS' : 'OFF')); saveSoon(); return;
+    case 'fxrpt': ifxSet('r', true); return;
+    case 'fxwarp': ifxSet('w', true); return;
     case 'filledit':
       if (M.fillEdit){ M.fillEdit = false; say('FILL EDIT  OFF'); return; }
       if (!fillOk(pat().fill)){ pat().fill = makeFill(pat().vars[M.editVar]); saveSoon(); }      // first time: start from the fill the machine would have made, so there is something to change
@@ -282,7 +304,7 @@ function press(c){
     case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
   }
 }
-function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); }
+function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); if (c.id === 'fxrpt') ifxSet('r', false); else if (c.id === 'fxwarp') ifxSet('w', false); }
 function onCtl(c){                                 // a knob or fader moved
   c.show();
   if (c.dev){ DEVH[c.dev].ctl(c); return; }
@@ -351,7 +373,8 @@ function updateTR(now, dt){
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);
   var lit = { shift:M.shift, clear:M.clearArm && blink, ptn:M.mode === 'ptn', trrec:M.mode === 'trrec', last:M.mode === 'last', sub:M.sub, instplay:M.mode === 'instplay', instrec:M.mode === 'instrec' && (!M.playing || blink),
-    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit };
+    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit, fxrpt:ifxOn('r') && fast, fxwarp:ifxOn('w') && fast };
+  ifxTick(now);
   CTLIST.forEach(function(c){
     if (c.dev || (c.kind !== 'btn' && c.kind !== 'pad')) return;
     var L = 0;

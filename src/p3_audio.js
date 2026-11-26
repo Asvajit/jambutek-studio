@@ -25,7 +25,14 @@ function unlock(){
     var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 0.7;
     var hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 10; hp.Q.value = 0.7;
     lp.connect(hp); hp.connect(vol); AU.lp = lp; AU.hp = hp;
-    var bus = ac.createGain(); bus.connect(lp); AU.bus = bus;
+    var bus = ac.createGain(); AU.bus = bus;
+    /* WARP (an instant effect on the drums): the drum bus splits into a dry path and a wobbling one - a short delay whose time swings
+       fast and deep (the pitch bends up and down like a chewed tape), through a drive and a resonant low-pass. Holding the button
+       crossfades to the wobbling path; letting go fades straight back. */
+    var wd = ac.createGain(), ww = ac.createGain(), wdl = ac.createDelay(0.1), wlfo = ac.createOscillator(), wdep = ac.createGain(), wsh = ac.createWaveShaper(), wlp = ac.createBiquadFilter();
+    wd.gain.value = 1; ww.gain.value = 0; wdl.delayTime.value = 0.012; wlfo.frequency.value = 5.2; wdep.gain.value = 0.0075; wlfo.connect(wdep); wdep.connect(wdl.delayTime); wlfo.start();
+    var wc = new Float32Array(1025); for (var wi = 0; wi < 1025; wi++){ var wx = wi / 512 - 1; wc[wi] = Math.tanh(wx * 3) / Math.tanh(3); } wsh.curve = wc; wlp.type = 'lowpass'; wlp.frequency.value = 2200; wlp.Q.value = 5;
+    bus.connect(wd); wd.connect(lp); bus.connect(wdl); wdl.connect(wsh); wsh.connect(wlp); wlp.connect(ww); ww.connect(lp); AU.warp = { dry:wd, wet:ww, lp:wlp, lfo:wlfo };
     // reverb: a generated room
     var conv = ac.createConvolver(), len = Math.round(ac.sampleRate * 2.1), ir = ac.createBuffer(2, len, ac.sampleRate);
     for (var ch = 0; ch < 2; ch++){ var d = ir.getChannelData(ch), lpv = 0; for (var i = 0; i < len; i++){ var t = i / len, w = (Math.random() * 2 - 1) * Math.pow(1 - t, 3.2) * (i < 400 ? i / 400 : 1); lpv += (w - lpv) * (0.75 - t * 0.5); d[i] = lpv; } }

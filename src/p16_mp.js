@@ -195,6 +195,7 @@ var MP = (function(){
   }
   MPNET.regrid = function(){ var v = Q.anchor; if (!v || !Q.ws || Math.abs(v.bpm - M.bpm) > 0.01) return false; var sd = stepDur(), t0 = ac.currentTime + (v.t0 - serverNow()) / 1000, k = Math.max(0, Math.ceil((ac.currentTime + 0.03 - t0) / sd)); SEQ.n16 = (v.n0 | 0) + k; SEQ.step = SEQ.n16 % Math.max(1, playV().last); SEQ.nextT = t0 + k * sd; return true; };
   function anchor(){ return { on:1, t0:Math.round(serverNow() + (SEQ.nextT - ac.currentTime) * 1000), n0:SEQ.n16, bpm:M.bpm }; }
+  MPNET.ifx = function(k, on){ send({ t:'ev', e:['fx', k, on ? 1 : 0] }); };      // BEAT REPEAT and WARP, held by this player
   MPNET.start = function(){ var v = { on:1, t0:Math.round(serverNow() + 350), n0:0, bpm:M.bpm }; if (!send({ t:'set', k:'transport', v:v })){ startSeq(null, true); return; } transport(v); };
   MPNET.stop = function(){ send({ t:'set', k:'transport', v:{ on:0 } }); };
   MPNET.tempo = function(){ if (!M.playing || Q.applying) return; clearTimeout(Q.tempoT); Q.tempoT = setTimeout(function(){ if (M.playing && ac){ var v = anchor(); Q.anchor = v; send({ t:'set', k:'transport', v:v }); } }, 120); };
@@ -327,6 +328,7 @@ var MP = (function(){
     try {
       if (e[0] === 'c' && Array.isArray(e[1])) e[1].forEach(function(a){ var c = CT[a[0]]; if (c && (c.kind === 'knob' || c.kind === 'fader') && !c.endless && typeof a[1] === 'number'){ setCtl0(c, a[1]); if (c.show) c.show(); if (P) glow(c, P.color); } });
       else if (e[0] === 'b'){ if (P && typeof e[1] === 'string' && CT[e[1]]) glow(CT[e[1]], P.color); }
+      else if (e[0] === 'fx'){ if (P && (e[1] === 'r' || e[1] === 'w')) ifxSet(e[1], !!e[2], true); }
       else if (e[0] === 'p'){ if (e[1] === 'p' || e[1] === 'd' || e[1] === 'w') pingShow(id, e[1], e[2], e[3], e[4], e[5]); }
       else if (e[0] === 'n' && NOTE[e[1]] && typeof e[2] === 'number'){ unlock(); if (P){ if (e[3]) P.held[e[1] + ':' + e[2]] = 1; else delete P.held[e[1] + ':' + e[2]]; } (function(dev, nn, on, vel){ snapRun(id + dev + ':' + nn, on, function(){ NOTE[dev][on ? 0 : 1](nn, vel == null ? undefined : vel); }); })(e[1], e[2], e[3], e[4]); }
       else if (e[0] === 'm'){ if (e[1] === 0 && e[2] >= 0 && e[2] <= 12 && e[3] >= 0 && e[3] < 64) (function(a, b, on){ snapRun(id + 'mc' + a + ':' + b, on, function(){ mcChord0(a, b, on); }); })(e[2] | 0, e[3] | 0, e[4] ? 1 : 0); else if (e[1] === 1 && e[2] >= 0 && e[2] < 12) mcHarp0(e[2] | 0, 1); }
