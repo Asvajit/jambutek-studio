@@ -304,7 +304,6 @@ function press(c){
     case 'filltrig': if (M.playing){ SEQ.fill = true; SEQ.fillVar = null; say('FILL IN'); } else say('FILL IN  press START first'); return;
     case 'kit': M.menu = M.menu === 'kit' ? null : 'kit'; return;
     case 'inst': M.menu = M.menu === 'inst' ? null : 'inst'; return;
-    case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
   }
 }
 function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); if (c.id === 'fxrpt') ifxSet('r', false); else if (c.id === 'fxwarp') ifxSet('w', false); }

@@ -291,7 +291,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.252</span>
+    <span id="verFps">studio v0.253</span>
   </div>
 </div>
 
@@ -323,7 +323,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.252</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.253</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -4830,7 +4830,7 @@ function paintPanel(){
   });
   // common section 2
   T('VALUE', SIDEX - 22, 246, 2.8, null); VRAW = true; T('TEMPO', SIDEX, 366, 3.2, null); T('SHUFFLE', SIDEX, 450, 2.8, null); VRAW = false;      // the side column: placed by hand (VRAW), top to bottom
-  T('MOTION', 145, 370, 2.4, '#B8B8B4'); VRAW = true; T('INSTANT FX · HOLD', 145, 451, 2.3, '#B8B8B4'); VRAW = false;
+  VRAW = true; T('INSTANT FX · HOLD', 145, 417, 2.3, '#B8B8B4'); VRAW = false;
   // pads
   PADX.forEach(function(x, i){ T(String(i + 1), x - 12, 529, 3.4, '#E6E6E2', 'bold', 'left'); });
   INST.forEach(function(n, i){ T(n, PADX[i], 592, 3.6, 'rgba(230,230,226,.8)', 'A'); });
@@ -4954,9 +4954,9 @@ var RED = 0xFF2A3C, GRN = 0x3BFF6A, WHT = 0xFFFFFF, ORG = 0xFF8A2A;
 button('shift', 120, 262, 16, 16, 'SHIFT', 'Shift', WHT); button('clear', 170, 262, 16, 16, 'CLEAR', 'Clear', WHT);
 button('ptn', 120, 296, 16, 16, 'PTN\nSELECT', 'Pattern select', GRN); button('trrec', 170, 296, 16, 16, 'TR-REC', 'TR-REC · step recording', RED);
 button('last', 120, 330, 16, 16, 'LAST', 'Last step', GRN); button('sub', 170, 330, 16, 16, 'SUB', 'Sub steps', GRN);
-VRAW = true; button('moton', 120, 392, 16, 16, 'ON', 'Motion on', GRN); button('motrec', 170, 392, 16, 16, 'REC', 'Motion rec', RED);
-button('instplay', 120, 426, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 426, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED);
-button('fxrpt', 120, 468, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 468, 16, 16, 'ROLL', 'Roll · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
+VRAW = true;      /* the lower group: INST PLAY / INST REC, then the two instant effects (MOTION ON / REC were here and did nothing) */
+button('instplay', 120, 392, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 392, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED);
+button('fxrpt', 120, 434, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 434, 16, 16, 'ROLL', 'Roll · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
 'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
 pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
 button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
@@ -5457,7 +5457,6 @@ function press(c){
     case 'filltrig': if (M.playing){ SEQ.fill = true; SEQ.fillVar = null; say('FILL IN'); } else say('FILL IN  press START first'); return;
     case 'kit': M.menu = M.menu === 'kit' ? null : 'kit'; return;
     case 'inst': M.menu = M.menu === 'inst' ? null : 'inst'; return;
-    case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
   }
 }
 function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); if (c.id === 'fxrpt') ifxSet('r', false); else if (c.id === 'fxwarp') ifxSet('w', false); }
@@ -10499,7 +10498,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.252 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.253 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
