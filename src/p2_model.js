@@ -65,7 +65,8 @@ function paintPanel(){
   COLX.forEach(function(x, i){
     rr(x - 21, 238, x + 21, 251, 0.8, COLCOL[i], '#23262C');                                    // the drum's name, in the menu's Merchant Copy: wide open letters that survive the room's coarse picture
     var nm = ['KICK', 'SNARE', 'LOW TOM', 'MID TOM', 'HI TOM', 'RIM', 'CLAP', 'CL HAT', 'OP HAT', 'CRASH', 'RIDE'][i];                // short names, so the type can be large
-    g.font = '6.4px "Merchant Copy", ui-monospace, monospace'; g.fillStyle = g.strokeStyle = '#FFFFFF'; g.lineWidth = 0.22; g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeText(nm, U(x), V(245.2), 21.4); g.fillText(nm, U(x), V(245.2), 21.4);
+    g.font = '6.4px "Merchant Copy", ui-monospace, monospace'; g.fillStyle = g.strokeStyle = '#FFFFFF'; g.lineWidth = 0.22; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; var tm = g.measureText('KHR'), ty = V(244.5) + ((tm.actualBoundingBoxAscent || 4) - (tm.actualBoundingBoxDescent || 0)) / 2;      /* centred on the capitals' own height: this face's 'middle' sits low */
+    g.strokeText(nm, U(x), ty, 21.4); g.fillText(nm, U(x), ty, 21.4);
     T('TUNE', x, 287, 3, null); T('DECAY', x, 326, 3, null); T('TONE', x, 365, 3, null);
     VRAW = true; T('REV', x - 11.3, 411, 2.5, '#E8C63A'); T('DLY', x + 11.3, 411, 2.5, '#35C46B'); VRAW = false;      // the two sends, in the let-in row
     stops(x, 268, 9.5); stops(x, 307, 9.5); stops(x, 347, 9.5);

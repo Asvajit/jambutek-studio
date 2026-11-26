@@ -2,5 +2,8 @@
   { "n": "Narni",   "a": "csNarni",   "code": "NARNIBOO", "hat": "flatcap" },
   { "n": "OP",      "a": "csHotstar", "code": "HOT5TAR" },
   { "n": "Roo",     "a": "csRoo",     "code": "ROOBIX" },
-  { "n": "Asvajit", "a": "csAsvajit", "code": "FCAT",     "hat": "cap" }
+  { "n": "Asvajit", "a": "csAsvajit", "code": "FCAT",     "hat": "cap" },
+  { "n": "Geve",    "a": "csGeve",    "code": "GEEVEE" },
+  { "n": "Nigel",   "a": "csNigel",   "code": "NOODLE" },
+  { "n": "Yash",    "a": "csYash",    "code": "GRANDMASTER" }
 ]
