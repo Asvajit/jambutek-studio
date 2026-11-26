@@ -54,6 +54,25 @@ var M = { playing:false, bpm:DEF && DEF.bpm >= 40 && DEF.bpm <= 300 ? DEF.bpm : 
   mutes:[0,0,0,0,0,0,0,0,0,0,0], pat:0, nextPat:-1, varSel:[0], varIx:0, editVar:0, fillOn:false, fxOn:false, menu:null, roll:0, msg:'', msgUntil:0, taps:[] };
 var SEQ = { step:0, nextT:0, bar:0, timer:null, vis:[], visStep:-1, fill:false, fillVar:null, crashNext:false, skip:{}, flash:[0,0,0,0,0,0,0,0,0,0,0], kick:0 };
 
+/* ---- each drum's CTRL knob is a send: to the reverb (yellow) or the delay (green), picked with CTRL SELECT ----
+   a: which one the knob feeds (1 reverb, 2 delay), r and d: the two send amounts (both kept, the knob shows the one it feeds),
+   t: the voice's own character, which the knob used to set. A jam saved before this keeps its sound exactly: its old knob
+   positions become t, and the sends stay at the fixed amounts every drum had then. */
+var TRS = { a:[1,1,1,1,1,1,1,1,1,1,1], r:[0,0,0,0,0,0,0,0,0,0,0], d:[0,0,0,0,0,0,0,0,0,0,0], t:[.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5] }, SMAX = 0.6;
+function trsShow(){ for (var i = 0; i < 11; i++){ var c = CT['ctrl' + i]; c.v = TRS.a[i] === 2 ? TRS.d[i] : TRS.r[i]; c.mat.color.setHex(TRS.a[i] === 2 ? FXGRN : FXYEL); c.show(); } }
+function trsLoad(s){
+  var f = s && s.fx, ok = f && [f.a, f.r, f.d, f.t].every(function(x){ return Array.isArray(x) && x.length === 11; }), num = function(v, d){ return typeof v === 'number' && v === v ? clamp(v, 0, 1) : d; };
+  for (var i = 0; i < 11; i++){
+    if (ok){ TRS.a[i] = f.a[i] === 2 ? 2 : 1; TRS.r[i] = num(f.r[i], 0); TRS.d[i] = num(f.d[i], 0); TRS.t[i] = num(f.t[i], 0.5); }
+    else { TRS.a[i] = 1; TRS.r[i] = SENDS[i][0] / SMAX; TRS.d[i] = SENDS[i][1] / SMAX; TRS.t[i] = num(s && s.kn && s.kn['ctrl' + i], 0.5); }
+  }
+  trsShow(); applyMix();
+}
+function ctlAssign(a){                                 // CTRL SELECT, then a click on the reverb or the delay level knob
+  var i = M.sel; TRS.a[i] = a; M.ctlArm = false; trsShow(); CT.reverb.mat.emissive.setHex(0); CT.dlevel.mat.emissive.setHex(0);
+  say(INST[i] + ' CTRL > ' + (a === 2 ? 'DELAY' : 'REVERB') + ' SEND', 2000); dispDirty = true; applyMix(); saveSoon();
+}
+function fillOk(f){ return !!f && typeof f.last === 'number' && Array.isArray(f.acc) && [f.st, f.sb].every(function(x){ return Array.isArray(x) && x.length === 11; }); }
 /* ---- saving: the unit keeps itself in this browser, like the arcade keeps its progress ---- */
 var SAVE_KEY = 'jambutek-studio-tr-v1', saveT = null;
 /* which variations (A to H) are chained to play, and which one is being edited: saved with the rest, so a jam comes back playing A B and not just A */
@@ -61,7 +80,7 @@ function trVars(s){ var a = s && Array.isArray(s.vars) ? s.vars.filter(function(
   if (!a.length) return false; if (a.join() !== M.varSel.join()){ M.varSel = a; M.varIx = 0; } M.editVar = typeof s.ev === 'number' ? clamp(s.ev | 0, 0, 7) : a[0]; return true; }
 function save(){
   var kn = {}; CTLIST.forEach(function(c){ if (!c.dev && ((c.kind === 'knob' && !c.endless) || c.kind === 'fader')) kn[c.id] = +c.v.toFixed(3); });
-  store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, vars:M.varSel, ev:M.editVar, PAT:PAT, kn:kn }));
+  store(SAVE_KEY, JSON.stringify({ v:1, bpm:M.bpm, pat:M.pat, mutes:M.mutes, fillOn:M.fillOn, fxOn:M.fxOn, vars:M.varSel, ev:M.editVar, PAT:PAT, kn:kn, fx:TRS }));
 }
 function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(save, saveMs(1200)); }
 SAVENOW.push(save);
@@ -72,13 +91,15 @@ SAVENOW.push(save);
     if (!ok) return;
     PAT = s.PAT; M.bpm = clamp(+s.bpm || 124, 40, 300); M.pat = clamp(s.pat | 0, 0, 15); if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn; trVars(s);
     Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id]; if (c && typeof s.kn[id] === 'number'){ c.v = clamp(s.kn[id], 0, 1); c.show(); } });
+    trsLoad(s);
   } catch (e) {}
 })();
 
 /* ---- helpers ---- */
 function say(m, ms){ M.msg = m; M.msgUntil = performance.now() + (ms || 1400); dispDirty = true; }
 function pat(){ return PAT[M.pat]; }
-function editV(){ return pat().vars[M.editVar]; }
+function editV(){ var p = pat(); if (M.fillEdit){ if (fillOk(p.fill)) return p.fill; M.fillEdit = false; } return p.vars[M.editVar]; }      // with the fill's EDIT lit, the steps show and change this pattern's own fill-in
+function setEditV(v){ if (M.fillEdit) pat().fill = v; else pat().vars[M.editVar] = v; }
 function playV(){ return pat().vars[M.varSel[M.varIx % M.varSel.length]]; }
 function stepDur(){ return 60 / M.bpm / 4; }
 function fillEvery(){ return [2, 4, 8, 12, 16, 32][Math.round(CT.fillknob.v * 5)]; }
@@ -90,7 +111,6 @@ function valText(c){
   if (id === 'fillknob') return 'every ' + fillEvery() + ' bars';
   if (id === 'shuffle'){ var sh = Math.round((v - 0.5) * 200); return (sh > 0 ? '+' : '') + sh; }
   if (id === 'fxctrl') return v < 0.47 ? 'LPF ' + Math.round((0.47 - v) / 0.47 * 127) : v > 0.53 ? 'HPF ' + Math.round((v - 0.53) / 0.47 * 127) : 'flat';
-  if (id === 'extin') return 'nothing plugged in';
   return String(Math.round(v * 127));
 }
 function labelOf(c){
@@ -112,6 +132,7 @@ function applyMix(){
   var t = ac.currentTime;
   AU.vol.gain.setTargetAtTime(Math.pow(CT.volume.v, 1.6) * 1.1, t, 0.02);
   AU.chans.forEach(function(ch, i){ ch.g.gain.setTargetAtTime(M.mutes[i] ? 0 : Math.pow(CT['lev' + i].v, 1.7) * 1.25, t, 0.012); });
+  AU.chans.forEach(function(ch, i){ if (ch.rs){ ch.rs.gain.setTargetAtTime(TRS.r[i] * SMAX, t, 0.02); ch.ds.gain.setTargetAtTime(TRS.d[i] * SMAX, t, 0.02); } });      // each drum's sends: its CTRL knob
   AU.revRet.gain.setTargetAtTime(CT.reverb.v * 1.6, t, 0.03);
   AU.dRet.gain.setTargetAtTime(CT.dlevel.v * 1.8, t, 0.03);
   AU.dfb.gain.setTargetAtTime(CT.dfb.v * 0.92, t, 0.03);
@@ -124,7 +145,7 @@ var TRIM = [1, 0.75, 1, 1, 1, 2, 2.2, 1, 1, 0.45, 1.1];              // level-ma
 function trig(i, t, vel){
   if (!AU.ready || M.mutes[i]) return;
   if (i === 0) mxDuck(Math.max(t, ac.currentTime));            // the kick ducks every channel that has its sidechain knob up
-  try { VOICES[i](AU.chans[i].g, Math.max(t, ac.currentTime), vel * TRIM[i], { tune:CT['tune' + i].v, decay:CT['decay' + i].v, ctrl:CT['ctrl' + i].v }, TONES[pat().tones[i]] || '808'); } catch (e) {}
+  try { VOICES[i](AU.chans[i].g, Math.max(t, ac.currentTime), vel * TRIM[i], { tune:CT['tune' + i].v, decay:CT['decay' + i].v, ctrl:TRS.t[i] }, TONES[pat().tones[i]] || '808'); } catch (e) {}
 }
 function hit(i, vel){                           // a pad played by hand
   unlock(); if (!AU.ready) return;
@@ -146,12 +167,13 @@ function makeFill(v){
 function schedStep(t){
   var sd = stepDur();
   if (SEQ.step === 0){
-    if (M.nextPat >= 0){ M.pat = M.nextPat; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; dispDirty = true; saveSoon(); }
+    if (M.nextPat >= 0){ M.pat = M.nextPat; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; M.fillEdit = false; dispDirty = true; saveSoon(); }
     if (M.fillOn && (SEQ.bar + 1) % fillEvery() === 0) SEQ.fill = true;
     if (SEQ.crashNext){ SEQ.crashNext = false; trig(9, t, 0.9); }
   }
   var cur = playV(), v = cur;
-  if (SEQ.fill){ if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; }
+  if (SEQ.fill){ var cf = pat().fill;                              // this pattern's own fill-in if one has been written (EDIT under AUTO FILL IN), otherwise one made up from what is playing
+    if (fillOk(cf) && cf.st.some(function(r){ return r.some(function(x){ return x; }); })) v = cf; else { if (!SEQ.fillVar) SEQ.fillVar = makeFill(cur); v = SEQ.fillVar; } }
   var s = SEQ.step, sw = (CT.shuffle.v - 0.5) * 0.66, tt = t + (s % 2 ? sw * sd : 0), acc = v.acc[s] ? 1 + CT.accent.v * 0.6 : 1, hits = [], sv = 0;
   for (var i = 0; i < 11; i++){
     var st = v.st[i][s]; if (!st) continue;
@@ -183,7 +205,7 @@ function tapTempo(){
 }
 function selectPattern(i){
   if (M.playing){ M.nextPat = i === M.pat ? -1 : i; say('NEXT  1-' + ('0' + (i + 1)).slice(-2) + ' ' + PAT[i].name, 1600); }
-  else { M.pat = i; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; saveSoon(); }
+  else { M.pat = i; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; M.fillEdit = false; saveSoon(); }
   dispDirty = true;
 }
 function setKit(k){ var p = pat(); p.kit = (k + KITS.length) % KITS.length; p.tones = KITS[p.kit].tones.slice(); dispDirty = true; saveSoon(); }
@@ -228,7 +250,7 @@ function press(c){
     if (M.copyArm){ if (k !== M.editVar){ pat().vars[k] = JSON.parse(JSON.stringify(editV())); say('COPIED  ' + L[M.editVar] + ' > ' + L[k]); saveSoon(); } M.copyArm = false; return; }
     if (M.shift){ var ix = M.varSel.indexOf(k); if (ix >= 0){ if (M.varSel.length > 1) M.varSel.splice(ix, 1); } else { M.varSel.push(k); M.varSel.sort(); } say('CHAIN  ' + M.varSel.map(function(x){ return L[x]; }).join(' ')); }
     else { M.varSel = [k]; M.varIx = 0; }
-    M.editVar = k; saveSoon(); return;
+    M.editVar = k; M.fillEdit = false; saveSoon(); return;
   }
   if (c.inst != null && id.indexOf('sel') === 0){
     var i = c.inst;
@@ -248,29 +270,31 @@ function press(c){
     case 'sub': M.sub = !M.sub; if (M.sub){ M.mode = 'trrec'; M.accSel = false; say('SUB  tap a step: 1/2 1/3 1/4', 2200); } return;
     case 'accstep': M.accSel = !M.accSel; if (M.accSel){ M.mode = 'trrec'; M.sub = false; } return;
     case 'clear':
-      if (M.shift){ pat().vars[M.editVar] = emptyVar(); M.clearArm = false; say('CLEARED  VARIATION ' + 'ABCDEFGH'[M.editVar]); saveSoon(); }
+      if (M.shift && M.fillEdit){ delete pat().fill; M.fillEdit = false; M.clearArm = false; say('FILL IN  BACK TO AUTOMATIC', 2000); saveSoon(); }
+      else if (M.shift){ pat().vars[M.editVar] = emptyVar(); M.clearArm = false; say('CLEARED  VARIATION ' + 'ABCDEFGH'[M.editVar]); saveSoon(); }
       else { M.clearArm = !M.clearArm; if (M.clearArm) say('CLEAR  pick BD-RC  (SHIFT: all)', 2600); }
       return;
     case 'copy': M.copyArm = !M.copyArm; if (M.copyArm) say('COPY ' + 'ABCDEFGH'[M.editVar] + '  press A-H', 2600); return;
-    case 'mute': M.muteMode = !M.muteMode; if (M.muteMode) say('MUTE  press BD-RC', 2000); return;
     case 'fxon': M.fxOn = !M.fxOn; applyMix(); say('MASTER FX  ' + (M.fxOn ? 'ON  ' + valText(CT.fxctrl) : 'OFF')); saveSoon(); return;
     case 'fillon': M.fillOn = !M.fillOn; say('AUTO FILL  ' + (M.fillOn ? fillEvery() + ' BARS' : 'OFF')); saveSoon(); return;
+    case 'filledit':
+      if (M.fillEdit){ M.fillEdit = false; say('FILL EDIT  OFF'); return; }
+      if (!fillOk(pat().fill)){ pat().fill = makeFill(pat().vars[M.editVar]); saveSoon(); }      // first time: start from the fill the machine would have made, so there is something to change
+      M.fillEdit = true; M.mode = 'trrec'; M.menu = null; say('FILL EDIT  steps = this pattern\'s fill', 2600); return;
     case 'filltrig': if (M.playing){ SEQ.fill = true; SEQ.fillVar = null; say('FILL IN'); } else say('FILL IN  press START first'); return;
     case 'kit': M.menu = M.menu === 'kit' ? null : 'kit'; return;
     case 'inst': M.menu = M.menu === 'inst' ? null : 'inst'; return;
     case 'enter': if (M.shift) tapTempo(); else if (M.menu) M.menu = null; else say('SHIFT + ENTER  tap tempo', 1800); return;
     case 'write': save(); say('WRITE  saved'); return;
     case 'moton': case 'motrec': say('MOTION  not fitted yet', 1800); return;
-    case 'sample': say('SAMPLE  not fitted yet', 1800); return;
-    case 'ctrlsel': say('CTRL SELECT  not fitted yet', 1800); return;
-    case 'utility': say('UTILITY  not fitted yet', 1800); return;
+    case 'ctrlsel': M.ctlArm = !M.ctlArm; if (M.ctlArm) say(INST[M.sel] + ' CTRL  click REVERB or DELAY level', 3200); else { CT.reverb.mat.emissive.setHex(0); CT.dlevel.mat.emissive.setHex(0); } return;
   }
 }
 function release(c){ if (c.dev){ c.down = 0; DEVH[c.dev].release(c); return; } c.down = 0; if (c.pi != null) stopRoll(); }
 function onCtl(c){                                 // a knob or fader moved
   c.show();
   if (c.dev){ DEVH[c.dev].ctl(c); return; }
-  if (c.id === 'extin'){ say('EXT IN  nothing plugged in'); return; }
+  if (c.inst != null && c.id.indexOf('ctrl') === 0){ var fa = TRS.a[c.inst]; (fa === 2 ? TRS.d : TRS.r)[c.inst] = c.v; say(INST[c.inst] + (fa === 2 ? ' DELAY' : ' REVERB') + ' SEND  ' + valText(c)); applyMix(); saveSoon(); return; }
   say((c.inst != null ? INST[c.inst] + ' ' + c.id.replace(/\d+$/, '').replace('lev', 'level').toUpperCase() : c.name.toUpperCase()) + '  ' + valText(c));
   applyMix(); saveSoon();
 }
@@ -297,7 +321,7 @@ function paintDisp(){
   if (now < M.msgUntil) l2 = M.msg;
   else if (M.menu === 'kit') l2 = KITS[p.kit].name + '  turn VALUE';
   else if (M.menu === 'inst') l2 = 'TONE ' + TONES[p.tones[M.sel]] + '  turn VALUE';
-  else if (M.mode === 'trrec') l2 = 'TR-REC ' + (M.accSel ? 'ACCENT' : INST[M.sel]) + '  VAR ' + L[M.editVar] + (M.sub ? '  SUB' : '');
+  else if (M.mode === 'trrec') l2 = 'TR-REC ' + (M.accSel ? 'ACCENT' : INST[M.sel]) + (M.fillEdit ? '  FILL IN' : '  VAR ' + L[M.editVar]) + (M.sub ? '  SUB' : '');
   else if (M.mode === 'ptn') l2 = 'PTN SELECT  pads 1-16';
   else if (M.mode === 'last') l2 = 'LAST STEP ' + editV().last + '  VAR ' + L[M.editVar];
   else if (M.mode === 'instplay') l2 = 'INST PLAY' + (M.roll ? '  ROLL ' + M.roll : '');
@@ -330,7 +354,8 @@ function updateTR(now, dt){
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);
   var lit = { shift:M.shift, clear:M.clearArm && blink, ptn:M.mode === 'ptn', trrec:M.mode === 'trrec', last:M.mode === 'last', sub:M.sub, instplay:M.mode === 'instplay', instrec:M.mode === 'instrec' && (!M.playing || blink),
-    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', mute:M.muteMode, copy:M.copyArm && blink, enter:!!M.menu && blink };
+    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit, ctrlsel:!!M.ctlArm && blink };
+  if (M.ctlArm){ CT.reverb.mat.emissive.setHex(blink ? 0x6A5200 : 0x1A1400); CT.dlevel.mat.emissive.setHex(blink ? 0x0E5A2A : 0x04160A); }      // CTRL SELECT is waiting: the two level knobs glow, click one
   CTLIST.forEach(function(c){
     if (c.dev || (c.kind !== 'btn' && c.kind !== 'pad')) return;
     var L = 0;

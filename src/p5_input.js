@@ -154,6 +154,7 @@ CT.dtime.detents = DIVS.length - 1; CT.fillknob.detents = 5;
 var drag = null, pressed = null;
 function startCtl(c, e, h){
   if (c.kind === 'knob' || c.kind === 'fader'){
+    if (M.ctlArm && !c.dev && (c.id === 'reverb' || c.id === 'dlevel')){ ctlAssign(c.id === 'dlevel' ? 2 : 1); return; }      /* CTRL SELECT is waiting for one of these two */
     if (SNLEARN){ SNLEARN(c); if (!SNLEARN) return; }                 // a sequencer is listening: clicking the control is enough to pick it
     var tNow = performance.now(), dbl = e.detail >= 2 || (startCtl.last === c && tNow - startCtl.at < 400); startCtl.last = c; startCtl.at = tNow;      /* a pointerdown carries no click count, so two presses on the same control within 0.4 s are counted here */
     if (dbl && !c.endless && !c.click){ startCtl.last = null; setCtl(c, c.def); toast(c.name + ' reset'); return; }
@@ -288,12 +289,12 @@ document.addEventListener('keydown', function(e){
       if (e.code === 'Backquote' || e.key === '`' || e.key === '\u00AC'){ e.preventDefault(); if (!e.repeat){ M.kbHalf = M.kbHalf ? 0 : 1; say('KEYS 1-8  STEPS ' + (M.kbHalf ? '9-16' : '1-8'), 1600); } return; }
       if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'c' || k === 'v')){                 /* Ctrl+C copies the variation being edited; go to another (A-H, Shift+1-8, even another pattern) and Ctrl+V lays it in. The COPY button works as before */
         e.preventDefault(); if (e.repeat) return; var VL = 'ABCDEFGH';
-        if (k === 'c'){ M.clip = JSON.stringify(editV()); M.clipFrom = VL[M.editVar]; say('COPIED  VAR ' + M.clipFrom + '   CTRL+V TO PASTE', 2200); }
+        if (k === 'c'){ M.clip = JSON.stringify(editV()); M.clipFrom = M.fillEdit ? 'FILL' : VL[M.editVar]; say('COPIED  VAR ' + M.clipFrom + '   CTRL+V TO PASTE', 2200); }
         else if (!M.clip) say('NOTHING COPIED  CTRL+C FIRST', 1800);
-        else { pat().vars[M.editVar] = JSON.parse(M.clip); say('PASTED  ' + M.clipFrom + ' > ' + VL[M.editVar], 1800); dispDirty = true; saveSoon(); }
+        else { setEditV(JSON.parse(M.clip)); say('PASTED  ' + M.clipFrom + ' > ' + (M.fillEdit ? 'FILL' : VL[M.editVar]), 1800); dispDirty = true; saveSoon(); }
         return; }
       var evi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8'].indexOf(e.code);
-      if (e.shiftKey && evi >= 0){ e.preventDefault(); if (!e.repeat){ M.editVar = evi; M.copyArm = false; say('EDIT  VAR ' + 'ABCDEFGH'[evi] + '   CHAIN  ' + M.varSel.map(function(x){ return 'ABCDEFGH'[x]; }).join(' '), 1800); dispDirty = true; saveSoon(); } return; }      /* Shift + 1-8: pick which variation (A-H) the steps edit, without touching what is chained to play */
+      if (e.shiftKey && evi >= 0){ e.preventDefault(); if (!e.repeat){ M.editVar = evi; M.fillEdit = false; M.copyArm = false; say('EDIT  VAR ' + 'ABCDEFGH'[evi] + '   CHAIN  ' + M.varSel.map(function(x){ return 'ABCDEFGH'[x]; }).join(' '), 1800); dispDirty = true; saveSoon(); } return; }      /* Shift + 1-8: pick which variation (A-H) the steps edit, without touching what is chained to play */
       var ti = '1234567890-'.indexOf(e.key); if (ti < 0 || e.repeat) return;
       if (M.mode === 'instplay' || M.mode === 'instrec') hit(ti);        // playing: each key is a drum
       else if (M.mode === 'trrec' && ti < 8) pressPad((M.kbHalf ? 8 : 0) + ti);   // step record: keys 1-8 switch steps in the selected half
@@ -362,7 +363,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.234 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.235 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

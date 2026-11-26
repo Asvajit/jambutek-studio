@@ -38,7 +38,7 @@ function unlock(){
       rs.gain.value = SENDS[k][0]; ds.gain.value = SENDS[k][1];
       if (pan){ pan.pan.value = [0, 0, -0.35, 0, 0.35, 0.2, -0.1, 0.25, 0.25, -0.3, 0.3][k]; g.connect(pan); pan.connect(bus); pan.connect(rs); pan.connect(ds); } else { g.connect(bus); g.connect(rs); g.connect(ds); }
       rs.connect(revIn); ds.connect(dIn);
-      AU.chans.push({ g:g });
+      AU.chans.push({ g:g, rs:rs, ds:ds });
     }
     var nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), nd = nb.getChannelData(0); for (var j = 0; j < nd.length; j++) nd[j] = Math.random() * 2 - 1;
     AU.noise = nb;

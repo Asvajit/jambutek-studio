@@ -40,6 +40,7 @@ function scTr(s){                                               // the drum mach
   var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; } var ev = M.editVar; if (trVars(s)) M.editVar = ev;
   if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes.slice(); M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
   Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number' && Math.abs(c.v - v) > 0.0005){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
+  trsLoad(s);
   applyMix(); dispDirty = true;
 }
 /* mine: this player asked for the switch, so what changed is also kept and passed to the room like any other change. Otherwise the
