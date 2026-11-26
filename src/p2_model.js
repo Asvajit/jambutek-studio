@@ -27,10 +27,10 @@ var TRG = new THREE.Group(); TRG.position.set(0, TRH, 0); TRG.rotation.x = TILT;
 var CT = {}, CTLIST = [];                            // every control, by id
 
 /* ---- the printed panel ---- */
-var panelC = mk(2048, 1024), panelTex = null;
+var panelC = mk(3072, 2284), panelTex = null;      // about 7.7 px per panel millimetre each way: the small print has to stay readable when you lean in
 function paintPanel(){
   var g = panelC.getContext('2d');
-  g.setTransform(2048 / PANEL.w, 0, 0, 1024 / PANEL.h, 0, 0);          // draw in millimetres
+  g.setTransform(panelC.width / PANEL.w, 0, 0, panelC.height / PANEL.h, 0, 0);          // draw in millimetres
   g.fillStyle = '#14161A'; g.fillRect(0, 0, PANEL.w, PANEL.h);
   for (var i = 0; i < 5000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * PANEL.w, Math.random() * PANEL.h, .5, .3); }
   function rr(x0, y0, x1, y1, r, stroke, fill){
@@ -63,7 +63,9 @@ function paintPanel(){
   VRAW = true; stops(SIDEX, 470, 9.5); VRAW = false;
   // instrument columns
   COLX.forEach(function(x, i){
-    rr(x - 19, 239, x + 19, 250, 0.8, COLCOL[i], '#23262C'); T(INAME[i].toUpperCase().replace('HI-HAT', 'HIHAT'), x, 245, 3.3, '#F4F4F0', 'A');
+    rr(x - 21, 238, x + 21, 251, 0.8, COLCOL[i], '#23262C');                                    // the drum's name, in the menu's Merchant Copy: wide open letters that survive the room's coarse picture
+    var nm = ['KICK', 'SNARE', 'LOW TOM', 'MID TOM', 'HI TOM', 'RIM', 'CLAP', 'CL HAT', 'OP HAT', 'CRASH', 'RIDE'][i];                // short names, so the type can be large
+    g.font = '6.4px "Merchant Copy", ui-monospace, monospace'; g.fillStyle = g.strokeStyle = '#FFFFFF'; g.lineWidth = 0.22; g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeText(nm, U(x), V(245.2), 21.4); g.fillText(nm, U(x), V(245.2), 21.4);
     T('TUNE', x, 287, 3, null); T('DECAY', x, 326, 3, null); T('TONE', x, 365, 3, null);
     VRAW = true; T('REV', x - 11.3, 411, 2.5, '#E8C63A'); T('DLY', x + 11.3, 411, 2.5, '#35C46B'); VRAW = false;      // the two sends, in the let-in row
     stops(x, 268, 9.5); stops(x, 307, 9.5); stops(x, 347, 9.5);
@@ -86,6 +88,7 @@ function paintPanel(){
 }
 paintPanel(); panelTex = smoothTex(panelC);
 if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(function(){ paintPanel(); CTLIST.forEach(function(c){ if (c.repaintFace) c.repaintFace(); }); }).catch(function(){});
+if (document.fonts && document.fonts.load) document.fonts.load('20px "Merchant Copy"').then(paintPanel).catch(function(){});      // the drum names wait for their face too
 
 (function(){
   var W2 = PANEL.w * SC, D2 = PANEL.h * SC, TH = 0.11;
@@ -215,11 +218,11 @@ var HALFBAR = [0, 1].map(function(h){                          // a thin bar ove
 });
 
 /* ---- the two screens ---- */
-var dispC = mk(512, 144), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
+var dispC = mk(512, 252), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
 var tempoC = mk(192, 96), tempoT = canvasTex(tempoC); tempoT.minFilter = THREE.LinearFilter; tempoT.magFilter = THREE.LinearFilter;
 (function(){
-  var bez = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.004, 0.033), blackMat); bez.position.set(lx(SIDEX), 0.002, lz(212)); TRG.add(bez);                                       // narrower than it was, to sit at the head of the side column
-  var d = new THREE.Mesh(new THREE.PlaneGeometry(0.096, 0.027), new THREE.MeshBasicMaterial({ map:dispT })); d.rotation.x = -Math.PI / 2; d.position.set(lx(SIDEX), 0.0045, lz(212)); TRG.add(d);
+  var bez = new THREE.Mesh(new THREE.BoxGeometry(0.106, 0.004, 0.054), blackMat); bez.position.set(lx(SIDEX), 0.002, lz(210)); TRG.add(bez);                                       // as wide as the side column allows and twice as tall as it was, so two or three lines of large type fit
+  var d = new THREE.Mesh(new THREE.PlaneGeometry(0.102, 0.05), new THREE.MeshBasicMaterial({ map:dispT })); d.rotation.x = -Math.PI / 2; d.position.set(lx(SIDEX), 0.0045, lz(210)); TRG.add(d);
   var bez2 = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.004, 0.031), blackMat); bez2.position.set(lx(SIDEX), 0.002, lz(340)); TRG.add(bez2);
   var t = new THREE.Mesh(new THREE.PlaneGeometry(0.054, 0.027), new THREE.MeshBasicMaterial({ map:tempoT })); t.rotation.x = -Math.PI / 2; t.position.set(lx(SIDEX), 0.0045, lz(340)); TRG.add(t);
   [bez, d, bez2, t].forEach(function(m){ m.userData.ia = 'trbody'; m.userData.noShadow = true; solids.push(m); });

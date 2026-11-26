@@ -305,11 +305,11 @@ function turnCtl(c, n){                            // the two endless encoders, 
 var dispDirty = true, tempoDirty = true;
 function paintDisp(){
   var g = dispC.getContext('2d'), now = performance.now(), p = pat(), L = 'ABCDEFGH';
-  g.fillStyle = '#02060A'; g.fillRect(0, 0, 512, 144);
+  g.fillStyle = '#02060A'; g.fillRect(0, 0, 512, 252);
   g.fillStyle = '#BFEFFF'; g.shadowColor = '#5BC8FF'; g.shadowBlur = 6; g.textBaseline = 'middle'; g.textAlign = 'left';
-  g.font = 'bold 44px "Courier New", monospace';
+  g.font = 'bold 62px "Courier New", monospace';
   var l1 = M.menu === 'kit' ? 'KIT ' + (p.kit + 1) : M.menu === 'inst' ? 'INST ' + INST[M.sel] : (M.playing ? '▶' : '■') + ' 1-' + ('0' + (M.pat + 1)).slice(-2) + ' ' + p.name;
-  g.fillText(l1, 14, 42, 484);
+  g.fillText(l1, 16, 58, 480);
   var l2;
   if (now < M.msgUntil) l2 = M.msg;
   else if (M.menu === 'kit') l2 = KITS[p.kit].name + '  turn VALUE';
@@ -319,8 +319,12 @@ function paintDisp(){
   else if (M.mode === 'last') l2 = 'LAST STEP ' + editV().last + '  VAR ' + L[M.editVar];
   else if (M.mode === 'instplay') l2 = 'INST PLAY' + (M.roll ? '  ROLL ' + M.roll : '');
   else l2 = 'INST REC' + (M.playing ? '  ●' : '  (stopped)');
-  g.font = 'bold 34px "Courier New", monospace'; g.fillStyle = now < M.msgUntil ? '#FFE15A' : '#8FD8F2'; g.shadowColor = g.fillStyle;
-  g.fillText(l2, 14, 104, 484);
+  g.font = 'bold 46px "Courier New", monospace'; g.fillStyle = now < M.msgUntil ? '#FFE15A' : '#8FD8F2'; g.shadowColor = g.fillStyle;
+  if (g.measureText(l2).width <= 480) g.fillText(l2, 16, 168, 480);
+  else {                                                         // too long for one line of large type: break it at the gap nearest the middle
+    var cut = -1, mid = l2.length / 2; for (var ci = 0; ci < l2.length; ci++) if (l2[ci] === ' ' && (cut < 0 || Math.abs(ci - mid) < Math.abs(cut - mid))) cut = ci;
+    var la = cut < 0 ? l2 : l2.slice(0, cut).trim(), lb = cut < 0 ? '' : l2.slice(cut + 1).trim(); g.font = 'bold 40px "Courier New", monospace'; g.fillText(la, 16, 144, 480); g.fillText(lb, 16, 204, 480);
+  }
   g.shadowBlur = 0; dispT.needsUpdate = true;
 }
 var SEG = { 0:'abcdef', 1:'bc', 2:'abged', 3:'abgcd', 4:'fgbc', 5:'afgcd', 6:'afgedc', 7:'abc', 8:'abcdefg', 9:'abfgcd' };
