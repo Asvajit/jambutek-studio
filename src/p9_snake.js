@@ -53,7 +53,7 @@ function spButton(id, r, name, o){
     g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = st.bg; g.fillRect(e, e, W - 2 * e, H - 2 * e);
     if (st.prog > 0){ g.fillStyle = '#E0193C'; g.fillRect(e, e, (W - 2 * e) * Math.min(1, st.prog), H - 2 * e); }
     if (st.text){
-      var n = st.text.length, fs = (o.size || 54) * k * (n > 1 ? 0.78 : 1); g.font = Math.round(fs) + 'px "Pixel Game", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      var n = st.text.length, fs = (o.size || 54) * k * (n > 1 ? Math.min(0.78, 0.92 * (r[3] - 10) / n / (o.size || 54)) : 1); g.font = Math.round(fs) + 'px "Pixel Game", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
       st.text.forEach(function(s, i){ var y = H / 2 + (i - (n - 1) / 2) * fs * 0.95 + fs * 0.06;
         if (o.stroke){ g.lineWidth = fs * 0.14; g.strokeStyle = o.stroke; g.lineJoin = 'round'; g.strokeText(s, W / 2, y, W - 4 * e); }
         g.fillStyle = o.ink || '#000'; g.fillText(s, W / 2, y, W - 4 * e); });
@@ -114,7 +114,7 @@ var KB0 = KB; KB = { host:SNG, x:spx, z:spz, px:SPS, faces:SPFACES };
 var SPGREY = '#4E4F50', SPPINK = '#FB1874';
 /* the four lanes (the gates lane has no button now: its 16 on/off steps are the white buttons under the knobs) */
 [[0, 146.3], [2, 284.3], [3, 426.3]].forEach(function(a){ var b = trButton((PX + 'pg') + a[0], [66.5, a[1], 525, 107], SNLN[a[0]].charAt(0) + SNLN[a[0]].slice(1).toLowerCase() + ' lane', 0xFFFFFF); b.pg = a[0]; b.lane = true; });
-spButton((PX + 'pg') + 4, [66.5, 566.3, 525, 107], 'Custom lane', { bg:spHex(SNCOL[4]), text:['CUSTOM'], ink:'#FFFFFF', stroke:'#000000', size:88 }).pg = 4;
+spButton((PX + 'pg') + 4, [66.5, 566.3, 525, 107], 'Custom lane', { bg:spHex(SNCOL[4]), text:['CUSTOM'], ink:'#FFFFFF', size:88 }).pg = 4;
 trKnob((PX + 'root'), 120.7, 794, 'serp', '#FFFFFF', '#000000', 'Root', 0).detents = 11;
 trKnob((PX + 'scale'), 321.2, 794, 'serp', '#FFFFFF', '#000000', 'Scale', 0, { endless:true });
 trKnob((PX + 'swing'), 525.3, 794, 'serp', '#FFFFFF', '#000000', 'Swing', 0);
