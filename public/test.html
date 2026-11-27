@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.263</span>
+    <span id="verFps">studio v0.264</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.263</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.264</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -10205,8 +10205,13 @@ var MP = (function(){
     else if (e.key === 'Escape'){ closeChat(); e.preventDefault(); }
   });
   input.addEventListener('keyup', function(e){ e.stopPropagation(); });
+  /* a small, soft tick for the emoji buttons: a short high blip straight to the speakers (not through the mixer), well under the music */
+  function emoClick(){ try { if (!AU.ready) return; var t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'triangle'; o.frequency.setValueAtTime(2600, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.03); f.type = 'highpass'; f.frequency.value = 900;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * (OPT.vol == null ? 1 : OPT.vol), t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+    o.connect(f); f.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.06); } catch (e) {} }
   /* the six quick emoji under the chat bar: a click sends it straight to the chat, and it rises over your head for everyone */
-  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); try { uiPress(); } catch (x) {} closeChat(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); emoClick(); closeChat(); }); });
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }
@@ -10788,7 +10793,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.263 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.264 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

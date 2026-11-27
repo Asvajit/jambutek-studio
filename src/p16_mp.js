@@ -517,8 +517,13 @@ var MP = (function(){
     else if (e.key === 'Escape'){ closeChat(); e.preventDefault(); }
   });
   input.addEventListener('keyup', function(e){ e.stopPropagation(); });
+  /* a small, soft tick for the emoji buttons: a short high blip straight to the speakers (not through the mixer), well under the music */
+  function emoClick(){ try { if (!AU.ready) return; var t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'triangle'; o.frequency.setValueAtTime(2600, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.03); f.type = 'highpass'; f.frequency.value = 900;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * (OPT.vol == null ? 1 : OPT.vol), t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+    o.connect(f); f.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.06); } catch (e) {} }
   /* the six quick emoji under the chat bar: a click sends it straight to the chat, and it rises over your head for everyone */
-  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); try { uiPress(); } catch (x) {} closeChat(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); emoClick(); closeChat(); }); });
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }
