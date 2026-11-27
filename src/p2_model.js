@@ -267,3 +267,5 @@ var tempoC = mk(410, 220), tempoT = canvasTex(tempoC); tempoT.minFilter = THREE.
 })();
 /* a glow thrown up from the lit pads onto whoever is standing over them */
 var padGlow = new THREE.PointLight(0xFF6A4A, 0.0, 1.6, 2); padGlow.position.set(0, 0.25, 0.2); TRG.add(padGlow);
+/* every machine's button captions are painted in Anton: once the face has arrived, paint them again (a caption drawn before it loads falls back to a plain sans) */
+if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(function(){ CTLIST.forEach(function(c){ if (c.repaintFace) c.repaintFace(); }); }).catch(function(){});
