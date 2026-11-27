@@ -246,6 +246,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   font-family:'Pixel Game', 'Anton', sans-serif; font-size:52px; line-height:1; letter-spacing:.02em; text-shadow:none; box-shadow:none; transition:filter .1s, transform .1s }
 #mpLobby.v3 .card button:hover{ filter:brightness(1.18); transform:translateY(-2px) } #mpLobby.v3 .card button:active{ filter:brightness(.88); transform:translateY(1px) }
 #mpLobby.v3 #mpCreate, #mpLobby.v3 #mpGo{ background:#FB1874; margin-bottom:21px }
+#mpLobby.v3 #mpCreate{ height:68px; padding-top:8px; margin-bottom:13px }      /* taller, into the space below it; 8px at the top keeps the words centred */
 #mpLobby.v3 .row{ display:flex; gap:17px; margin:4px 0 14px; align-items:stretch } #mpLobby.v3 .row input{ width:161px; flex:none; margin:0; padding:7px 4px 0; text-align:center }
 #mpLobby.v3 #mpJoin{ width:112px; flex:none; background:#3270E7 } #mpLobby.v3 #mpSpec{ flex:1; background:#54398E }
 #mpLobby.v3 #mpSolo{ height:72px; font-size:62px; padding-top:5px; background:#242335 }
@@ -297,7 +298,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.284</span>
+    <span id="verFps">studio v0.285</span>
   </div>
 </div>
 
@@ -329,7 +330,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.284</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.285</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
