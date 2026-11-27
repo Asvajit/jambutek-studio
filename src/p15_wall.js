@@ -31,16 +31,47 @@ function roundBtn(G, id, x, y, dia, text, name, col, wk, opt){
   c.repaintFace = function(t){ if (t != null) rbCap(c, t); }; c.paintLit = NOP; c.hover = function(on){ c.hov = on; if (c.cap) c.cap.material.emissiveIntensity = on ? 0.7 : 0.45; };
   rbCap(c, text); rbRing(c, 0); WALLBTN.push(c); return c;
 }
+/* ---- the room screen, left of the jam buttons on each counter: what is loaded, the key, the tempo, and a picture of everything coming
+   out of the room. One canvas feeds both counters' screens; it is redrawn about thirty times a second */
+var RSC = { c:null, t:null, w:880, h:440, at:0, f:null, pk:[] };
+function wallScreen(G){
+  if (!RSC.c){ RSC.c = mk(RSC.w, RSC.h); RSC.t = smoothTex(RSC.c); }
+  var bez = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.04, 0.25), new THREE.MeshLambertMaterial({ color:0x0A0A0C })); bez.position.set(-0.505, -0.02, 0.09); bez.userData.noShadow = true; G.add(bez);
+  var d = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.22), new THREE.MeshBasicMaterial({ map:RSC.t })); d.rotation.x = -Math.PI / 2; d.position.set(-0.505, 0.0012, 0.09); G.add(d);
+}
+function rscDraw(now){
+  if (!RSC.c || now - RSC.at < 33) return; RSC.at = now; var g = RSC.c.getContext('2d'), W = RSC.w, H = RSC.h;
+  g.fillStyle = '#050608'; g.fillRect(0, 0, W, H);
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = '#8A8E96'; g.font = '34px "Merchant Copy", ui-monospace, monospace'; g.fillText('NOW PLAYING', 26, 48);
+  g.fillStyle = '#FFE83C'; g.font = '80px "Pixel Game", "Merchant Copy", ui-monospace, monospace'; g.fillText((JAMNAME || 'New jam').toUpperCase(), 26, 122, W - 52);
+  var key = RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'KEY OFF';
+  g.font = '46px "Merchant Copy", ui-monospace, monospace'; g.fillStyle = RK.on ? '#FFFFFF' : '#6A6E76'; g.fillText(key.toUpperCase(), 26, 182);
+  g.textAlign = 'right'; g.fillStyle = '#FFFFFF'; g.fillText((Math.round(M.bpm * 10) / 10) + ' BPM', W - 26, 182);
+  var b = M.playing && typeof SEQ.visStep === 'number' && SEQ.visStep >= 0 ? (SEQ.visStep >> 2) & 3 : -1;      // four beat lights
+  for (var i = 0; i < 4; i++){ g.fillStyle = i === b ? (i === 0 ? '#FF2A3C' : '#3BFF6A') : '#1E2026'; g.fillRect(W - 26 - (4 - i) * 34, 24, 26, 26); }
+  g.fillStyle = '#1A1C22'; g.fillRect(26, 200, W - 52, 2);
+  /* the visualiser: 40 bars across the room's whole output, low on the left, high on the right, each with a falling peak */
+  var N = 32, x0 = 26, y1 = H - 20, hh = y1 - 218, bw = (W - 52) / N;
+  if (AU.ready && AU.an){ if (!RSC.f) RSC.f = new Uint8Array(AU.an.frequencyBinCount); AU.an.getByteFrequencyData(RSC.f); }
+  for (i = 0; i < N; i++){
+    var v = 0;
+    if (RSC.f){ var lo = Math.floor(Math.pow(RSC.f.length, i / N)), hi = Math.max(lo + 1, Math.floor(Math.pow(RSC.f.length, (i + 1) / N))); for (var k = lo; k < hi && k < RSC.f.length; k++) v = Math.max(v, RSC.f[k]); v = Math.pow(v / 255, 1.6); }
+    RSC.pk[i] = Math.max(v, (RSC.pk[i] || 0) - 0.02); var h = Math.round(v * hh), seg = 10;
+    for (var y = 0; y < h; y += seg){ var q = y / hh; g.fillStyle = q > 0.82 ? '#FF2A3C' : q > 0.6 ? '#FFE15A' : '#3BFF6A'; g.fillRect(x0 + i * bw + 2, y1 - y - seg + 2, bw - 4, seg - 3); }
+    if (RSC.pk[i] > 0.02){ g.fillStyle = '#FFFFFF'; g.fillRect(x0 + i * bw + 2, y1 - Math.round(RSC.pk[i] * hh) - 3, bw - 4, 3); }
+  }
+  RSC.t.needsUpdate = true;
+}
 function wallPanel(P){                                       // called by vidBooth with that booth's place
   var n = WALLBTN.length ? '2' : '', nx = -Math.sin(P.r), nz = -Math.cos(P.r), o = { H:HOST, X:LX, Z:LZ, D:DEV, F:FACE };
-  var Y = new THREE.Group(); Y.position.set(P.x + nx * 0.565, 0.72, P.z + nz * 0.565); Y.rotation.y = P.r + Math.PI; scene.add(Y);
+  var Y = new THREE.Group(); Y.position.set(P.x + nx * 0.565, 0.72 + BOOTHUP, P.z + nz * 0.565); Y.rotation.y = P.r + Math.PI; scene.add(Y);
   var G = new THREE.Group(); G.rotation.x = Math.PI / 2; Y.add(G);
   function plate(w, x, title){
     var c = mk(w * 1000, 420), g = c.getContext('2d'); g.fillStyle = '#0A0A0C'; g.fillRect(0, 0, c.width, 420); g.font = '22px ' + FONT; g.fillStyle = '#8E8E92'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(title, c.width / 2, 22);
     var t = smoothTex(c), box = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, 0.42), [0, 1, 2, 3, 4, 5].map(function(i){ return i === 2 ? new THREE.MeshPhongMaterial({ color:0x9A9A9A, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:8 }) : new THREE.MeshLambertMaterial({ color:0x0A0A0C }); }));
     box.position.set(x, -0.02, 0.09); box.userData.noShadow = true; G.add(box);
   }
-  plate(0.5, 0, 'JAM CONTROLZ'); plate(0.26, 0.4, 'ROOM KEY');
+  plate(0.5, 0, 'JAM CONTROLZ'); plate(0.26, 0.4, 'ROOM KEY'); wallScreen(G);
   HOST = G; LX = function(u){ return u * SC; }; LZ = function(u){ return u * SC; }; DEV = 'wall';
   roundBtn(G, 'wallclear' + n, -58, 10, 74, 'CLEAR', 'Clear all patterns', '#E53A3A', 'clear');
   roundBtn(G, 'walldef' + n, 58, 10, 74, 'DEMO', 'Load the demo jam', '#177D32', 'def');
@@ -98,6 +129,7 @@ function jamNameLoad(){ var n = ''; try { var s = JSON.parse(store(JAMKEY) || 'n
 function jamNamed(n){ JAMNAME = String(n || 'Jam').replace(/\.json$/i, '').slice(0, 40); store(JAMKEY, JSON.stringify({ v:1, name:JAMNAME })); }
 jamNameLoad(); RESTORE[JAMKEY] = jamNameLoad;
 function nowUpdate(){
+  rscDraw(performance.now());
   if (!nowEl) return; var key = RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] : 'off', sig = JAMNAME + '|' + key + '|' + M.bpm;
   if (sig !== nowSig){ nowSig = sig; nowEl.querySelector('.jam').textContent = JAMNAME; nowEl.querySelector('.key').textContent = key; nowEl.querySelector('.key').parentNode.classList.toggle('dim', !RK.on); nowEl.querySelector('.bpm').textContent = (Math.round(M.bpm * 10) / 10) + ' BPM'; }
   var b = M.playing && typeof SEQ.visStep === 'number' && SEQ.visStep >= 0 ? (SEQ.visStep >> 2) & 3 : -1;
