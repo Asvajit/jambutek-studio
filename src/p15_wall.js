@@ -50,10 +50,10 @@ function rscDraw(now){
   for (var i = 0; i < 4; i++){ g.fillStyle = i === b ? (i === 0 ? '#FF2A3C' : '#3BFF6A') : '#1E2026'; g.fillRect(26 + i * ((W - 52 + 12) / 4), 192, (W - 52 + 12) / 4 - 12, 16); }
   /* the visualiser: 40 bars across the room's whole output, low on the left, high on the right, each with a falling peak */
   var N = 32, x0 = 26, y1 = H - 22, hh = y1 - 236, bw = (W - 52) / N;
-  if (AU.ready && AU.an){ if (!RSC.f) RSC.f = new Uint8Array(AU.an.frequencyBinCount); AU.an.getByteFrequencyData(RSC.f); }
+  if (AU.ready && AU.an){ if (!RSC.f){ RSC.f = new Uint8Array(AU.an.frequencyBinCount); AU.an.minDecibels = -84; AU.an.maxDecibels = -6; } AU.an.getByteFrequencyData(RSC.f); }      /* -6 dB at the top: a full mix sits in the green and yellow and only real peaks reach the red (the mixer's meters read this analyser's waveform, which these do not change) */
   for (i = 0; i < N; i++){
     var v = 0;
-    if (RSC.f){ var lo = Math.floor(Math.pow(RSC.f.length, i / N)), hi = Math.max(lo + 1, Math.floor(Math.pow(RSC.f.length, (i + 1) / N))); for (var k = lo; k < hi && k < RSC.f.length; k++) v = Math.max(v, RSC.f[k]); v = Math.pow(v / 255, 1.6); }
+    if (RSC.f){ var lo = Math.floor(Math.pow(RSC.f.length, i / N)), hi = Math.max(lo + 1, Math.floor(Math.pow(RSC.f.length, (i + 1) / N))); for (var k = lo; k < hi && k < RSC.f.length; k++) v = Math.max(v, RSC.f[k]); v = Math.pow(v / 255, 1.6) * (0.82 + 0.3 * i / N); }      // a little tilt toward the highs, which carry less energy
     RSC.pk[i] = Math.max(v, (RSC.pk[i] || 0) - 0.02); var h = Math.round(v * hh), seg = 10;
     for (var y = 0; y < h; y += seg){ var q = y / hh; g.fillStyle = q > 0.82 ? '#FF2A3C' : q > 0.6 ? '#FFE15A' : '#3BFF6A'; g.fillRect(x0 + i * bw + 2, y1 - y - seg + 2, bw - 4, seg - 3); }
     if (RSC.pk[i] > 0.02){ g.fillStyle = '#FFFFFF'; g.fillRect(x0 + i * bw + 2, y1 - Math.round(RSC.pk[i] * hh) - 3, bw - 4, 3); }

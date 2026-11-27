@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.267</span>
+    <span id="verFps">studio v0.268</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.267</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.268</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -8904,10 +8904,10 @@ function rscDraw(now){
   for (var i = 0; i < 4; i++){ g.fillStyle = i === b ? (i === 0 ? '#FF2A3C' : '#3BFF6A') : '#1E2026'; g.fillRect(26 + i * ((W - 52 + 12) / 4), 192, (W - 52 + 12) / 4 - 12, 16); }
   /* the visualiser: 40 bars across the room's whole output, low on the left, high on the right, each with a falling peak */
   var N = 32, x0 = 26, y1 = H - 22, hh = y1 - 236, bw = (W - 52) / N;
-  if (AU.ready && AU.an){ if (!RSC.f) RSC.f = new Uint8Array(AU.an.frequencyBinCount); AU.an.getByteFrequencyData(RSC.f); }
+  if (AU.ready && AU.an){ if (!RSC.f){ RSC.f = new Uint8Array(AU.an.frequencyBinCount); AU.an.minDecibels = -84; AU.an.maxDecibels = -6; } AU.an.getByteFrequencyData(RSC.f); }      /* -6 dB at the top: a full mix sits in the green and yellow and only real peaks reach the red (the mixer's meters read this analyser's waveform, which these do not change) */
   for (i = 0; i < N; i++){
     var v = 0;
-    if (RSC.f){ var lo = Math.floor(Math.pow(RSC.f.length, i / N)), hi = Math.max(lo + 1, Math.floor(Math.pow(RSC.f.length, (i + 1) / N))); for (var k = lo; k < hi && k < RSC.f.length; k++) v = Math.max(v, RSC.f[k]); v = Math.pow(v / 255, 1.6); }
+    if (RSC.f){ var lo = Math.floor(Math.pow(RSC.f.length, i / N)), hi = Math.max(lo + 1, Math.floor(Math.pow(RSC.f.length, (i + 1) / N))); for (var k = lo; k < hi && k < RSC.f.length; k++) v = Math.max(v, RSC.f[k]); v = Math.pow(v / 255, 1.6) * (0.82 + 0.3 * i / N); }      // a little tilt toward the highs, which carry less energy
     RSC.pk[i] = Math.max(v, (RSC.pk[i] || 0) - 0.02); var h = Math.round(v * hh), seg = 10;
     for (var y = 0; y < h; y += seg){ var q = y / hh; g.fillStyle = q > 0.82 ? '#FF2A3C' : q > 0.6 ? '#FFE15A' : '#3BFF6A'; g.fillRect(x0 + i * bw + 2, y1 - y - seg + 2, bw - 4, seg - 3); }
     if (RSC.pk[i] > 0.02){ g.fillStyle = '#FFFFFF'; g.fillRect(x0 + i * bw + 2, y1 - Math.round(RSC.pk[i] * hh) - 3, bw - 4, 3); }
@@ -10559,7 +10559,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.267 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.268 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
