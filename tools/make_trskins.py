@@ -109,7 +109,15 @@ def bb_full(pts):
     if not pts: return False
     b = bbox(pts); return b[2] - b[0] >= W - 1
 
+def font_check():
+    # the designer's PDFs name Merchant Copy without embedding it: unless the font is installed the renderer quietly swaps in another
+    import subprocess
+    try: ok = 'Merchant Copy' in subprocess.run(['fc-list'], capture_output=True, text=True).stdout
+    except Exception: ok = False
+    if not ok: sys.exit('Install public/fonts/merchantcopy.ttf first (e.g. copy it to /usr/share/fonts/truetype/ and run fc-cache -f)')
+
 def render(pdf_path, drop_bg, drop_controls):
+    font_check()
     r = pypdf.PdfReader(pdf_path)
     if drop_controls or drop_bg:
         global Z
