@@ -171,8 +171,9 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpChat .log .sys{ color:rgba(216,216,216,.7); font-style:italic }
 #mpChat input{ pointer-events:auto; display:none; width:100%; box-sizing:border-box; margin-top:8px; font:inherit; font-size:16px; color:#fff; background:rgba(5,6,10,.85); border:1px solid rgba(216,216,216,.35); border-radius:6px; padding:8px 10px }
 #mpChat.open input{ display:block }
-#mpChat .emo{ display:none; gap:6px; margin-top:6px; pointer-events:auto }
-#mpChat.open .emo{ display:flex }
+#mpChat .emo{ display:none; flex-wrap:wrap; gap:6px; margin-top:6px; pointer-events:auto }
+#mpChat .emo img{ display:block; width:28px; height:28px; margin:auto } #mpLog img.jb{ height:1.35em; vertical-align:-.35em }
+#mpChat.open .emo{ display:grid; grid-template-columns:repeat(6, 44px) }      /* two rows of six */
 #mpChat .emo button{ width:44px; height:40px; font-size:24px; line-height:1; padding:0; border-radius:6px; border:1px solid rgba(216,216,216,.35); background:rgba(5,6,10,.85); cursor:pointer; transition:transform .08s, background .12s; font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif }
 #mpChat .emo button:hover{ background:rgba(40,44,56,.95); transform:scale(1.12) }
 #mpChat .emo button:active{ transform:scale(.94) }
@@ -296,7 +297,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.283</span>
+    <span id="verFps">studio v0.284</span>
   </div>
 </div>
 
@@ -328,7 +329,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.283</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.284</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -345,7 +346,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
-<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="emo" id="mpEmo"><button type="button" title="Fire">🔥</button><button type="button" title="Skull and crossbones">☠️</button><button type="button" title="Tongue out">😛</button><button type="button" title="Cross-eyed">😵</button><button type="button" title="Heart">❤️</button><button type="button" title="Laughing">😂</button></div><div class="tip"><b>T</b> to chat</div></div>
+<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="emo" id="mpEmo"><button type="button" title="Fire">🔥</button><button type="button" title="Skull and crossbones">☠️</button><button type="button" title="Tongue out">😛</button><button type="button" title="Cross-eyed">😵</button><button type="button" title="Heart">❤️</button><button type="button" title="Laughing">😂</button><button type="button" title="Ghost">👻</button><button type="button" title="Fist bump">👊</button><button type="button" title="Poop">💩</button><button type="button" title="Sad face">😢</button><button type="button" title="Cat">🐱</button><button type="button" title="Jambu" data-t=":jambu:"><img src="jambu.png" alt="Jambu"></button></div><div class="tip"><b>T</b> to chat</div></div>
 <div id="toast"></div>
 <div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
 
@@ -9707,16 +9708,17 @@ var MP = (function(){
     var P = { skin:skinI, g:g, torso:torso, head:head, armL:armL, armR:armR, legL:legL, legR:legR, tag:tag, tg:tg, tt:tt, name:name, color:color, say:'', sayUntil:0, s:null, x:0, z:0, yaw:0, pitch:0, c:0, j:0, lean:0, walk:0, lastX:0, lastZ:0, held:{} };
     paintTag(P); scene.add(g); return P;
   }
+  var JAMBUIMG = new Image(); JAMBUIMG.onload = function(){ JAMBUIMG.ok = true; Object.keys(Q.peers).forEach(function(id){ if (Q.peers[id].say === ':jambu:') paintTag(Q.peers[id]); }); }; JAMBUIMG.src = 'jambu.png';
   function paintTag(P){
     var g2 = P.tg; g2.clearRect(0, 0, 256, 96); g2.font = '600 26px ui-monospace, Menlo, Consolas, monospace'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
     var w = Math.min(240, g2.measureText(P.name).width + 26); g2.fillStyle = 'rgba(8,10,14,.78)'; g2.fillRect(128 - w / 2, 54, w, 36); g2.fillStyle = P.color; g2.fillRect(128 - w / 2, 86, w, 4); g2.fillStyle = '#fff'; g2.fillText(P.name, 128, 73);
     if (P.say){                                                    /* a speech bubble with a tail; a lone emoji (the chat bar's quick ones) is drawn large */
-      var emo = !/[A-Za-z0-9]/.test(P.say) && Array.from(P.say).length <= 3, s = emo ? P.say : (P.say.length > 22 ? P.say.slice(0, 21) + '…' : P.say);
+      var jb = P.say === ':jambu:', emo = jb || (!/[A-Za-z0-9]/.test(P.say) && Array.from(P.say).length <= 3), s = jb ? '' : emo ? P.say : (P.say.length > 22 ? P.say.slice(0, 21) + '…' : P.say);      /* :jambu: is the Jambutek jambu, drawn as a picture */
       g2.font = emo ? '30px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' : '20px ui-monospace, Menlo, Consolas, monospace';
-      var w2 = Math.min(250, g2.measureText(s).width + (emo ? 26 : 20)), x0 = 128 - w2 / 2, y0 = 4, hb = 40, rr2 = 10;
+      var w2 = jb ? 62 : Math.min(250, g2.measureText(s).width + (emo ? 26 : 20)), x0 = 128 - w2 / 2, y0 = 4, hb = 40, rr2 = 10;
       g2.fillStyle = 'rgba(255,255,255,.95)'; g2.beginPath(); g2.moveTo(x0 + rr2, y0); g2.lineTo(x0 + w2 - rr2, y0); g2.quadraticCurveTo(x0 + w2, y0, x0 + w2, y0 + rr2); g2.lineTo(x0 + w2, y0 + hb - rr2); g2.quadraticCurveTo(x0 + w2, y0 + hb, x0 + w2 - rr2, y0 + hb);
       g2.lineTo(136, y0 + hb); g2.lineTo(128, y0 + hb + 8); g2.lineTo(120, y0 + hb); g2.lineTo(x0 + rr2, y0 + hb); g2.quadraticCurveTo(x0, y0 + hb, x0, y0 + hb - rr2); g2.lineTo(x0, y0 + rr2); g2.quadraticCurveTo(x0, y0, x0 + rr2, y0); g2.closePath(); g2.fill();
-      g2.fillStyle = '#0B0D12'; g2.fillText(s, 128, y0 + hb / 2 + (emo ? 2 : 0));
+      g2.fillStyle = '#0B0D12'; if (jb){ if (JAMBUIMG.ok) g2.drawImage(JAMBUIMG, 111, y0 + 3, 34, 34); } else g2.fillText(s, 128, y0 + hb / 2 + (emo ? 2 : 0));
     }
     P.tt.needsUpdate = true;
   }
@@ -9971,7 +9973,7 @@ var MP = (function(){
       else if (m.t === 'join'){ if (!Q.peers[m.id]) Q.peers[m.id] = avatar(m.color, m.name, m.skin); Q.peers[m.id].guest = !!m.guest; paintHud(); line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + '</b> joined' + (m.guest ? ' as a guest' : ''), true); toast(m.name + ' joined' + (m.guest ? ' as a guest' : '')); }
       else if (m.t === 'leave'){ var P = Q.peers[m.id]; if (P && !m.back) line('<b style="color:' + esc(P.color) + '">' + esc(P.name) + '</b> left', true); removePeer(m.id); }
       else if (m.t === 's'){ var R = Q.peers[m.id]; if (R){ if (!R.s){ R.x = m.s[0]; R.z = m.s[1]; } R.s = m.s; } }
-      else if (m.t === 'chat'){ line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + ':</b> ' + esc(m.text)); var S = Q.peers[m.id]; if (S){ S.say = m.text; S.sayUntil = performance.now() + 6000; paintTag(S); } }
+      else if (m.t === 'chat'){ line('<b style="color:' + esc(m.color) + '">' + esc(m.name) + ':</b> ' + esc(m.text).split(':jambu:').join('<img class="jb" src="jambu.png" alt="jambu">')); var S = Q.peers[m.id]; if (S){ S.say = m.text; S.sayUntil = performance.now() + 6000; paintTag(S); } }
       else if (m.t === 'set') applySet(m.k, m.v);
       else if (m.t === 'ev') onEv(m.id, m.e);
       else if (m.t === 'pong'){ Q.pingOut = 0; var rtt = performance.now() - m.at; if (rtt <= Q.rtt){ Q.rtt = rtt; Q.off = m.now + rtt / 2 - Date.now(); } else Q.rtt *= 1.03; Q.pings++; }   // trust only the quickest round trips; let the bar drift up slowly so the clock can still be corrected
@@ -10100,7 +10102,7 @@ var MP = (function(){
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * (OPT.vol == null ? 1 : OPT.vol), t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
     o.connect(f); f.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 0.06); } catch (e) {} }
   /* the six quick emoji under the chat bar: a click sends it straight to the chat, and it rises over your head for everyone */
-  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); emoClick(); closeChat(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.getAttribute('data-t') || b.textContent }); emoClick(); closeChat(); }); });
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }
@@ -10680,7 +10682,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.283 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.284 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
