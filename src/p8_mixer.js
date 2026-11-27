@@ -90,7 +90,15 @@ function mxDuck(t){
   if (!AU.ready) return; var rel = clamp(60 / M.bpm * 0.22, 0.05, 0.16);
   for (var i = 1; i < MX.ch.length; i++){ var d = MX.ch[i].sc; if (!(d > 0.01)) continue; var g = AU.ch[i].duck.gain; try { g.cancelScheduledValues(t); g.setTargetAtTime(1 - d * 0.94, t, 0.005); g.setTargetAtTime(1, t + 0.04, rel); } catch (e) {} }
 }
-function mxSolo(i){ var c = MX.ch[i]; c.solo = c.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.solo ? ' solo' : ' solo off')); }
+/* solo is one channel at a time: soloing another moves the solo there. Hold Shift to group several soloed channels (Shift + click toggles one in or out) */
+var MXSHIFT = false;
+function mxSolo(i, group){
+  var c = MX.ch[i]; if (!c) return; if (group === undefined) group = MXSHIFT;
+  if (group) c.solo = c.solo ? 0 : 1;
+  else { var others = MX.ch.some(function(h, k){ return k !== i && h.solo; }); MX.ch.forEach(function(h, k){ h.solo = k === i ? (c.solo && !others ? 0 : 1) : 0; }); }
+  mxApply(); mxSaveSoon(); var n = MX.ch.filter(function(h){ return h.solo; }).length;
+  toast(MXN[i] + (c.solo ? (n > 1 ? ' solo · ' + n + ' grouped' : ' solo') : ' solo off'));
+}
 function mxMute(i){ var c = MX.ch[i]; c.mute = c.mute ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[i] + (c.mute ? ' muted' : ' on')); }
 function mxCtl(c){
   var id = c.id, v = c.v;
@@ -112,7 +120,7 @@ function mxPress(c){
   if (c.clr){ for (var i = 0; i < MXNC; i++){ MX.ch[i][c.clr] = 0; var k = CT['mx' + c.clr + i]; k.v = 0; k.show(); } mxApply(); mxSaveSoon(); toast('Send ' + (c.clr === 'sa' ? 'A' : 'B') + ' cleared'); return; }
   if (c.frst){ var fk = c.frst === 'h' ? 'hpf' : 'lpf', fa = c.frst === 'h' ? 'fh' : 'fl', fc = CT['mx' + fk]; MX[fk] = c.frst === 'h' ? 0 : 1; fc.v = MX[fk]; fc.show(); for (var fi2 = 0; fi2 < 10; fi2++) MX[fa][fi2] = 1; mxApply(); mxSaveSoon(); toast((c.frst === 'h' ? 'High-pass' : 'Low-pass') + ' reset · off, every channel switched in'); return; }
   if (c.flt){ MX[c.flt][c.ch] = MX[c.flt][c.ch] ? 0 : 1; mxApply(); mxSaveSoon(); toast((c.flt === 'fh' ? 'High-pass ' : 'Low-pass ') + (MX[c.flt][c.ch] ? 'on ' : 'off ') + MXN[c.ch]); return; }
-  if (c.solo){ var h = MX.ch[c.ch]; h.solo = h.solo ? 0 : 1; mxApply(); mxSaveSoon(); toast(MXN[c.ch] + (h.solo ? ' solo' : ' solo off')); return; }
+  if (c.solo){ mxSolo(c.ch); return; }
   if (c.ch != null) mxMute(c.ch);
 }
 function mxUpdate(now, dt){

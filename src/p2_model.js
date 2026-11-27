@@ -1,108 +1,60 @@
 
-/* ================= the drum machine: an 11-voice rhythm box on an angled stand =================
-   Laid out from the TR-8S reference manual's top-panel drawing. Positions are read off that drawing in its
-   own pixels (PX, PY), turned into millimetres on a 401 x 268 mm panel, and built at double size so every
-   control is easy to aim at from standing height. */
-/* The panel is 30 mm taller than the drawing: a row was let in under the TONE knobs for each drum's two effect sends. Everything
-   the drawing puts below that line (PY > 372) simply sits ROWH lower; the new row itself is placed with VRAW on, in the gap. */
-var ROWH = 52, VRAW = false;
-var PANEL = { w:401, h:268 + ROWH / 1.735 }, SC = 0.002;           // metres per panel millimetre (2x life size)
-function U(px){ return (px - 75) / 1.863; }
-function V(py){ return ((VRAW || py <= 372 ? py : py + ROWH) - 155) / 1.735; }
-function lx(px){ return (U(px) - PANEL.w / 2) * SC; }
-function lz(py){ return (V(py) - PANEL.h / 2) * SC; }
+/* ================= DRUMBU-8: the 11-voice drum machine on its angled stand =================
+   The top plate is the designer's own artwork: a 3072 x 2284 px plate (401 x 298 mm, built at double size so every control is easy to
+   aim at from standing height). Every control sits at the design's own pixel position (lx / lz take design pixels), and the plate
+   texture is that design with the controls cut out of it (tools/make_trskins.py), so the 3D knobs, buttons and pads land exactly
+   where they are drawn. Five colourways ("skins"), switched with the SKIN SELECT arrows: black is the default. */
+var PANEL = { w:401, h:297.97 }, SC = 0.002;                      /* metres per panel millimetre (2x life size) */
+var DPX = PANEL.w / 3072 * SC;                                     /* metres per design pixel */
+function lx(px){ return (px / 3072 - 0.5) * PANEL.w * SC; }
+function lz(py){ return (py / 2284 - 0.5) * PANEL.h * SC; }
 var INST = ['BD','SD','LT','MT','HT','RS','HC','CH','OH','CC','RC'];
 var INAME = ['Bass Drum','Snare Drum','Low Tom','Mid Tom','High Tom','Rim Shot','Hand Clap','Closed Hi-hat','Open Hi-hat','Crash Cymbal','Ride Cymbal'];
-/* The drawing's right-hand block is rebuilt as one narrow column (screen, VALUE, COPY, KIT, INST, tempo, shuffle), which leaves the
-   eleven drums 47 px more room: their columns are spread to a 44.3 px pitch and the top row above them is stretched to match (TRX). */
-var COLX = [229, 273, 318, 362, 406, 451, 495, 539, 583, 628, 672], CHX1 = 694, SIDEX = 752;
-function TRX(x){ return 207 + (x - 207) * (CHX1 - 207) / 440; }
-var PADX = [199, 236, 273, 311, 349, 386, 424, 461, 499, 537, 574, 612, 650, 687, 725, 762];
-var PADCOL = [0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF2A3C, 0xFF8A2A, 0xFF8A2A, 0xFF8A2A, 0xFF8A2A, 0xFFE15A, 0xFFE15A, 0xFFE15A, 0xFFE15A, 0xF4F4F4, 0xF4F4F4, 0xF4F4F4, 0xF4F4F4];
-var COLCOL = ['#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF2A3C', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FF8A2A', '#FFE15A', '#FFE15A', '#FFE15A'];
+var COLX = [632, 813, 998, 1180, 1360, 1544, 1726, 1908, 2088, 2275, 2452];                    /* the eleven drum columns' knob centres */
+var KPINK = '#FB1874', KORG = '#FF943D', KBLUE = '#3270E7';
+var COLCOL = [KPINK, KPINK, KPINK, KPINK, KPINK, KORG, KORG, KBLUE, KBLUE, KBLUE, KBLUE];
 var TILT = 0.56, TRH = 1.1;
 
 var TRY = new THREE.Group(); TRY.position.set(TRPOS.x, 0, TRPOS.z); TRY.rotation.y = TRPOS.r; scene.add(TRY);
 var TRG = new THREE.Group(); TRG.position.set(0, TRH, 0); TRG.rotation.x = TILT; TRY.add(TRG);
-var CT = {}, CTLIST = [];                            // every control, by id
+var CT = {}, CTLIST = [];                            /* every control, by id */
 
-/* ---- the printed panel ---- */
-var panelC = mk(3072, 2284), panelTex = null;      // about 7.7 px per panel millimetre each way: the small print has to stay readable when you lean in
-var TRPLATE = { on:true, dark:0, img:null };      /* the artwork is stored already as a ghost print (two close dark tones, softened), so it needs no darkening here */
-(function(){ var src = window.JB_ASSETS && JB_ASSETS.trPlate; if (!src) return; var im = new Image(); im.onload = function(){ TRPLATE.img = im; paintPanel(); }; im.src = src; })();
+/* ---- the printed plate, one image per skin (public/tr/<skin>.jpg). The choice is this player's own and is kept in this browser ---- */
+var panelC = mk(3072, 2284), panelTex = null;
+var TRSKINS = [['black', 'BLACK'], ['navy', 'NAVY'], ['blue', 'BLUE'], ['purple', 'PURPLE'], ['green', 'GREEN']];
+var TRSKIN = { i:0, img:{} };
+(function(){ try { var k = localStorage.getItem('jbtr-skin'); TRSKINS.forEach(function(s, i){ if (s[0] === k) TRSKIN.i = i; }); } catch (e) {} })();
+function trSkinImg(i){
+  var k = TRSKINS[i][0]; if (TRSKIN.img[k]) return TRSKIN.img[k];
+  var im = new Image(); im.onload = function(){ im.ok = true; if (TRSKIN.i === i) paintPanel(); }; im.src = 'tr/' + k + '.jpg'; TRSKIN.img[k] = im; return im;
+}
 function paintPanel(){
-  var g = panelC.getContext('2d');
-  g.setTransform(panelC.width / PANEL.w, 0, 0, panelC.height / PANEL.h, 0, 0);          // draw in millimetres
-  g.fillStyle = '#14161A'; g.fillRect(0, 0, PANEL.w, PANEL.h);
-  if (TRPLATE.on && TRPLATE.img){                                  /* the baseplate artwork, cover-fitted, then darkened so the print and the controls on it stay readable. TRPLATE.on = false brings back the plain plate */
-    var pi = TRPLATE.img, sc = Math.max(PANEL.w / pi.width, PANEL.h / pi.height), dw = pi.width * sc, dh = pi.height * sc;
-    g.drawImage(pi, (PANEL.w - dw) / 2, (PANEL.h - dh) / 2, dw, dh); g.fillStyle = 'rgba(12,6,12,' + TRPLATE.dark + ')'; g.fillRect(0, 0, PANEL.w, PANEL.h);
-  } else
-  for (var i = 0; i < 5000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * PANEL.w, Math.random() * PANEL.h, .5, .3); }
-  function rr(x0, y0, x1, y1, r, stroke, fill){
-    var a = U(x0), b = V(y0), c = U(x1), d = V(y1); g.beginPath();
-    g.moveTo(a + r, b); g.lineTo(c - r, b); g.quadraticCurveTo(c, b, c, b + r); g.lineTo(c, d - r); g.quadraticCurveTo(c, d, c - r, d); g.lineTo(a + r, d); g.quadraticCurveTo(a, d, a, d - r); g.lineTo(a, b + r); g.quadraticCurveTo(a, b, a + r, b); g.closePath();
-    if (fill){ g.fillStyle = fill; g.fill(); } if (stroke){ g.strokeStyle = stroke; g.lineWidth = 0.55; g.stroke(); }
-  }
-  function T(s, px, py, size, col, font, align){
-    g.font = font === 'A' ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif';
-    g.fillStyle = col || '#E6E6E2'; g.textAlign = align || 'center'; g.textBaseline = 'middle'; g.fillText(s, U(px), V(py));
-  }
-  var line = 'rgba(216,216,216,.55)';
-  // section frames
-  rr(92, 178, 198, 512, 3, line); [[207, 284], [290, 323], [329, 444], [450, 525], [531, 647]].forEach(function(b){ rr(TRX(b[0]), 178, TRX(b[1]), 236, 3, line); });
-  rr(207, 252, CHX1, 464, 3, line); rr(207, 470, CHX1, 512, 3, line);
-  rr(CHX1 + 8, 178, 802, 512, 3, line); rr(92, 520, 802, 606, 3, line);                // the bottom box runs the full width and holds START / STOP as well as the pads
-  // brand strip: this is the label's own box, so it wears the label's name
-   T('RHYTHM STATION', 700, 166, 3.2, '#C9C9C4', 'bold', 'right'); T('DRUMBU-8', 800, 165, 7.2, '#E0193C', 'A', 'right');
-  // top row
-  T('VOLUME', 145, 190, 3, null);
-  T('ACCENT', TRX(245), 190, 3.2, null); T('LEVEL', TRX(226), 230, 2.6, null);
-  T('REVERB', TRX(306), 190, 3.2, null); T('LEVEL', TRX(306), 230, 2.6, null);
-  T('DELAY', TRX(386), 190, 3.2, null); T('LEVEL', TRX(346), 230, 2.6, null); T('TIME', TRX(386), 230, 2.6, null); T('FEEDBACK', TRX(427), 230, 2.6, null);
-  T('MASTER FX', TRX(487), 190, 3.2, null); T('CTRL', TRX(508), 230, 2.6, null);
-  T('AUTO FILL IN', TRX(588), 190, 3.2, null);
-  [['2', 566, 222], ['4', 569, 204], ['8', 580, 193], ['12', 596, 193], ['16', 607, 204], ['32', 611, 222]].forEach(function(m){ T(m[0], TRX(588) + m[1] - 588, m[2], 2.3, '#B8B8B4'); });
-  // knob end-stops
-  function stops(px, py, r){ g.fillStyle = '#B8B8B4'; [-1, 1].forEach(function(s){ g.beginPath(); g.arc(U(px) + s * r * 0.76, V(py) + r * 0.72, 0.5, 0, 7); g.fill(); }); }
-  [[145, 213], [TRX(226), 212], [TRX(306), 212], [TRX(346), 212], [TRX(386), 212], [TRX(427), 212], [TRX(508), 212]].forEach(function(p){ stops(p[0], p[1], 9.5); });
-  VRAW = true; stops(SIDEX, 470, 9.5); VRAW = false;
-  // instrument columns
-  COLX.forEach(function(x, i){
-    rr(x - 21, 238, x + 21, 251, 0.8, COLCOL[i], '#23262C');                                    // the drum's name, in the menu's Merchant Copy: wide open letters that survive the room's coarse picture
-    var nm = ['KICK', 'SNARE', 'LOW TOM', 'MID TOM', 'HI TOM', 'RIM', 'CLAP', 'CL HAT', 'OP HAT', 'CRASH', 'RIDE'][i];                // short names, so the type can be large
-    g.font = '6.4px "Merchant Copy", ui-monospace, monospace'; g.fillStyle = g.strokeStyle = '#FFFFFF'; g.lineWidth = 0.22; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; var tm = g.measureText('KHR'), ty = V(244.5) + ((tm.actualBoundingBoxAscent || 4) - (tm.actualBoundingBoxDescent || 0)) / 2;      /* centred on the capitals' own height: this face's 'middle' sits low */
-    g.strokeText(nm, U(x), ty, 21.4); g.fillText(nm, U(x), ty, 21.4);
-    T('TUNE', x, 287, 3, null); T('DECAY', x, 326, 3, null); T('TONE', x, 365, 3, null);
-    VRAW = true; T('REV', x - 11.3, 411, 2.5, '#E8C63A'); T('DLY', x + 11.3, 411, 2.5, '#35C46B'); VRAW = false;      // the two sends, in the let-in row
-    stops(x, 268, 9.5); stops(x, 307, 9.5); stops(x, 347, 9.5);
-    rr(x - 7.5, 378, x + 7.5, 458, 1.6, COLCOL[i], '#07080A');
-    g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.3;
-    for (var k = 0; k <= 10; k++){ var yy = V(386 + k * 6.5); g.beginPath(); g.moveTo(U(x) - 7.6, yy); g.lineTo(U(x) - (k % 5 ? 5.6 : 4.8), yy); g.stroke(); g.beginPath(); g.moveTo(U(x) + 7.6, yy); g.lineTo(U(x) + (k % 5 ? 5.6 : 4.8), yy); g.stroke(); }
-    if (i < 10){ g.strokeStyle = 'rgba(216,216,216,.22)'; g.lineWidth = 0.3; g.beginPath(); g.moveTo(U(x + 22.15), V(256)); g.lineTo(U(x + 22.15), V(460)); g.stroke(); }
-  });
-  // common section 2
-  T('VALUE', SIDEX - 22, 246, 2.8, null); VRAW = true; T('TEMPO', SIDEX, 366, 3.2, null); T('SHUFFLE', SIDEX, 450, 2.8, null); VRAW = false;      // the side column: placed by hand (VRAW), top to bottom
-  VRAW = true; T('INSTANT FX · HOLD', 145, 417, 2.3, '#B8B8B4'); VRAW = false;
-  // pads
-  PADX.forEach(function(x, i){ T(String(i + 1), x - 12, 529, 3.4, '#E6E6E2', 'bold', 'left'); });
-  INST.forEach(function(n, i){ T(n, PADX[i], 592, 3.6, 'rgba(230,230,226,.8)', 'A'); });
-  T('ROLL', 631, 592, 3, 'rgba(230,230,226,.8)', 'A'); T('16', 600, 592, 2.4, '#B8B8B4'); T('32', 662, 592, 2.4, '#B8B8B4');
-  T('FILL IN', 687, 592, 3, 'rgba(230,230,226,.8)', 'A'); T('TAP', 762, 592, 3, 'rgba(230,230,226,.8)', 'A');
-  rr(106, 582, 160, 600, 1, line, '#23262C'); T('START / STOP', 133, 591.6, 4, '#F4F4F0', 'A');
-  g.setTransform(1, 0, 0, 1, 0, 0);
+  var g = panelC.getContext('2d'), im = trSkinImg(TRSKIN.i);
+  if (im.ok){
+    g.drawImage(im, 0, 0, panelC.width, panelC.height);
+  } else { g.fillStyle = '#141414'; g.fillRect(0, 0, panelC.width, panelC.height); }
   if (panelTex) panelTex.needsUpdate = true;
 }
+function trSkin(step){                                             /* the SKIN SELECT arrows */
+  var n = TRSKINS.length; TRSKIN.i = (TRSKIN.i + step + n) % n;
+  try { localStorage.setItem('jbtr-skin', TRSKINS[TRSKIN.i][0]); } catch (e) {}
+  paintPanel(); trSkinImg((TRSKIN.i + step + n) % n);                 /* and fetch the next one along, so the next press is instant */
+  return TRSKINS[TRSKIN.i][1];
+}
 paintPanel(); panelTex = smoothTex(panelC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(function(){ paintPanel(); CTLIST.forEach(function(c){ if (c.repaintFace) c.repaintFace(); }); }).catch(function(){});
-if (document.fonts && document.fonts.load) document.fonts.load('20px "Merchant Copy"').then(paintPanel).catch(function(){});      // the drum names wait for their face too
 
 (function(){
   var W2 = PANEL.w * SC, D2 = PANEL.h * SC, TH = 0.11;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:panelTex, emissive:0xffffff, emissiveMap:panelTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; TRG.add(top); solid(top, 'trbody');
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
+  /* the body: the designer's side strip on both ends and the widened version on the front; back and base plain in the strip's ground */
+  var bodyM = new THREE.MeshPhongMaterial({ color:0x282526, shininess:30, specular:0x222222, flatShading:true });
+  function art(f){ var t = new THREE.TextureLoader().load('tr/' + f); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:20, specular:0x151515 }); }
+  var sideM = art('side.jpg'), frontM = art('front.jpg');
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), [sideM, sideM, bodyM, bodyM, frontM, bodyM]); body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
+  paintPanel();
 })();
 
 /* ---- control builders (HOST / LX / LZ / DEV say which instrument they are building on) ---- */
@@ -132,20 +84,6 @@ function knob(id, px, py, r, name, def, opt){
     hover:function(on){ mat.emissive.setHex(on ? 0x2E6A44 : 0x000000); } };
   c.show();
   return reg(c, [body, hit]);
-}
-function fader(i){
-  var px = COLX[i], zTop = LZ(386), zBot = LZ(451), g = new THREE.Group(); g.position.set(LX(px), 0, 0); HOST.add(g);
-  var capM = new THREE.MeshPhongMaterial({ color:0x9A9A96, shininess:30, specular:0x222222, flatShading:true, emissive:0x000000 });
-  var cap = new THREE.Mesh(new THREE.BoxGeometry(0.023, 0.011, 0.013), capM); cap.castShadow = true; g.add(cap);
-  var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.0235, 0.0115, 0.002), new THREE.MeshBasicMaterial({ color:0x15171A })); cap.add(stripe);
-  var glowM = new THREE.MeshBasicMaterial({ color:new THREE.Color(COLCOL[i]) });
-  var glow = new THREE.Mesh(new THREE.PlaneGeometry(0.006, 1), glowM); glow.rotation.x = -Math.PI / 2; glow.position.y = 0.0012; g.add(glow);
-  var hit = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.026, zBot - zTop + 0.03), HITMAT); hit.position.set(0, 0.012, (zTop + zBot) / 2); g.add(hit);
-  var c = { id:'lev' + i, kind:'fader', name:INAME[i] + ' level', inst:i, v:0.8, def:0.8, step:0.04, g:g, cap:cap, mat:capM, glow:glow, glowM:glowM,
-    show:function(){ var z = lerp(zBot, zTop, c.v); cap.position.set(0, 0.0065, z); glow.scale.y = Math.max(0.001, zBot - z); glow.position.z = (zBot + z) / 2; },
-    hover:function(on){ capM.emissive.setHex(on ? 0x2E6A44 : 0x000000); } };
-  c.show();
-  return reg(c, [cap, hit]);
 }
 function faceTex(text, w, h, sub){
   var c = mk(128, Math.max(32, Math.round(128 * h / w / 8) * 8)), t = canvasTex(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
@@ -185,55 +123,148 @@ function pad(id, px, py, w, h, col, name){
   return reg(c, [m, hit]);
 }
 
-/* ---- every control on the panel ---- */
-var FXYEL = 0xE8C63A, FXGRN = 0x35C46B;      // the reverb level knob is yellow and the delay level knob green; each drum has a small send knob in each colour
-knob('volume', 145, 213, 6.5, 'Volume', 0.8);
-knob('accent', TRX(226), 212, 6.5, 'Accent level', 0.6); knob('reverb', TRX(306), 212, 6.5, 'Reverb level', 0.3, { color:FXYEL, tick:0x15130A });
-knob('dlevel', TRX(346), 212, 6.5, 'Delay level', 0.2, { color:FXGRN, tick:0x0A150E }); knob('dtime', TRX(386), 212, 6.5, 'Delay time', 0.5, { step:0.1 }); knob('dfb', TRX(427), 212, 6.5, 'Delay feedback', 0.4);
-knob('fxctrl', TRX(508), 212, 6.5, 'Master FX', 0.5); knob('fillknob', TRX(588), 212, 6.5, 'Auto fill-in', 0.2, { step:0.2 });
+/* ================= DRUMBU-8 controls, drawn to the design =================
+   Knob tops are painted from the design's measurements (a dark twelve-sided body, a grey ring, a coloured cap and the pointer) and turn
+   with the knob. Button and pad faces are cut straight from the design (public/tr/faces.png); a face is white until it lights, then takes
+   its colour: green for most, red for CLEAR, DR-REC and the mutes. */
+var TRFACES = new Image(), TRFACEFN = [];
+TRFACES.onload = function(){ TRFACES.ok = true; TRFACEFN.forEach(function(f){ f(); }); }; TRFACES.src = 'tr/faces.png';
+var TRWHITE = new THREE.Color(1, 1, 1), TRTMP = new THREE.Color(), TRSIDE = new THREE.MeshLambertMaterial({ color:0x111214 });
+function trTex(c){ var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
+function dodec(g, r, fill){ g.beginPath(); for (var k = 0; k < 12; k++){ var a = Math.PI / 12 + k * Math.PI / 6; g.lineTo(Math.sin(a) * r, -Math.cos(a) * r); } g.closePath(); g.fillStyle = fill; g.fill(); }
+/* style: 'big' (125 px across), 'small' (the send knobs), 'tempo'. The cylinder's cap maps the canvas turned a quarter, hence the rotate */
+var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 } };
+function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
+  opt = opt || {}; var S = TRK[style], R = S.r * DPX, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : 6.5) * SC;
+  var cv = mk(256, 256), g = cv.getContext('2d'), s = 128 / S.r;
+  g.translate(128, 128); g.rotate(-Math.PI / 2); g.scale(s, s);
+  if (style === 'small'){
+    g.fillStyle = '#131419'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 29, col);
+    g.fillStyle = 'rgba(0,0,0,.12)'; g.beginPath(); g.arc(0, 4, 27, 0.15, Math.PI - 0.15); g.fill();
+    g.fillStyle = ptr; g.fillRect(-4, -27, 8, 23);
+  } else if (style === 'tempo'){
+    g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 96.5, '#2B2E36'); dodec(g, 90, '#3B3D47');
+    g.fillStyle = ptr; g.fillRect(-10, -99, 20, 85);
+  } else {
+    g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49, '#2B2E36'); dodec(g, 45.5, col);
+    g.fillStyle = ptr; g.fillRect(-5.3, -51, 10.6, 47.2);
+  }
+  var tex = trTex(cv), gr = new THREE.Group(); gr.position.set(lx(cx), 0, lz(cy)); TRG.add(gr);
+  var topM = new THREE.MeshPhongMaterial({ color:0x4D4D4D, map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.62, shininess:10, specular:0x0A0A0A });      /* less lamp, more glow: the caps keep the design's colours instead of washing out under the room lights */
+  var sideM = new THREE.MeshPhongMaterial({ color:style === 'small' ? 0x131419 : 0x17171C, shininess:12, specular:0x0A0A0A, flatShading:true });
+  var rot = new THREE.Group(); gr.add(rot);
+  var body = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.97, R, H, S.seg, 1, false, Math.PI / S.seg), [sideM, topM, sideM]); body.position.y = H / 2 + 0.001; body.castShadow = true; rot.add(body);
+  var hit = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.25, R * 1.25, H + 0.012, 8), HITMAT); hit.position.y = H / 2 + 0.004; gr.add(hit);
+  var c = { id:id, kind:'knob', name:name, v:def, def:def, step:opt.step || 0.02, endless:!!opt.endless, g:gr, rot:rot, mat:topM, ring:null,
+    show:function(){ rot.rotation.y = c.endless ? -c.v * Math.PI * 2 : -(c.v - 0.5) * 5.2; },
+    hover:function(on){ topM.emissiveIntensity = on ? 0.85 : 0.62; sideM.emissive.setHex(on ? 0x2E6A44 : 0x000000); } };
+  c.show();
+  return reg(c, [body, hit]);
+}
+/* a button or pad: r = [x, y, w, h] of its square in the design (the 5 px black edge is drawn on it, so the face takes it in) */
+function trFace(r, plain){
+  var w = r[2] + 5, h = r[3] + 5, k = Math.min(3, 360 / Math.max(w, h)), cv = mk(Math.round(w * k), Math.round(h * k)), t = trTex(cv);
+  function paint(){
+    var g = cv.getContext('2d');
+    if (TRFACES.ok && !plain) g.drawImage(TRFACES, r[0] - 2.5, r[1] - 2.5, w, h, 0, 0, cv.width, cv.height);
+    else { g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = '#fff'; g.fillRect(5 * k, 5 * k, cv.width - 10 * k, cv.height - 10 * k); }
+    t.needsUpdate = true;
+  }
+  paint(); if (!plain) TRFACEFN.push(paint);
+  return t;
+}
+function trButton(id, r, name, lit, kind, plain){
+  var W2 = (r[2] + 5) * DPX, D2 = (r[3] + 5) * DPX, t = trFace(r, plain), y0 = kind === 'pad' ? 0.004 : 0.003;
+  var topM = new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.5, shininess:10, specular:0x080808 });
+  var m = new THREE.Mesh(new THREE.BoxGeometry(W2, y0 * 2, D2), [TRSIDE, TRSIDE, topM, TRSIDE, TRSIDE, TRSIDE]); m.position.set(lx(r[0] + r[2] / 2), y0, lz(r[1] + r[3] / 2)); TRG.add(m);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); TRG.add(hit);
+  var c = { id:id, kind:kind || 'btn', name:name, m:m, mat:topM, col:new THREE.Color(lit), base:new THREE.Color(lit), lit:0, hov:false, down:0, y0:y0, flash:0, tr:true };
+  /* white until lit; lit fades the face to its colour. A step pad has no white state: its colour is set each frame */
+  c.paintLit = function(){
+    var k = clamp(c.lit, 0, 1);
+    if (c.kind === 'pad' && plain) TRTMP.copy(c.col); else TRTMP.copy(TRWHITE).lerp(c.col, k);
+    topM.color.copy(TRTMP).multiplyScalar(0.3); topM.emissive.copy(TRTMP); topM.emissiveIntensity = 0.62 + k * 0.15 + (c.hov ? 0.15 : 0);
+  };
+  c.hover = function(on){ c.hov = on; c.paintLit(); };
+  c.paintLit();
+  return reg(c, [m, hit]);
+}
+var FADX = [588.7, 767.1, 955.0, 1141.0, 1319.0, 1506.0, 1688.0, 1866.0, 2045.0, 2224.3, 2411.0];
+function trFader(i){
+  var px = FADX[i] + 41.45, zTop = lz(1390.7), zBot = lz(1640.5), g = new THREE.Group(); g.position.set(lx(px), 0, 0); TRG.add(g);
+  var capM = new THREE.MeshPhongMaterial({ color:0xC8C8C8, emissive:0xffffff, emissiveIntensity:0.32, shininess:30, specular:0x222222 });
+  var cap = new THREE.Mesh(new THREE.BoxGeometry(82.9 * DPX, 0.008, 43 * DPX), capM); cap.castShadow = true; g.add(cap);
+  var stripe = new THREE.Mesh(new THREE.BoxGeometry(83.6 * DPX, 0.0082, 9.1 * DPX), new THREE.MeshBasicMaterial({ color:0x000000 })); stripe.position.z = 1.15 * DPX; cap.add(stripe);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.026, zBot - zTop + 0.03), HITMAT); hit.position.set(0, 0.012, (zTop + zBot) / 2); g.add(hit);
+  var c = { id:'lev' + i, kind:'fader', name:INAME[i] + ' level', inst:i, v:0.8, def:0.8, step:0.04, g:g, cap:cap, mat:capM, glowM:new THREE.MeshBasicMaterial(),
+    show:function(){ cap.position.set(0, 0.004, lerp(zBot, zTop, c.v)); },
+    hover:function(on){ capM.emissive.setHex(on ? 0x90F0A8 : 0xffffff); } };
+  c.show();
+  return reg(c, [cap, hit]);
+}
+
+/* ---- every control, at the design's positions ---- */
+HOST = TRG; LX = lx; LZ = lz; DEV = null;
+var KDARK = '#393C41', KYEL = '#FFFF61', KGRN = '#5CFFAD', SYEL = '#FFFF61', SGRN = '#5CFFAD';
+trKnob('volume', 286, 353, 'big', KDARK, '#FFFFFF', 'Volume', 0.8);
+trKnob('accent', 628, 350, 'big', KDARK, '#FFFFFF', 'Accent level', 0.6);
+trKnob('reverb', 993, 350, 'big', KYEL, '#000000', 'Reverb level', 0.3);
+trKnob('dlevel', 1174, 350, 'big', KGRN, '#000000', 'Delay level', 0.2);
+trKnob('dtime', 1363, 350, 'big', KGRN, '#000000', 'Delay time', 0.5, { step:0.1 });
+trKnob('dfb', 1543, 350, 'big', KGRN, '#000000', 'Delay feedback', 0.4);
+trKnob('fxctrl', 1910, 350, 'big', KDARK, '#FFFFFF', 'Filter LPF / HPF', 0.5);
+trKnob('fillknob', 2274, 350, 'big', KDARK, '#FFFFFF', 'Auto fill-in', 0.2, { step:0.2 });
+var SMX = [633, 813, 999, 1179, 1361, 1547, 1729, 1910, 2091, 2271, 2457];
 COLX.forEach(function(x, i){
-  knob('tune' + i, x, 268, 6.5, INAME[i] + ' tune', 0.5).inst = i;
-  knob('decay' + i, x, 307, 6.5, INAME[i] + ' decay', 0.5).inst = i;
-  knob('ctrl' + i, x, 347, 6.5, INAME[i] + ' tone', 0.5).inst = i;                  // the voice's own character (this knob was labelled CTRL)
-  VRAW = true; knob('rsend' + i, x - 11.3, 394, 4.8, INAME[i] + ' reverb send', 0, { h:7, color:FXYEL, tick:0x15130A }).inst = i; knob('dsend' + i, x + 11.3, 394, 4.8, INAME[i] + ' delay send', 0, { h:7, color:FXGRN, tick:0x0A150E }).inst = i; VRAW = false;
-  fader(i);
+  trKnob('tune' + i, x, 597, 'big', COLCOL[i], '#FFFFFF', INAME[i] + ' tune', 0.5).inst = i;
+  trKnob('decay' + i, x, 769, 'big', COLCOL[i], '#FFFFFF', INAME[i] + ' decay', 0.5).inst = i;
+  trKnob('ctrl' + i, x, 946, 'big', COLCOL[i], '#FFFFFF', INAME[i] + ' tone', 0.5).inst = i;
+  trKnob('rsend' + i, SMX[i], 1107.5, 'small', SYEL, '#111114', INAME[i] + ' reverb send', 0).inst = i;
+  trKnob('dsend' + i, SMX[i], 1237.5, 'small', SGRN, '#111114', INAME[i] + ' delay send', 0).inst = i;
+  trFader(i);
 });
-knob('value', SIDEX - 22, 268, 8, 'Value', 0, { endless:true, step:1 / 24, sides:14 });
-VRAW = true; knob('tempo', SIDEX, 402, 13.5, 'Tempo', 0, { endless:true, step:1 / 60, sides:16, h:10, ring:0x3BFF6A });
-knob('shuffle', SIDEX, 470, 6.5, 'Shuffle', 0.5); VRAW = false;
+trKnob('value', 2782, 595, 'big', KDARK, '#FFFFFF', 'Selectah', 0, { endless:true, step:1 / 24 });
+trKnob('shuffle', 2778, 941, 'big', KDARK, '#FFFFFF', 'Swing', 0.5);
+trKnob('tempo', 2783.2, 1434.2, 'tempo', '#3B3D47', '#FFFFFF', 'Tempo', 0, { endless:true, step:1 / 60 });
+/* the ring round TEMPO: lights to the beat */
+var TRRING = (function(){
+  var g = new THREE.Group(); g.position.set(lx(2783.2), 0, lz(1434.2)); TRG.add(g);
+  function ring(r0, r1, col, y){ var m = new THREE.Mesh(new THREE.RingGeometry(r0 * DPX, r1 * DPX, 12, 1, Math.PI / 12), new THREE.MeshBasicMaterial({ color:col })); m.rotation.x = -Math.PI / 2; m.position.y = y; m.userData.noShadow = true; g.add(m); return m; }
+  ring(118, 150.5, 0x000000, 0.0008); var red = ring(122.5, 147.5, 0xFF4F66, 0.0012);
+  return { mat:red.material };
+})();
 
 var RED = 0xFF2A3C, GRN = 0x3BFF6A, WHT = 0xFFFFFF, ORG = 0xFF8A2A;
-/* the left column: ten square 16 mm buttons in two groups (editing above, motion and inst below), with a gap between the groups */
-button('shift', 120, 262, 16, 16, 'SHIFT', 'Shift', WHT); button('clear', 170, 262, 16, 16, 'CLEAR', 'Clear', WHT);
-button('ptn', 120, 296, 16, 16, 'PTN\nSELECT', 'Pattern select', GRN); button('trrec', 170, 296, 16, 16, 'TR-REC', 'TR-REC · step recording', RED);
-button('last', 120, 330, 16, 16, 'LAST', 'Last step', GRN); button('sub', 170, 330, 16, 16, 'SUB', 'Sub steps', GRN);
-VRAW = true;      /* the lower group: INST PLAY / INST REC, then the two instant effects (MOTION ON / REC were here and did nothing) */
-button('instplay', 120, 392, 16, 16, 'INST\nPLAY', 'Inst play · play the pads', GRN); button('instrec', 170, 392, 16, 16, 'INST\nREC', 'Inst rec · record the pads', RED);
-button('fxrpt', 120, 434, 16, 16, 'BEAT\nREPEAT', 'Beat repeat · hold', ORG); button('fxwarp', 170, 434, 16, 16, 'ROLL', 'Roll · hold', 0xD24BFF); VRAW = false;      // the two instant effects: drums only, on while held
-'ABCDEFGH'.split('').forEach(function(L, k){ button('var' + k, [113, 135, 158, 181][k % 4], k < 4 ? 456 : 489, 8, 14, L, 'Variation ' + L, GRN).vi = k; });
-pad('start', 133, 557, 21, 15.5, 0xF4F4F4, 'Start / Stop');
-button('accstep', TRX(266), 212, 11, 8.5, 'STEP', 'Accent steps', ORG);
-button('fxon', TRX(467), 212, 11, 8.5, 'ON', 'Master FX on', ORG);
-button('fillon', TRX(548), 208, 11, 8.5, 'ON', 'Auto fill-in on', GRN); button('filledit', TRX(548), 224, 11, 7.5, 'EDIT', 'Edit the fill-in', WHT); button('filltrig', TRX(628), 212, 11, 9.5, 'MANUAL\nTRIG', 'Fill-in now', WHT);
-COLX.forEach(function(x, i){ button('sel' + i, x, 483, 12, 8.5, INST[i], INAME[i], GRN).inst = i; button('mt' + i, x, 501, 12, 7, 'MUTE', INAME[i] + ' mute', RED).mi = i; });      // the selected drum lights green; a mute is red when on
-button('copy', SIDEX + 22, 268, 12, 8.5, 'COPY', 'Copy', GRN);
-button('kit', SIDEX - 22, 305, 12, 8.5, 'KIT', 'Kit', GRN); button('inst', SIDEX + 22, 305, 12, 8.5, 'INST', 'Instrument tone', GRN);
-VRAW = true; pad('instpad', SIDEX, 524, 19, 20, 0xF4F4F4, 'Inst pad'); VRAW = false;
-PADX.forEach(function(x, i){ pad('pad' + i, x, 555, 15.5, 19, PADCOL[i], 'Pad ' + (i + 1)).pi = i; });
-var HALFBAR = [0, 1].map(function(h){                          // a thin bar over pads 1-8 or 9-16: the half the number keys switch in step record
-  var x0 = LX(PADX[h * 8] - 8), x1 = LX(PADX[h * 8 + 7] + 8), m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.003, Math.abs(LZ(523.4) - LZ(521.4))), new THREE.MeshBasicMaterial({ color:0x202226 }));
-  m.position.set((x0 + x1) / 2, 0.0016, LZ(522.4)); m.userData.noShadow = true; HOST.add(m); return m;
+trButton('skinprev', [1352.5, 82.9, 65.0, 55.4], 'Skin select, back', GRN); trButton('skinnext', [1648.0, 80.9, 65.0, 55.4], 'Skin select, next', GRN);
+trButton('accstep', [743.8, 315.6, 134, 68], 'Accent steps', GRN);
+trButton('fxon', [1670.5, 315.6, 134, 68], 'Filter on', GRN);
+trButton('fillon', [2023.2, 280.2, 134, 68], 'Auto fill-in on', GRN); trButton('filledit', [2023.2, 360.0, 134, 68], 'Edit the fill-in', GRN);
+trButton('filltrig', [2375.5, 279.2, 134, 147], 'Fill-in now', GRN);
+trButton('shift', [102.8, 533.9, 174.7, 174.7], 'Shift', GRN); trButton('clear', [299.5, 533.4, 174.7, 174.7], 'Clear', RED);
+trButton('ptn', [102.8, 728.6, 174.7, 174.7], 'Pattern select', GRN); trButton('trrec', [299.5, 728.1, 174.7, 174.7], 'DR-REC · step recording', RED);
+trButton('last', [102.8, 927.9, 174.7, 174.7], 'Last step', GRN); trButton('sub', [299.5, 927.4, 174.7, 174.7], 'Sub steps', GRN);
+trButton('fxrpt', [102.8, 1261.8, 174.7, 174.7], 'Roll B · hold', GRN); trButton('fxwarp', [299.5, 1261.3, 174.7, 174.7], 'Roll A · hold', GRN);
+var VARX = [107.4, 201.5, 297.5, 395.4];
+'ABCDEFGH'.split('').forEach(function(L, k){ trButton('var' + k, [VARX[k % 4], k < 4 ? 1610.5 : 1746.8, 76.8, 116.2], 'Pattern ' + L, GRN).vi = k; });
+var SELX = [568.0, 740.5, 928.5, 1110.5, 1296.5, 1478.5, 1660.5, 1840.5, 2018.5, 2202.5, 2386.5];
+SELX.forEach(function(x, i){ trButton('sel' + i, [x, 1737.9, 134, 68], INAME[i], GRN).inst = i; trButton('mt' + i, [x, 1815.9, 134, 68], INAME[i] + ' mute', RED).mi = i; });
+trButton('copy', [2600.5, 683.9, 109.2, 55.4], 'Copy', GRN); trButton('inst', [2730.4, 684.4, 109.2, 55.4], 'Instrument tone', GRN); trButton('kit', [2857.9, 683.9, 109.2, 55.4], 'Kit', GRN);
+trButton('instpad', [2693.5, 1693.5, 174.7, 174.7], 'Performance pad', GRN, 'pad');
+trButton('start', [141.8, 2028.6, 191.6, 140.8], 'Start / Stop', GRN, 'pad');
+var PADX = [446.1, 598.7, 751.3, 908.1, 1064.9, 1217.5, 1374.3, 1526.9, 1683.7, 1840.5, 1993.1, 2149.9, 2306.7, 2459.3, 2616.1, 2768.7];
+PADX.forEach(function(x, i){ trButton('pad' + i, [x, 2026.9, 119.3, 145.7], 'Step ' + (i + 1), 0x525257, 'pad', true).pi = i; });
+var HALFBAR = [[447.0, 0x2DFF2D], [1686.0, 0xFFFFFF]].map(function(b){             /* the bar under pads 1-8 or 9-16: green under the half the number keys write */
+  var m = new THREE.Mesh(new THREE.BoxGeometry(1199 * DPX, 0.0016, 8 * DPX), new THREE.MeshBasicMaterial({ color:b[1] }));
+  m.position.set(lx(b[0] + 599.5), 0.0008, lz(2197.1)); m.userData.noShadow = true; TRG.add(m); return m;
 });
 
-/* ---- the two screens ---- */
-var dispC = mk(512, 252), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
-var tempoC = mk(192, 96), tempoT = canvasTex(tempoC); tempoT.minFilter = THREE.LinearFilter; tempoT.magFilter = THREE.LinearFilter;
+/* ---- the two screens, set into the plate's own windows ---- */
+var dispC = mk(782, 480), dispT = canvasTex(dispC); dispT.minFilter = THREE.LinearFilter; dispT.magFilter = THREE.LinearFilter;
+var tempoC = mk(410, 220), tempoT = canvasTex(tempoC); tempoT.minFilter = THREE.LinearFilter; tempoT.magFilter = THREE.LinearFilter;
 (function(){
-  var bez = new THREE.Mesh(new THREE.BoxGeometry(0.106, 0.004, 0.054), blackMat); bez.position.set(lx(SIDEX), 0.002, lz(210)); TRG.add(bez);                                       // as wide as the side column allows and twice as tall as it was, so two or three lines of large type fit
-  var d = new THREE.Mesh(new THREE.PlaneGeometry(0.102, 0.05), new THREE.MeshBasicMaterial({ map:dispT })); d.rotation.x = -Math.PI / 2; d.position.set(lx(SIDEX), 0.0045, lz(210)); TRG.add(d);
-  var bez2 = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.004, 0.031), blackMat); bez2.position.set(lx(SIDEX), 0.002, lz(340)); TRG.add(bez2);
-  var t = new THREE.Mesh(new THREE.PlaneGeometry(0.054, 0.027), new THREE.MeshBasicMaterial({ map:tempoT })); t.rotation.x = -Math.PI / 2; t.position.set(lx(SIDEX), 0.0045, lz(340)); TRG.add(t);
-  [bez, d, bez2, t].forEach(function(m){ m.userData.ia = 'trbody'; m.userData.noShadow = true; solids.push(m); });
+  var d = new THREE.Mesh(new THREE.PlaneGeometry(391 * DPX, 240 * DPX), new THREE.MeshBasicMaterial({ map:dispT })); d.rotation.x = -Math.PI / 2; d.position.set(lx(2785.5), 0.0006, lz(339)); TRG.add(d);
+  var t = new THREE.Mesh(new THREE.PlaneGeometry(196 * DPX, 101 * DPX), new THREE.MeshBasicMaterial({ map:tempoT })); t.rotation.x = -Math.PI / 2; t.position.set(lx(2789.35), 0.0006, lz(1115.7)); TRG.add(t);
+  [d, t].forEach(function(m){ m.userData.ia = 'trbody'; m.userData.noShadow = true; solids.push(m); });
 })();
-// a glow thrown up from the lit pads onto whoever is standing over them
+/* a glow thrown up from the lit pads onto whoever is standing over them */
 var padGlow = new THREE.PointLight(0xFF6A4A, 0.0, 1.6, 2); padGlow.position.set(0, 0.25, 0.2); TRG.add(padGlow);

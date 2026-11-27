@@ -80,7 +80,7 @@ function ifxApply(){
 }
 function ifxSet(k, on, remote){
   if (remote){ IFX[k].them = on ? performance.now() + 3000 : 0; } else { IFX[k].me = on; if (MPON && MPNET.ifx) MPNET.ifx(k, on); IFX.sentAt = performance.now(); }
-  if (!remote) say(on ? (k === 'r' ? 'BEAT REPEAT  1/8' : 'ROLL  1/32') : (k === 'r' ? 'BEAT REPEAT  OFF' : 'ROLL  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
+  if (!remote) say(on ? (k === 'r' ? 'ROLL B  1/8' : 'ROLL A  1/32') : (k === 'r' ? 'ROLL B  OFF' : 'ROLL A  OFF'), on ? 60000 : 700); ifxApply(); dispDirty = true;
 }
 function ifxTick(now){                                   // while held, remind the room every second and a half; let go of anyone who stopped saying so
   if ((IFX.r.me || IFX.w.me) && now - IFX.sentAt > 1500){ IFX.sentAt = now; if (MPON && MPNET.ifx){ if (IFX.r.me) MPNET.ifx('r', true); if (IFX.w.me) MPNET.ifx('w', true); } }
@@ -293,7 +293,7 @@ function press(c){
       else { M.clearArm = !M.clearArm; if (M.clearArm) say('CLEAR  pick BD-RC  (SHIFT: all)', 2600); }
       return;
     case 'copy': M.copyArm = !M.copyArm; if (M.copyArm) say('COPY ' + 'ABCDEFGH'[M.editVar] + '  press A-H', 2600); return;
-    case 'fxon': M.fxOn = !M.fxOn; applyMix(); say('MASTER FX  ' + (M.fxOn ? 'ON  ' + valText(CT.fxctrl) : 'OFF')); saveSoon(); return;
+    case 'fxon': M.fxOn = !M.fxOn; applyMix(); say('FILTER  ' + (M.fxOn ? 'ON  ' + valText(CT.fxctrl) : 'OFF')); saveSoon(); return;
     case 'fillon': M.fillOn = !M.fillOn; say('AUTO FILL  ' + (M.fillOn ? fillEvery() + ' BARS' : 'OFF')); saveSoon(); return;
     case 'fxrpt': ifxSet('r', true); return;
     case 'fxwarp': ifxSet('w', true); return;
@@ -303,6 +303,7 @@ function press(c){
       M.fillEdit = true; M.mode = 'trrec'; M.menu = null; say('FILL EDIT  steps = this pattern\'s fill', 2600); return;
     case 'filltrig': if (M.playing){ SEQ.fill = true; SEQ.fillVar = null; say('FILL IN'); } else say('FILL IN  press START first'); return;
     case 'kit': M.menu = M.menu === 'kit' ? null : 'kit'; return;
+    case 'skinprev': case 'skinnext': say('SKIN  ' + trSkin(id === 'skinnext' ? 1 : -1), 1500); return;
     case 'inst': M.menu = M.menu === 'inst' ? null : 'inst'; return;
   }
 }
@@ -327,55 +328,57 @@ function turnCtl(c, n){                            // the two endless encoders, 
 
 /* ---- the screens ---- */
 var dispDirty = true, tempoDirty = true;
-function paintDisp(){
+function paintDisp(){                              /* drawn to the design's screen: 391 x 240 design px, at twice that */
   var g = dispC.getContext('2d'), now = performance.now(), p = pat(), L = 'ABCDEFGH';
-  g.fillStyle = '#02060A'; g.fillRect(0, 0, 512, 252);
-  g.fillStyle = '#BFEFFF'; g.shadowColor = '#5BC8FF'; g.shadowBlur = 6; g.textBaseline = 'middle'; g.textAlign = 'left';
-  g.font = 'bold 62px "Courier New", monospace';
-  var l1 = M.menu === 'kit' ? 'KIT ' + (p.kit + 1) : M.menu === 'inst' ? 'INST ' + INST[M.sel] : (M.playing ? '▶' : '■') + ' 1-' + ('0' + (M.pat + 1)).slice(-2) + ' ' + p.name;
-  g.fillText(l1, 16, 58, 480);
+  g.setTransform(2, 0, 0, 2, 0, 0); g.fillStyle = '#05080F'; g.fillRect(0, 0, 391, 240);
+  g.fillStyle = '#A8E3FF'; g.textBaseline = 'middle'; g.textAlign = 'left';
+  if (M.playing){ g.beginPath(); g.moveTo(16, 40); g.lineTo(36, 53.5); g.lineTo(16, 67); g.closePath(); g.fill(); } else g.fillRect(16, 40, 19, 27);
+  g.font = 'bold 50px "Courier New", monospace';
+  function sq(t, x, y, w){ g.save(); g.translate(x, y); g.scale(0.82, 1); g.fillText(t, 0, 0, w / 0.82); g.restore(); }      /* the design sets its Courier narrowed to 82 % */
+  var l1 = M.menu === 'kit' ? 'KIT ' + (p.kit + 1) : M.menu === 'inst' ? 'INST ' + INST[M.sel] : '1-' + ('0' + (M.pat + 1)).slice(-2) + ' ' + p.name;
+  sq(l1, 60, 56, 322);
   var l2;
   if (now < M.msgUntil) l2 = M.msg;
-  else if (M.menu === 'kit') l2 = KITS[p.kit].name + '  turn VALUE';
-  else if (M.menu === 'inst') l2 = 'TONE ' + TONES[p.tones[M.sel]] + '  turn VALUE';
+  else if (M.menu === 'kit') l2 = KITS[p.kit].name + '  turn SELECTAH';
+  else if (M.menu === 'inst') l2 = 'TONE ' + TONES[p.tones[M.sel]] + '  turn SELECTAH';
   else if (M.mode === 'trrec') l2 = 'TR-REC ' + (M.accSel ? 'ACCENT' : INST[M.sel]) + (M.fillEdit ? '  FILL IN' : '  VAR ' + L[M.editVar]) + (M.sub ? '  SUB' : '');
   else if (M.mode === 'ptn') l2 = 'PTN SELECT  pads 1-16';
   else if (M.mode === 'last') l2 = 'LAST STEP ' + editV().last + '  VAR ' + L[M.editVar];
   else if (M.mode === 'instplay') l2 = 'INST PLAY' + (M.roll ? '  ROLL ' + M.roll : '');
   else l2 = 'INST REC' + (M.playing ? '  ●' : '  (stopped)');
-  g.font = 'bold 46px "Courier New", monospace'; g.fillStyle = now < M.msgUntil ? '#FFE15A' : '#8FD8F2'; g.shadowColor = g.fillStyle;
-  if (g.measureText(l2).width <= 480) g.fillText(l2, 16, 168, 480);
-  else {                                                         // too long for one line of large type: break it at the gap nearest the middle
+  g.font = 'bold 42px "Courier New", monospace'; g.fillStyle = now < M.msgUntil ? '#FFE15A' : '#70B8E0';
+  if (g.measureText(l2).width * 0.82 <= 365) sq(l2, 13, 180, 365);
+  else {                                                         /* too long for one line: break it at the gap nearest the middle */
     var cut = -1, mid = l2.length / 2; for (var ci = 0; ci < l2.length; ci++) if (l2[ci] === ' ' && (cut < 0 || Math.abs(ci - mid) < Math.abs(cut - mid))) cut = ci;
-    var la = cut < 0 ? l2 : l2.slice(0, cut).trim(), lb = cut < 0 ? '' : l2.slice(cut + 1).trim(); g.font = 'bold 40px "Courier New", monospace'; g.fillText(la, 16, 144, 480); g.fillText(lb, 16, 204, 480);
+    var la = cut < 0 ? l2 : l2.slice(0, cut).trim(), lb = cut < 0 ? '' : l2.slice(cut + 1).trim(); g.font = 'bold 38px "Courier New", monospace'; sq(la, 13, 150, 365); sq(lb, 13, 200, 365);
   }
-  g.shadowBlur = 0; dispT.needsUpdate = true;
+  g.setTransform(1, 0, 0, 1, 0, 0); dispT.needsUpdate = true;
 }
 var SEG = { 0:'abcdef', 1:'bc', 2:'abged', 3:'abgcd', 4:'fgbc', 5:'afgcd', 6:'afgedc', 7:'abc', 8:'abcdefg', 9:'abfgcd' };
-function seg7(g, x, y, w, h, on){
-  var t = 7, m = 2;
-  var S = { a:[x + m, y, w - 2 * m, t], g:[x + m, y + h / 2 - t / 2, w - 2 * m, t], d:[x + m, y + h - t, w - 2 * m, t],
-    f:[x, y + m, t, h / 2 - 2 * m], b:[x + w - t, y + m, t, h / 2 - 2 * m], e:[x, y + h / 2 + m, t, h / 2 - 2 * m], c:[x + w - t, y + h / 2 + m, t, h / 2 - 2 * m] };
-  Object.keys(S).forEach(function(k){ g.fillStyle = on.indexOf(k) >= 0 ? '#FF3A2A' : '#2A0A0C'; var r = S[k]; g.fillRect(r[0], r[1], r[2], r[3]); });
+function seg7(g, x, y, on){                           /* one digit as the design draws it: 6.4 px bars, 23.2 across, 27 down */
+  var S = { a:[5.2, 0, 23.2, 6.4], g:[5.2, 29.6, 23.2, 6.4], d:[5.2, 59.2, 23.2, 6.4], f:[0, 3.8, 6.4, 27], b:[27, 3.8, 6.4, 27], e:[0, 34.7, 6.4, 27], c:[27, 34.7, 6.4, 27] };
+  Object.keys(S).forEach(function(k){ g.fillStyle = on.indexOf(k) >= 0 ? '#FF4A3D' : '#3B0F12'; var r = S[k]; g.fillRect(x + r[0], y + r[1], r[2], r[3]); });
 }
-function paintTempo(){
-  var g = tempoC.getContext('2d'); g.fillStyle = '#090304'; g.fillRect(0, 0, 192, 96);
+function paintTempo(){                                /* the window is 204.7 x 109.4 design px; the mesh shows its inner 196 x 101 */
+  var g = tempoC.getContext('2d'); g.setTransform(410 / 196, 0, 0, 220 / 101, -4.35 * 410 / 196, -4.2 * 220 / 101);
+  g.fillStyle = '#0A0A0D'; g.fillRect(0, 0, 205, 110);
   var s = M.bpm.toFixed(1).replace('.', ''); while (s.length < 4) s = ' ' + s;
-  for (var i = 0; i < 4; i++) seg7(g, 12 + i * 43, 16, 32, 64, s[i] === ' ' ? '' : SEG[s[i]]);
-  g.fillStyle = '#FF3A2A'; g.fillRect(12 + 3 * 43 - 8, 74, 6, 6);
-  tempoT.needsUpdate = true;
+  for (var i = 0; i < 4; i++) seg7(g, 19.3 + i * 43.8, 21.9, s[i] === ' ' ? '' : SEG[s[i]]);
+  g.fillStyle = '#FF4A3D'; g.fillRect(144.2, 81.1, 6.4, 6.4);
+  g.setTransform(1, 0, 0, 1, 0, 0); tempoT.needsUpdate = true;
 }
 
 /* ---- lights: called every frame ---- */
 var VARL = 'ABCDEFGH';
 function updateTR(now, dt){
-  for (var hb = 0; hb < 2; hb++){ HALFBAR[hb].visible = M.mode === 'trrec'; HALFBAR[hb].material.color.setHex((M.kbHalf ? 1 : 0) === hb ? 0x3BFF6A : 0x1E2A22); }
+  for (var hb = 0; hb < 2; hb++) HALFBAR[hb].material.color.setHex((M.kbHalf ? 1 : 0) === hb ? 0x2DFF2D : 0xFFFFFF);
   if (ac && M.playing){ var ct = ac.currentTime; while (SEQ.vis.length && SEQ.vis[0].t <= ct){ var e = SEQ.vis.shift(); SEQ.visStep = e.step; SEQ.visN = e.n; e.hits.forEach(function(i){ SEQ.flash[i] = 1; if (i === 0) SEQ.kick = 1; }); if (e.sv) SEQ.snare = e.sv; } }
   var blink = (now % 420) < 210, fast = (now % 200) < 100, v = editV(), pv = playV(), vs = M.playing ? SEQ.visStep : -1;
   for (var i = 0; i < 11; i++) SEQ.flash[i] = Math.max(0, SEQ.flash[i] - dt * 7);
   SEQ.kick = Math.max(0, SEQ.kick - dt * 5);
-  var lit = { shift:M.shift, clear:M.clearArm && blink, ptn:M.mode === 'ptn', trrec:M.mode === 'trrec', last:M.mode === 'last', sub:M.sub, instplay:M.mode === 'instplay', instrec:M.mode === 'instrec' && (!M.playing || blink),
-    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit, fxrpt:ifxOn('r') && fast, fxwarp:ifxOn('w') && fast };
+  if (vs !== SEQ.beatAt){ SEQ.beatAt = vs; if (vs >= 0 && vs % 4 === 0) SEQ.beat = 1; } SEQ.beat = M.playing ? Math.max(0, (SEQ.beat || 0) - dt * 3.2) : 0;      /* the beat, for the performance pad and the tempo ring */
+  var lit = { shift:M.shift, clear:M.clearArm, ptn:M.mode === 'ptn', trrec:M.mode === 'trrec', last:M.mode === 'last', sub:M.sub, instplay:M.mode === 'instplay', instrec:M.mode === 'instrec' && (!M.playing || blink),
+    accstep:M.accSel, fxon:M.fxOn, fillon:M.fillOn, filltrig:SEQ.fill && fast, kit:M.menu === 'kit', inst:M.menu === 'inst', copy:M.copyArm && blink, enter:!!M.menu && blink, filledit:!!M.fillEdit, fxrpt:ifxOn('r'), fxwarp:ifxOn('w') };
   ifxTick(now);
   CTLIST.forEach(function(c){
     if (c.dev || (c.kind !== 'btn' && c.kind !== 'pad')) return;
@@ -383,24 +386,25 @@ function updateTR(now, dt){
     if (c.vi != null){ var inChain = M.varSel.indexOf(c.vi) >= 0, cur = M.playing && M.varSel[M.varIx % M.varSel.length] === c.vi; L = cur ? (blink ? 1 : 0.25) : inChain ? 1 : c.vi === M.editVar ? 0.4 : 0; c.col.setHex(M.mode === 'trrec' && c.vi === M.editVar && M.playing ? RED : GRN); }
     else if (c.inst != null && c.kind === 'btn'){ var i = c.inst; L = M.muteMode ? (M.mutes[i] ? 0 : 0.7) : (i === M.sel ? 0.85 : 0); L = Math.max(L, SEQ.flash[i]); if (M.mutes[i] && !M.muteMode) L *= 0.3; }
     else if (c.mi != null) L = M.mutes[c.mi] ? 1 : 0;
-    else if (c.pi != null){
-      var k = c.pi; c.col.copy(c.base);
-      if (M.mode === 'trrec'){ var s = M.accSel ? v.acc[k] : v.st[M.sel][k];              // step record: white pads, beats 1 5 9 13 a touch brighter, written steps red
-        if (s){ c.col.setHex(RED); L = s === 2 ? 0.4 : (v.sb[M.sel][k] && !M.accSel && fast ? 0.7 : 1); } else { c.col.setHex(0xFFFFFF); L = k >= v.last ? 0 : k % 4 === 0 ? 0.3 : 0.14; } if (k >= v.last && s) L = 0.12; }
-      else if (M.mode === 'ptn'){ L = k === M.pat ? 1 : k === M.nextPat ? (fast ? 1 : 0.1) : PAT[k].name !== 'INIT PTN' ? 0.22 : 0.02; }
-      else if (M.mode === 'last'){ L = k < v.last ? (k === v.last - 1 ? 1 : 0.4) : 0; }
-      else { L = k < 11 ? 0.12 + SEQ.flash[k] : k === 11 ? (M.roll === 16 ? 1 : 0.1) : k === 12 ? (M.roll === 32 ? 1 : 0.1) : k === 13 ? (SEQ.fill ? 1 : 0.1) : k === 15 ? 0.1 : 0; }
-      if (k === vs && (M.mode === 'trrec' || M.mode === 'last') && k < pv.last){ c.col.setHex(0xFFFFFF); L = 1.1; }
+    else if (c.pi != null){                          /* step pads: grey, a lighter grey on each beat, red where a step is written; the playhead white */
+      var k = c.pi, hx = k % 4 === 0 ? 0x78757A : 0x525257; L = 0;
+      if (M.mode === 'trrec'){ var s = M.accSel ? v.acc[k] : v.st[M.sel][k];
+        if (k >= v.last) hx = s ? 0x5A2A31 : 0x2E2E31;
+        else if (s){ hx = s === 2 ? 0x8F3845 : (v.sb[M.sel][k] && !M.accSel && fast ? 0x8F3845 : 0xFF4F66); L = 0.6; } }
+      else if (M.mode === 'ptn'){ if (k === M.pat){ hx = GRN; L = 1; } else if (k === M.nextPat){ hx = fast ? GRN : 0x525257; L = 1; } else if (PAT[k].name !== 'INIT PTN') hx = 0x9A979C; }
+      else if (M.mode === 'last'){ if (k < v.last){ hx = GRN; L = k === v.last - 1 ? 1 : 0.3; } }
+      else if (k < 11 && SEQ.flash[k] > 0.05){ hx = 0xFF4F66; L = SEQ.flash[k]; }
+      if (k === vs && (M.mode === 'trrec' || M.mode === 'last') && k < pv.last){ hx = 0xF4F4F4; L = 1; }
+      c.col.setHex(hx);
     }
-    else if (c.id === 'start'){ L = M.playing ? (vs % 4 === 0 ? 1.1 : 0.55) : 0.1; c.col.setHex(M.playing ? GRN : 0xF4F4F4); }
-    else if (c.id === 'instpad'){ L = 0.12 + SEQ.flash[M.sel]; c.col.set(COLCOL[M.sel]); }
+    else if (c.id === 'start'){ L = 1; c.col.setHex(M.playing ? RED : GRN); }      /* red while playing, green while stopped */
+    else if (c.id === 'instpad') L = Math.max(SEQ.beat || 0, SEQ.flash[M.sel] * 0.6);
     else L = lit[c.id] ? 1 : 0;
     if (c.down) L = Math.max(L, 0.8);
     if (L !== c.lit || c.pi != null || c.vi != null || c.id === 'start' || c.id === 'instpad'){ c.lit = L; c.paintLit(); }
     var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
   });
-  for (var f = 0; f < 11; f++){ var fc = CT['lev' + f]; fc.glowM.color.set(COLCOL[f]).multiplyScalar(M.mutes[f] ? 0.15 : 0.45 + SEQ.flash[f] * 0.55); }
-  if (CT.tempo.ring) CT.tempo.ring.material.color.setHex(M.playing && vs % 4 === 0 ? 0xB8FFC8 : 0x1E9A44);
+  TRRING.mat.color.setHex(0xFF4F66).multiplyScalar(M.playing ? 0.45 + (SEQ.beat || 0) * 0.75 : 1);      /* the ring round TEMPO: dims while playing and flares on every beat */
   padGlow.intensity = 0.25 + SEQ.kick * 0.5; padGlow.color.setHex(M.playing ? 0xFF8A5A : 0xFFB48A);
   if (now > M.msgUntil && M.msg){ M.msg = ''; dispDirty = true; }
   if (dispDirty){ dispDirty = false; paintDisp(); }

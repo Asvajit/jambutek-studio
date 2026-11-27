@@ -246,7 +246,7 @@ function pointerDone(){
 }
 canvas.addEventListener('pointerup', pointerDone);
 canvas.addEventListener('pointercancel', function(){ endCtl(true); look = null; });
-window.addEventListener('blur', function(){ endCtl(true); keys = {}; Object.keys(MF.kb).forEach(mfKbUp); Object.keys(BS.kb).forEach(bsKbUp); });
+window.addEventListener('blur', function(){ MXSHIFT = false; endCtl(true); keys = {}; Object.keys(MF.kb).forEach(mfKbUp); Object.keys(BS.kb).forEach(bsKbUp); });
 canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 var wheelAcc = 0, wheelOn = null;
 canvas.addEventListener('wheel', function(e){
@@ -266,7 +266,7 @@ canvas.addEventListener('wheel', function(e){
 document.addEventListener('keydown', function(e){
   var tag = (e.target && e.target.tagName) || '', k = e.key.toLowerCase();
   if (e.key === 'Enter' && tag !== 'BUTTON'){ e.preventDefault(); if (!e.repeat){ unlock(); if (MP.guest) MP.guestSay(); else toggleSeq(); } return; }
-  if (e.key === 'Shift'){ if (!e.repeat){ M.shift = true; MF.shift = true; BS.fn = true; TP.chomp = true; dispDirty = true; MF.dirty = true; if (mode === 'walk') running = true; } return; }   // Shift holds the shift button on every machine
+  if (e.key === 'Shift'){ if (!e.repeat){ MXSHIFT = true; M.shift = true; MF.shift = true; BS.fn = true; TP.chomp = true; dispDirty = true; MF.dirty = true; if (mode === 'walk') running = true; } return; }   // Shift holds the shift button on every machine
   if (mode === 'tr' && LEAN.keys){                                       // the two keyboards: letters play notes, so only Esc steps back
     if (e.key === 'Escape'){ leaveTR(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -279,7 +279,7 @@ document.addEventListener('keydown', function(e){
     if (!(e.ctrlKey || e.metaKey) && ((k === 'e' && !e.repeat) || 'wasd'.indexOf(k) >= 0 && k.length === 1) || e.key === 'Escape'){ leaveTR(); return; }
     if (e.key === ' '){ e.preventDefault(); if (!e.repeat) toggleSeq(); return; }
     if (e.key === 'Tab' || k === 'q'){ e.preventDefault(); if (!e.repeat){ if (hasSeq(LEAN)) swapLean(); else if (k === 'q'){ LOOKUP.on = true; LOOKUP.yaw = 0; LOOKUP.pitch = 0; } } return; }
-    if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi); } return; }      // 1-10 mute, with Shift solo
+    if (LEAN === DEVS.mx){ var mi = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'].indexOf(e.code); if (mi < 0) mi = '1234567890'.indexOf(e.key); if (mi >= 0 && !e.repeat){ if (e.shiftKey) mxSolo(mi); else mxMute(mi);      /* Shift + number solos; Shift is held, so these group */ } return; }      // 1-10 mute, with Shift solo
     if (LEAN.key && LEAN.key.indexOf('sn') === 0){                     // a Snake: 1-8 switch gates 1-8, with Shift gates 9-16
       if ((e.ctrlKey || e.metaKey) && k === 'z'){ e.preventDefault(); if (!e.repeat) for (var ui = 0; ui < SNAKES.length; ui++) if (SNAKES[ui].key === LEAN.key) SNAKES[ui].undo(); return; }      // Ctrl+Z undoes, on this Snake only
       if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'c' || k === 'v')){ e.preventDefault(); if (!e.repeat) for (var ci = 0; ci < SNAKES.length; ci++) if (SNAKES[ci].key === LEAN.key){ if (k === 'c') SNAKES[ci].copyPage(); else SNAKES[ci].pastePage(); } return; }      // Ctrl+C / Ctrl+V: copy the page being shown, paste it on the other page or on another Snake
@@ -323,7 +323,7 @@ document.addEventListener('keydown', function(e){
 document.addEventListener('keyup', function(e){
   var k = e.key.toLowerCase(); keys[k] = false; mfKbUp(k); bsKbUp(k); amKbUp(k); tpKbUp(k); mbKbUp(k); shKbUp(k); mcKbUp(k); zkKbUp(k);
   if (k === 'c') crouch.on = false;
-  if (e.key === 'Shift'){ running = false; M.shift = false; MF.shift = false; BS.fn = false; TP.chomp = false; dispDirty = true; MF.dirty = true; }
+  if (e.key === 'Shift'){ MXSHIFT = false; running = false; M.shift = false; MF.shift = false; BS.fn = false; TP.chomp = false; dispDirty = true; MF.dirty = true; }
 });
 
 /* sound toggle */
@@ -364,7 +364,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.268 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.269 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
