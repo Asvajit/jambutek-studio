@@ -3,7 +3,7 @@
    The top plate is the designer's own artwork: a 3072 x 2284 px plate (401 x 298 mm, built at double size so every control is easy to
    aim at from standing height). Every control sits at the design's own pixel position (lx / lz take design pixels), and the plate
    texture is that design with the controls cut out of it (tools/make_trskins.py), so the 3D knobs, buttons and pads land exactly
-   where they are drawn. Five colourways ("skins"), switched with the SKIN SELECT arrows: navy is the default, black second. */
+   where they are drawn. Five colourways ("skins"), switched with the SKIN SELECT arrows: black is the default. */
 var PANEL = { w:401, h:297.97 }, SC = 0.002;                      /* metres per panel millimetre (2x life size) */
 var DPX = PANEL.w / 3072 * SC;                                     /* metres per design pixel */
 function lx(px){ return (px / 3072 - 0.5) * PANEL.w * SC; }
@@ -21,7 +21,7 @@ var CT = {}, CTLIST = [];                            /* every control, by id */
 
 /* ---- the printed plate, one image per skin (public/tr/<skin>.jpg). The choice is this player's own and is kept in this browser ---- */
 var panelC = mk(3072, 2284), panelTex = null;
-var TRSKINS = [['navy', 'NAVY'], ['black', 'BLACK'], ['blue', 'BLUE'], ['purple', 'PURPLE'], ['green', 'GREEN']];
+var TRSKINS = [['black', 'BLACK'], ['navy', 'NAVY'], ['blue', 'BLUE'], ['purple', 'PURPLE'], ['green', 'GREEN']];
 var TRSKIN = { i:0, img:{} };
 (function(){ try { var k = localStorage.getItem('jbtr-skin'); TRSKINS.forEach(function(s, i){ if (s[0] === k) TRSKIN.i = i; }); } catch (e) {} })();
 function trSkinImg(i){
