@@ -34,7 +34,7 @@ var RVLED = {};
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';
 [['size', 22, 42, 'Reverb size'], ['dec', 50, 42, 'Decay'], ['dens', 78, 42, 'Density'], ['hpf', 106, 42, 'Reverb HPF'], ['mod', 22, 80, 'Modulation'], ['tone', 50, 80, 'Tone'], ['level', 78, 80, 'Reverb level'], ['lpf', 106, 80, 'Reverb LPF']]
-  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:a[0] === 'hpf' || a[0] === 'lpf' ? 0x9CCBEA : 0xDAD8E8, tick:0x1A1440 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
+  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:0x0E0F11 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
 var rvB1 = button('rvmode', 141, 42, 22, 11, 'HALL', 'Reverb mode', 0xB48CFF); rvB1.rv = true; rvB1.rk = 'mode';
 var rvB2 = button('rvon', 141, 72, 22, 11, 'ON', 'Reverb on / off', 0x3BFF6A); rvB2.rv = true; rvB2.rk = 'on';
 ledAt(RVLED, 'pk', 141, 94, 0.003, 0xFF2A3C);

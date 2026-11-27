@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.264</span>
+    <span id="verFps">studio v0.265</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.264</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.265</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -8237,7 +8237,7 @@ var RVLED = {};
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';
 [['size', 22, 42, 'Reverb size'], ['dec', 50, 42, 'Decay'], ['dens', 78, 42, 'Density'], ['hpf', 106, 42, 'Reverb HPF'], ['mod', 22, 80, 'Modulation'], ['tone', 50, 80, 'Tone'], ['level', 78, 80, 'Reverb level'], ['lpf', 106, 80, 'Reverb LPF']]
-  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:a[0] === 'hpf' || a[0] === 'lpf' ? 0x9CCBEA : 0xDAD8E8, tick:0x1A1440 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
+  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:0x0E0F11 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
 var rvB1 = button('rvmode', 141, 42, 22, 11, 'HALL', 'Reverb mode', 0xB48CFF); rvB1.rv = true; rvB1.rk = 'mode';
 var rvB2 = button('rvon', 141, 72, 22, 11, 'ON', 'Reverb on / off', 0x3BFF6A); rvB2.rv = true; rvB2.rk = 'on';
 ledAt(RVLED, 'pk', 141, 94, 0.003, 0xFF2A3C);
@@ -10793,7 +10793,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.264 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.265 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
