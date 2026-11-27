@@ -14,8 +14,8 @@ var SCOPECH = { mf:1, bs:2, mb:3, am:4, tp:5, sh:6, mc:7, sc:8, zk:9 };
     var arm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.1), metalMat); arm.position.set(0, -0.04, -0.075); g.add(arm);          // the bracket back to the Snake's underside
     g.traverse(function(o){ o.userData.noShadow = true; });
     // the same picture on the Snake's own panel, above its INST slider, for whoever is playing it
-    var fr = new THREE.Mesh(new THREE.PlaneGeometry(64 * SC, 33 * SC), new THREE.MeshBasicMaterial({ color:0x08090C })), own = new THREE.Mesh(new THREE.PlaneGeometry(60 * SC, 29 * SC), scr.material);
-    [fr, own].forEach(function(m, k){ m.rotation.x = -Math.PI / 2; m.position.set((41 - SNW / 2) * SC, 0.0012 + k * 0.0008, (152.5 - SND / 2) * SC); m.userData.noShadow = true; S.G.add(m); });
+    var fr = new THREE.Mesh(new THREE.PlaneGeometry(65.75 * SC, 33.9 * SC), new THREE.MeshBasicMaterial({ color:0x08090C })), own = new THREE.Mesh(new THREE.PlaneGeometry(61.64 * SC, 29.79 * SC), scr.material);
+    [fr, own].forEach(function(m, k){ m.rotation.x = -Math.PI / 2; m.position.set((40.87 - SNW / 2) * SC, 0.0012 + k * 0.0008, (152.93 - SND / 2) * SC); m.userData.noShadow = true; S.G.add(m); });
     SCOPE.list.push({ S:S, c:c, g:c.getContext('2d'), t:t, gain:4, flat:false, ch:-2 });
   });
 })();

@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.273</span>
+    <span id="verFps">studio v0.274</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.273</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.274</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -354,11 +354,11 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <div class="keys desk" id="hudMf" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, strips and matrix dots &middot; <b>click</b> an encoder to push it<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> play / stop &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk cols" id="hudMx" hidden><div><i>Mixer controls</i><b>Scroll</b> or <b>drag</b> knobs and faders<br><b>Double-click</b> a knob or fader to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>10</b>: mute <span>(0 is 10)</span><br><b>Shift</b> + <b>1</b>&ndash;<b>10</b>: solo<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: look up <span>(hold)</span><br><b>E</b> / <b>Esc</b>: step away</div></div>
-  <div class="keys desk cols" id="hudSn" hidden><div><i>Sequencer controls</i><b>Scroll</b> or <b>drag</b> knobs<br><b>Double-click</b> knobs to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>8</b>: toggle gates 1&ndash;8<br><b>Shift</b> + <b>1</b>&ndash;<b>8</b>: toggle gates 9&ndash;16<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: swap to instrument<br><b>Ctrl</b> + <b>Z</b>: undo<br><b>Ctrl</b> + <b>C</b> / <b>V</b>: copy / paste the page<br><b>E</b> / <b>Esc</b>: step away</div></div>
+  <div class="keys desk cols" id="hudSn" hidden><div><i>Sequencer controls</i><b>Scroll</b> or <b>drag</b> knobs<br><b>Double-click</b> knobs to reset<br><b>Click</b> to toggle buttons<br><b>Hold</b> reset, clear and random</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>8</b>: toggle gates 1&ndash;8<br><b>Shift</b> + <b>1</b>&ndash;<b>8</b>: toggle gates 9&ndash;16<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: swap to instrument<br><b>Ctrl</b> + <b>Z</b>: undo<br><b>Ctrl</b> + <b>C</b> / <b>V</b>: copy / paste the pattern<br><b>E</b> / <b>Esc</b>: step away</div></div>
   <div class="keys desk" id="hudEc" hidden>The echo (top) is fed by <b>SEND A</b> on the mixer, the reverb (bottom) by <b>SEND B</b> &middot; reverb: low <b>DENSITY</b> gives repeats, high a wash; <b>MODE</b> picks the space &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>SCENES</b>: click an empty slot (or keys <b>1</b>&ndash;<b>4</b>) to store the whole room, a stored one to switch to it (on the next bar) &middot; <b>Shift + click</b> slots to chain them &middot; <b>COPY</b>, then two slots &middot; hold <b>CLEAR</b> to empty the one you are on<br><b>Enter</b> start / stop &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBz" hidden>Video synth B, after Fosfora: it moves to the music and the drum machine&rsquo;s kick and snare &middot; the ten buttons pick the effect &middot; pots <b>A B C</b> shape it, <b>HUE</b> picks its one colour, <b>SPEED</b> sets its pace &middot; the big button freezes it<br>Its own screen shows the picture even when it is not on the roof &middot; the box on the right picks what the roof shows: <b>A</b>, <b>B</b> or <b>OFF</b> &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudZk" hidden>Four voices through one filter &middot; play it with <b>A W S E D F T G Y H U J K</b>, <b>Z</b> / <b>X</b> octave, or the four pads &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> the switches: LP / BP, POLY / ACID, THIN / FAT<br><b>WAVE</b>, <b>OCTAVE</b> and <b>HOLD</b> are the three buttons on the left &middot; <b>Q</b> hops to its sequencer &middot; <b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
-  <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Snake on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Serpent on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMc" hidden>One key plays a whole chord &middot; keys <b>A W S E D F T G Y H U J</b> pick the root &middot; <b>Z X C V</b> dim / min / maj / sus &middot; <b>B N M ,</b> add 6 / m7 / M7 / 9 &middot; the big <b>CHORD VOICE</b> dial turns it through its inversions<br><b>Click</b> or hold and <b>slide</b> along the strip between the speaker grilles to strum the chord, or keys <b>1</b>&ndash;<b>=</b> &middot; <b>SOUND</b> next preset &middot; <b>PERFORM</b> hold &middot; <b>Q</b> hops to its sequencer &middot; <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudSc" hidden><b>Hold</b> the platter and <b>drag</b> up and down to scratch, or <b>scroll</b> on it &middot; the fader at the back cuts the sound &middot; corner buttons: sample &minus; / +, play, cue<br><b>X</b> cuts while held &middot; <b>C</b> cue &middot; <b>Space</b> starts the drums &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudPf" hidden><b>Scroll</b> or <b>drag</b> the four knobs to play the light &middot; <b>click</b> a knob to reset it &middot; the arrows step through the patterns &middot; LIGHT blanks it<br>The box on the right picks what the roof shows: <b>A</b> (this), <b>B</b> or <b>OFF</b> &middot; Flashing patterns: look away or turn it off if it bothers you &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
@@ -386,7 +386,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <ul><li>Menu music: <b>Feature Creep</b> by <b>Asvajit</b></li></ul>
   <h3>Instruments built after open designs</h3>
   <ul>
-    <li><b>Snake</b> sequencers - after MDD SnAkE by Maxime Dangles</li>
+    <li><b>Serpent</b> sequencers - after MDD SnAkE by Maxime Dangles</li>
     <li><b>Ambi</b> poly synth - after Ambika by Mutable Instruments (Emilie Gillet)</li>
     <li><b>Jambu Shru</b> - after Shruthi-1 by Mutable Instruments (Emilie Gillet)</li>
     <li><b>Jambu Blip</b> bass - after the MeeBlip triode</li>
@@ -4884,16 +4884,19 @@ function pad(id, px, py, w, h, col, name){
    Knob tops are painted from the design's measurements (a dark twelve-sided body, a grey ring, a coloured cap and the pointer) and turn
    with the knob. Button and pad faces are cut straight from the design (public/tr/faces.png); a face is white until it lights, then takes
    its colour: green for most, red for CLEAR, DR-REC and the mutes. */
-var TRFACES = new Image(), TRFACEFN = [];
-TRFACES.onload = function(){ TRFACES.ok = true; TRFACEFN.forEach(function(f){ f(); }); }; TRFACES.src = 'tr/faces.png';
+function trFaces(src){ var im = new Image(); im.fn = []; im.onload = function(){ im.ok = true; im.fn.forEach(function(f){ f(); }); }; im.src = src; return im; }
+var TRFACES = trFaces('tr/faces.png');
+/* KB: where these builders put things. The DRUMBU-8 sets it to its own plate; the SERPENT sequencers point it at theirs */
+var KB = { host:TRG, x:lx, z:lz, px:DPX, faces:TRFACES };
 var TRWHITE = new THREE.Color(1, 1, 1), TRTMP = new THREE.Color(), TRSIDE = new THREE.MeshLambertMaterial({ color:0x111214 });
 function trTex(c){ var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 function dodec(g, r, fill){ g.beginPath(); for (var k = 0; k < 12; k++){ var a = Math.PI / 12 + k * Math.PI / 6; g.lineTo(Math.sin(a) * r, -Math.cos(a) * r); } g.closePath(); g.fillStyle = fill; g.fill(); }
 /* style: 'big' (125 px across), 'small' (the send knobs), 'tempo'. The cylinder's cap maps the canvas turned a quarter, hence the rotate */
-var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 } };
-function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
-  opt = opt || {}; var S = TRK[style], R = S.r * DPX, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : 6.5) * SC;
-  var cv = mk(256, 256), g = cv.getContext('2d'), s = 128 / S.r;
+var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 } };
+var TRKTEX = {};                                    /* knob tops are shared by look: a SERPENT lane change just swaps which one its knobs wear */
+function trKnobTex(style, col, ptr){
+  var key = style + col + ptr; if (TRKTEX[key]) return TRKTEX[key];
+  var S = TRK[style], cv = mk(256, 256), g = cv.getContext('2d'), s = 128 / S.r;
   g.translate(128, 128); g.rotate(-Math.PI / 2); g.scale(s, s);
   if (style === 'small'){
     g.fillStyle = '#131419'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 29, col);
@@ -4902,11 +4905,18 @@ function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
   } else if (style === 'tempo'){
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 96.5, '#2B2E36'); dodec(g, 90, '#3B3D47');
     g.fillStyle = ptr; g.fillRect(-10, -99, 20, 85);
+  } else if (style === 'serp' || style === 'serpS'){
+    var q = S.r / 64.7; g.fillStyle = '#0D0D0F'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49.8 * q, '#2B2E36'); dodec(g, 44.8 * q, col);
+    g.fillStyle = ptr; g.fillRect(-5.3 * q, -40 * q, 10.6 * q, 34 * q);
   } else {
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49, '#2B2E36'); dodec(g, 45.5, col);
     g.fillStyle = ptr; g.fillRect(-5.3, -51, 10.6, 47.2);
   }
-  var tex = trTex(cv), gr = new THREE.Group(); gr.position.set(lx(cx), 0, lz(cy)); TRG.add(gr);
+  return (TRKTEX[key] = trTex(cv));
+}
+function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
+  opt = opt || {}; var S = TRK[style], R = S.r * KB.px, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : style === 'serpS' ? 4.5 : 6.5) * SC;
+  var tex = trKnobTex(style, col, ptr), gr = new THREE.Group(); gr.position.set(KB.x(cx), 0, KB.z(cy)); KB.host.add(gr);
   var topM = new THREE.MeshPhongMaterial({ color:0x4D4D4D, map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.62, shininess:10, specular:0x0A0A0A });      /* less lamp, more glow: the caps keep the design's colours instead of washing out under the room lights */
   var sideM = new THREE.MeshPhongMaterial({ color:style === 'small' ? 0x131419 : 0x17171C, shininess:12, specular:0x0A0A0A, flatShading:true });
   var rot = new THREE.Group(); gr.add(rot);
@@ -4914,27 +4924,29 @@ function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
   var hit = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.25, R * 1.25, H + 0.012, 8), HITMAT); hit.position.y = H / 2 + 0.004; gr.add(hit);
   var c = { id:id, kind:'knob', name:name, v:def, def:def, step:opt.step || 0.02, endless:!!opt.endless, g:gr, rot:rot, mat:topM, ring:null,
     show:function(){ rot.rotation.y = c.endless ? -c.v * Math.PI * 2 : -(c.v - 0.5) * 5.2; },
-    hover:function(on){ topM.emissiveIntensity = on ? 0.85 : 0.62; sideM.emissive.setHex(on ? 0x2E6A44 : 0x000000); } };
+    hover:function(on){ topM.emissiveIntensity = on ? 0.85 : 0.62; sideM.emissive.setHex(on ? 0x2E6A44 : 0x000000); },
+    look:function(c2, p2){ var t2 = trKnobTex(style, c2, p2 || ptr); if (topM.map !== t2){ topM.map = topM.emissiveMap = t2; topM.needsUpdate = true; } } };
   c.show();
   return reg(c, [body, hit]);
 }
 /* a button or pad: r = [x, y, w, h] of its square in the design (the 5 px black edge is drawn on it, so the face takes it in) */
 function trFace(r, plain){
+  var F = KB.faces;
   var w = r[2] + 5, h = r[3] + 5, k = Math.min(3, 360 / Math.max(w, h)), cv = mk(Math.round(w * k), Math.round(h * k)), t = trTex(cv);
   function paint(){
     var g = cv.getContext('2d');
-    if (TRFACES.ok && !plain) g.drawImage(TRFACES, r[0] - 2.5, r[1] - 2.5, w, h, 0, 0, cv.width, cv.height);
+    if (F.ok && !plain) g.drawImage(F, r[0] - 2.5, r[1] - 2.5, w, h, 0, 0, cv.width, cv.height);
     else { g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = '#fff'; g.fillRect(5 * k, 5 * k, cv.width - 10 * k, cv.height - 10 * k); }
     t.needsUpdate = true;
   }
-  paint(); if (!plain) TRFACEFN.push(paint);
+  paint(); if (!plain) F.fn.push(paint);
   return t;
 }
 function trButton(id, r, name, lit, kind, plain){
-  var W2 = (r[2] + 5) * DPX, D2 = (r[3] + 5) * DPX, t = trFace(r, plain), y0 = kind === 'pad' ? 0.004 : 0.003;
+  var W2 = (r[2] + 5) * KB.px, D2 = (r[3] + 5) * KB.px, t = trFace(r, plain), y0 = kind === 'pad' ? 0.004 : 0.003;
   var topM = new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.5, shininess:10, specular:0x080808 });
-  var m = new THREE.Mesh(new THREE.BoxGeometry(W2, y0 * 2, D2), [TRSIDE, TRSIDE, topM, TRSIDE, TRSIDE, TRSIDE]); m.position.set(lx(r[0] + r[2] / 2), y0, lz(r[1] + r[3] / 2)); TRG.add(m);
-  var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); TRG.add(hit);
+  var m = new THREE.Mesh(new THREE.BoxGeometry(W2, y0 * 2, D2), [TRSIDE, TRSIDE, topM, TRSIDE, TRSIDE, TRSIDE]); m.position.set(KB.x(r[0] + r[2] / 2), y0, KB.z(r[1] + r[3] / 2)); KB.host.add(m);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); KB.host.add(hit);
   var c = { id:id, kind:kind || 'btn', name:name, m:m, mat:topM, col:new THREE.Color(lit), base:new THREE.Color(lit), lit:0, hov:false, down:0, y0:y0, flash:0, tr:true };
   /* white until lit; lit fades the face to its colour. A step pad has no white state: its colour is set each frame */
   c.paintLit = function(){
@@ -8407,29 +8419,62 @@ var SNW = 300, SND = 190, SNH = 1.38, SNTILT = 0.95, SNZ = -1.22;
 function sx(u){ return (u - SNW / 2) * SC; }
 function sz(u){ return (u - SND / 2) * SC; }
 var SNHOLD = 1100;                 // ms to hold CUSTOM to forget what it learned
-var SNLN = ['NOTES', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0x90F0A8, 0xFFE15A, 0xFF8A2A, 0x4AA8FF, 0xFF6AB0], SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc', 'zk', 'sc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord', 'Kit', 'Scratch'];
+var SNLN = ['PITCH', 'GATES', 'VELOCITY', 'PROBABILITY', 'CUSTOM'], SNCOL = [0xFB1874, 0x3BFF6A, 0xFF6E3D, 0x3270E7, 0x54398E],      /* the SERPENT's lane colours: everything pink on the pitch lane wears the lane's colour on the others */ SNDEV = ['', 'mf', 'bs', 'mb', 'am', 'tp', 'sh', 'mc', 'zk', 'sc'], SNDIR = ['forwards', 'backwards', 'fore/back', 'back/fore', 'random'], SNSPD = [[0.5, '1/32'], [1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2']], SNOUT = ['Off', 'Synth', 'Bass', 'Blip', 'Ambi', 'Tape', 'Shru', 'Chord', 'Kit', 'Scratch'];
 var SNGX = [178, 210, 242, 274], SNGY = [36, 78, 120, 162];
 function snDefaults(){
   var notes = [0, 2, 3, 5, 7, 8, 12, 12, 15, 15, 17, 19, 20, 22, 24, 27].map(function(n){ return n + 12; });
   function lane(vals, sp){ return { vals:vals, dir:0, speed:sp, len:16, shift:0, shape:0 }; }
   return { root:0, scale:2, out:0, swing:0, page:0, lanes:[lane(notes, 1), lane([1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0], 1), lane([100, 64, 64, 90, 64, 64, 100, 64, 80, 64, 100, 64, 64, 90, 64, 64], 1), lane([127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127], 1), lane([64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64], 1)] };
 }
-var snC = mk(1200, 760), snTex = null;
-function paintSN(){
-  var g = snC.getContext('2d'); g.setTransform(4, 0, 0, 4, 0, 0);
-  g.fillStyle = '#17191E'; g.fillRect(0, 0, SNW, SND);
-  for (var i = 0; i < 3000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * SNW, Math.random() * SND, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E6E2'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  function box(x0, y0, x1, y1){ g.fillStyle = '#22252B'; g.fillRect(x0, y0, x1 - x0, y1 - y0); }
-  box(4, 14, 78, 186); box(82, 14, 154, 186); box(158, 14, 296, 186);
-  T('SNAKE', 5, 7, 7.5, '#90F0A8', true, 'left'); T('after MDD SnAkE by Maxime Dangles', 296, 7.5, 4, '#9A9CA0', false, 'right');
-  T('FUNDAMENTAL', 22, 114, 3.6); T('SCALE', 59, 114, 3.6); T('INST', 9, 177, 3.9, '#E6E6E2', false, 'left'); T('MIX', 87, 7.2, 3, '#B8B8B4', false, 'left'); ['OFF', 'SYN', 'BAS', 'BLP', 'AMB', 'TAP', 'SHR', 'CHD', 'KIT', 'SCR'].forEach(function(s, k){ T(s, 24.5 + k * 5.33, 185.5, 2.1, '#B8B8B4'); });
-  T('STEPS', 100, 113, 3.6); T('SHIFT', 136, 113, 3.6); T('SWING', 100, 149, 3.6); T('SNAKE SHAPE', 136, 149, 3.6);
-  SNGY.forEach(function(y, r){ SNGX.forEach(function(x, c){ g.strokeStyle = 'rgba(216,216,216,.35)'; g.lineWidth = 0.4; g.beginPath(); g.arc(x, y - 5, 9.4, Math.PI * 0.75, Math.PI * 0.25); g.stroke(); T(String(r * 4 + c + 1), x - 13.2, y + 12, 3.2, '#7C7E84'); }); });
-  g.setTransform(1, 0, 0, 1, 0, 0); if (snTex) snTex.needsUpdate = true;
-}
+/* ---- the SERPENT plate: the designer's artwork (tools/make_serpent.py cuts the controls out of it). 2400 x 1520 design px = 300 x 190 mm ---- */
+var SPFACES = trFaces('tr/serpent-faces.png');
+var snC = mk(2400, 1520), snTex = null, snPlate = new Image();
+function paintSN(){ var g = snC.getContext('2d'); if (snPlate.ok) g.drawImage(snPlate, 0, 0); else { g.fillStyle = '#282526'; g.fillRect(0, 0, 2400, 1520); } if (snTex) snTex.needsUpdate = true; }
+snPlate.onload = function(){ snPlate.ok = true; paintSN(); }; snPlate.src = 'tr/serpent.jpg';
 paintSN(); snTex = smoothTex(snC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintSN).catch(function(){});
+function spHex(n){ return '#' + ('00000' + (n >>> 0).toString(16)).slice(-6); }
+function spOutCol(o){ var i = typeof MXN !== 'undefined' ? MXN.indexOf(String(SNOUT[o]).toUpperCase()) : -1; return i >= 0 ? MXCOL[i] : '#FF8A29'; }      /* a lit INST square wears its instrument's mixer colour */
+/* faces whose colour or words change. The design is cut up once: each face's ink (its words or icon) becomes a white mask, tinted
+   on demand, so a button can be grey or the lane's colour, white or lit, and show a progress bar under its words while it is held */
+var SPMASK = {};
+function spMask(r, bgref, ink){
+  var key = r.join() + ink; if (SPMASK[key]) return SPMASK[key]; if (!SPFACES.ok) return null;
+  var w = Math.round(r[2] - 10), h = Math.round(r[3] - 10), c = mk(w, h), g = c.getContext('2d'); g.drawImage(SPFACES, r[0] + 5, r[1] + 5, w, h, 0, 0, w, h);
+  var d; try { d = g.getImageData(0, 0, w, h); } catch (e) { return (SPMASK[key] = c); }      /* a page opened from disk cannot read its own pictures: show the face as drawn */
+  var a = d.data, q = new THREE.Color(ink), br = a[(2 * w + 2) * 4], bg = a[(2 * w + 2) * 4 + 1], bb = a[(2 * w + 2) * 4 + 2];      /* the face's own colour, read just inside its corner: a button drawn lit in the design still gives a clean mask */
+  var ref = Math.abs(q.r * 255 - br) + Math.abs(q.g * 255 - bg) + Math.abs(q.b * 255 - bb) || 1;
+  for (var i = 0; i < a.length; i += 4){ var t = clamp((Math.abs(a[i] - br) + Math.abs(a[i + 1] - bg) + Math.abs(a[i + 2] - bb)) / ref, 0, 1); a[i] = q.r * 255; a[i + 1] = q.g * 255; a[i + 2] = q.b * 255; a[i + 3] = t * 255; }
+  g.putImageData(d, 0, 0); return (SPMASK[key] = c);
+}
+/* o: bgref (the face's colour in the design), ink, bg (its colour now); or text: [lines] in Pixel Game, with an optional black outline */
+function spButton(id, r, name, o){
+  var W2 = (r[2] + 5) * KB.px, D2 = (r[3] + 5) * KB.px, y0 = 0.003, k = Math.min(1.6, 240 / Math.max(r[2], r[3])), cv = mk(Math.round((r[2] + 5) * k), Math.round((r[3] + 5) * k)), t = trTex(cv);
+  var topM = new THREE.MeshPhongMaterial({ color:0x4D4D4D, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.62, shininess:10, specular:0x080808 });
+  var m = new THREE.Mesh(new THREE.BoxGeometry(W2, y0 * 2, D2), [TRSIDE, TRSIDE, topM, TRSIDE, TRSIDE, TRSIDE]); m.position.set(KB.x(r[0] + r[2] / 2), y0, KB.z(r[1] + r[3] / 2)); KB.host.add(m);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); KB.host.add(hit);
+  var st = { bg:o.bg || o.bgref || '#FFFFFF', prog:0, text:o.text || null, key:'' };
+  function paint(){
+    var key = st.bg + '|' + st.prog + '|' + (st.text ? st.text.join('/') : '') + '|' + SPFACES.ok; if (key === st.key) return; st.key = key;
+    var g = cv.getContext('2d'), W = cv.width, H = cv.height, e = 5 * k;
+    g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = st.bg; g.fillRect(e, e, W - 2 * e, H - 2 * e);
+    if (st.prog > 0){ g.fillStyle = '#E0193C'; g.fillRect(e, e, (W - 2 * e) * Math.min(1, st.prog), H - 2 * e); }
+    if (st.text){
+      var n = st.text.length, fs = (o.size || 54) * k * (n > 1 ? 0.78 : 1); g.font = Math.round(fs) + 'px "Pixel Game", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      st.text.forEach(function(s, i){ var y = H / 2 + (i - (n - 1) / 2) * fs * 0.95 + fs * 0.06;
+        if (o.stroke){ g.lineWidth = fs * 0.14; g.strokeStyle = o.stroke; g.lineJoin = 'round'; g.strokeText(s, W / 2, y, W - 4 * e); }
+        g.fillStyle = o.ink || '#000'; g.fillText(s, W / 2, y, W - 4 * e); });
+    } else if (o.bgref){ var mk2 = spMask(r, o.bgref, o.ink || '#000000'); if (mk2) g.drawImage(mk2, e, e, W - 2 * e, H - 2 * e); }
+    t.needsUpdate = true;
+  }
+  paint(); SPFACES.fn.push(function(){ st.key = ''; paint(); });
+  if (document.fonts && document.fonts.load && st.text) document.fonts.load('40px "Pixel Game"').then(function(){ st.key = ''; paint(); }).catch(function(){});
+  var c = { id:id, kind:'btn', name:name, m:m, mat:topM, lit:0, hov:false, down:0, y0:y0, sp:true,
+    setBg:function(hex){ if (hex !== st.bg){ st.bg = hex; paint(); } },
+    repaintFace:function(text, prog){ if (typeof text === 'string') st.text = text.split('\n'); if (prog != null) st.prog = prog; paint(); },
+    paintLit:function(){ topM.emissiveIntensity = 0.62 + (c.hov ? 0.15 : 0) + (c.down ? 0.1 : 0); } };
+  c.hover = function(on){ c.hov = on; c.paintLit(); };
+  return reg(c, [m, hit]);
+}
 function snNoteName(n){ return NOTEN[n % 12] + (Math.floor(n / 12) - 1); }
 function snCellAt(L, k){
   var n = L.len, i = L.dir === 0 ? k % n : L.dir === 1 ? n - 1 - (k % n) : L.dir === 4 ? (Math.random() * n) | 0 : (function(){ var per = Math.max(1, 2 * n - 2), q = k % per, f = q < n ? q : per - q; return L.dir === 2 ? f : n - 1 - f; })();
@@ -8454,45 +8499,64 @@ function snRestore(){ try { var s = JSON.parse(store(('jambutek-studio-snake-v3-
   if (s.lanes.length < 5) s.lanes.push(snDefaults().lanes[4]); SN.cc = s.cc && typeof s.cc === 'object' && typeof s.cc.dev === 'string' ? s.cc : null;
   SN.pgs[0] = s.lanes; SN.pgs[1] = snLanesOk(s.b) ? s.b : snDefaults().lanes; SN.act = Array.isArray(s.act) && s.act.length === 2 ? [s.act[0] ? 1 : 0, s.act[1] ? 1 : 0] : [1, 0];      // a save from before there was a page B: A alone, exactly as it played
   SN.root = clamp(s.root | 0, 0, 11); SN.scale = clamp(s.scale | 0, 0, SCALES.length - 1); SN.out = clamp(s.out | 0, 0, 9); if (SN.page === 1) SN.page = 0; SN.swing = clamp(+s.swing || 0, 0, 1); } catch (e) {} } snRestore();
-var SNLED = [], snDispC = mk(272, 112), snDispT = canvasTex(snDispC); snDispT.minFilter = THREE.LinearFilter; snDispT.magFilter = THREE.LinearFilter;
+var SNLED = [], snDispC = mk(1028, 424), snDispT = canvasTex(snDispC); snDispT.minFilter = THREE.LinearFilter; snDispT.magFilter = THREE.LinearFilter;
+var SPS = SC / 8, spx = function(px){ return sx(px / 8); }, spz = function(py){ return sz(py / 8); };          /* design px to the Snake's own frame */
 (function(){
   var W2 = SNW * SC, D2 = SND * SC, TH = 0.04;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:snTex, emissive:0xffffff, emissiveMap:snTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; SNG.add(top);
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1B1D22, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SNG.add(body);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x282526, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -TH / 2 - 0.0015; SNG.add(body);
   var tray = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.02, D2 + 0.05), tableMat); tray.position.y = -TH - 0.012; SNG.add(tray);
   var lip = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.08, 0.04, 0.02), tableMat); lip.position.set(0, -TH + 0.008, D2 / 2 + 0.03); SNG.add(lip);
   devBody(SNY, DK);
-  var geo = new THREE.CylinderGeometry(0.0034, 0.0034, 0.0025, 8);
-  SNGY.forEach(function(y){ SNGX.forEach(function(x){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(sx(x), 0.0015, sz(y - 17.5)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });
-  var d = new THREE.Mesh(new THREE.PlaneGeometry(68 * SC, 28 * SC), new THREE.MeshBasicMaterial({ map:snDispT })); d.rotation.x = -Math.PI / 2; d.position.set(sx(118), 0.002, sz(31)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; SNG.add(d); solids.push(d);
+  /* the 16 step lights: white, lit in the lane's colour as its snake passes */
+  var geo = new THREE.CylinderGeometry(16 * SPS, 16 * SPS, 0.0022, 16), rim = new THREE.CylinderGeometry(19 * SPS, 19 * SPS, 0.0016, 16), rimM = new THREE.MeshBasicMaterial({ color:0x000000 });
+  [154.6, 487.8, 825.7, 1160.1].forEach(function(y){ [1426, 1682.4, 1938.7, 2193.4].forEach(function(x){
+    var r0 = new THREE.Mesh(rim, rimM); r0.position.set(spx(x + 16), 0.0008, spz(y + 16)); r0.userData.noShadow = true; SNG.add(r0);
+    var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0xF2F2F2 })); m.position.set(spx(x + 16), 0.0013, spz(y + 16)); m.userData.noShadow = true; SNG.add(m); SNLED.push(m.material); }); });
+  var d = new THREE.Mesh(new THREE.PlaneGeometry(514 * SPS, 211.6 * SPS), new THREE.MeshBasicMaterial({ map:snDispT })); d.rotation.x = -Math.PI / 2; d.position.set(spx(941), 0.0006, spz(250.2)); d.userData.noShadow = true; d.userData.ia = 'trbody'; d.userData.dev = DK; SNG.add(d); solids.push(d);
 })();
-HOST = SNG; LX = sx; LZ = sz; DEV = DK; FACE = { bg:'#30343B', fg:'#F0F0EC' };
-SNLN.forEach(function(n, i){ if (i === 1) return; button((PX + 'pg') + i, 41, 24 + [0, 0, 1, 2, 3][i] * 17.5, 66, 14, n, n.charAt(0) + n.slice(1).toLowerCase() + ' lane', SNCOL[i]).pg = i; });
-knob((PX + 'root'), 22, 99, 6.5, 'Fundamental', 0, { h:8 }).detents = 11; knob((PX + 'scale'), 59, 99, 7, 'Scale', 0, { h:8, endless:true, sides:14 });
-button((PX + 'resetall'), 22, 126, 30, 12, 'CLEAR\nALL', 'Clear this whole sequencer, A and B · press and hold', 0xFFFFFF); button((PX + 'randall'), 59, 126, 30, 12, 'RANDOM\nALL', 'Randomise all lanes', 0xFFFFFF);
-slide((PX + 'out'), 48.5, 177, 10, false, 'Inst', 0.096);
-button((PX + 'pa'), 118, 7, 13, 8.5, 'A', 'Page A', 0xFFFFFF).ab = 0; button((PX + 'pta'), 134, 7, 16, 8.5, 'ON', 'Page A on / off', 0x3BFF6A).tg = 0;
-button((PX + 'pb'), 154, 7, 13, 8.5, 'B', 'Page B', 0xFFFFFF).ab = 1; button((PX + 'ptb'), 170, 7, 16, 8.5, 'OFF', 'Page B on / off', 0x3BFF6A).tg = 1;
-button((PX + 'pcopy'), 195, 7, 22, 8.5, 'COPY', 'Copy a page', 0xFFE15A);
-/* SOLO is for the player's own ears: while it is lit and you are leaned in here (or at its instrument) you hear only that instrument.
-   MIX brings the rest back in underneath. Nothing about the shared mix changes, and neither control is saved or sent. */
-SN.mon = false; SN.monMix = 0;
-button((PX + 'msolo'), 54, 7, 20, 8.5, 'SOLO', 'Solo this instrument in your own ears', 0x3A8BFF); knob((PX + 'mmix'), 80, 7, 3.4, 'Solo mix', 0, { h:5 });
-button((PX + 'dir'), 118, 58, 64, 13, 'DIRECTION', 'Direction', 0xFFFFFF); button((PX + 'speed'), 118, 76, 64, 13, 'SPEED', 'Speed', 0xFFFFFF);
-knob((PX + 'steps'), 100, 98, 6.5, 'Steps', 1, { h:8 }).detents = 15; knob((PX + 'shift'), 136, 98, 6.5, 'Shift', 0, { h:8 }).detents = 15;
-knob((PX + 'swing'), 100, 134, 6.5, 'Swing', 0, { h:8 }); knob((PX + 'shape'), 136, 134, 7, 'Snake shape', 0, { h:8, endless:true, sides:14 });
-button((PX + 'rand'), 100, 170, 30, 12, 'RANDOM', 'Randomise this lane', 0xFFFFFF); button((PX + 'reset'), 136, 170, 30, 12, 'CLEAR', 'Clear this lane on this page · press and hold', 0xFFFFFF);
-for (var sni = 0; sni < 16; sni++){ (function(i){ var c = knob((PX + 'c') + i, SNGX[i % 4], SNGY[(i / 4) | 0] - 5, 6.4, 'Cell ' + (i + 1), 0, { h:9, sides:12 }); c.cell = i; })(sni); }
-/* gates page: the 16 cell knobs give way to 16 on/off step buttons */
-for (var sgi = 0; sgi < 16; sgi++){ (function(i){ var n0 = HOST.children.length, c = pad((PX + 'g') + i, SNGX[i % 4], SNGY[(i / 4) | 0] + 12, 21, 8.5, SNCOL[1], 'Step ' + (i + 1)); c.gate = i; c.hitM = HOST.children[n0 + 1]; })(sgi); }
-/* each step button wears its cell's value for the lane being shown (the note, the velocity, the chance), so nothing has to be hovered to read a pattern */
+HOST = SNG; LX = sx; LZ = sz; DEV = DK;
+var KB0 = KB; KB = { host:SNG, x:spx, z:spz, px:SPS, faces:SPFACES };
+var SPGREY = '#4E4F50', SPPINK = '#FB1874';
+/* the four lanes (the gates lane has no button now: its 16 on/off steps are the white buttons under the knobs) */
+[[0, 146.3], [2, 284.3], [3, 426.3]].forEach(function(a){ var b = trButton((PX + 'pg') + a[0], [66.5, a[1], 525, 107], SNLN[a[0]].charAt(0) + SNLN[a[0]].slice(1).toLowerCase() + ' lane', 0xFFFFFF); b.pg = a[0]; b.lane = true; });
+spButton((PX + 'pg') + 4, [66.5, 566.3, 525, 107], 'Custom lane', { bg:spHex(SNCOL[4]), text:['CUSTOM'], ink:'#FFFFFF', stroke:'#000000', size:88 }).pg = 4;
+trKnob((PX + 'root'), 120.7, 794, 'serp', '#FFFFFF', '#000000', 'Root', 0).detents = 11;
+trKnob((PX + 'scale'), 321.2, 794, 'serp', '#FFFFFF', '#000000', 'Scale', 0, { endless:true });
+trKnob((PX + 'swing'), 525.3, 794, 'serp', '#FFFFFF', '#000000', 'Swing', 0);
+spButton((PX + 'resetall'), [66.5, 960.5, 225, 95], 'Reset all lanes, A and B · hold', { bgref:'#FFFFFF', ink:'#000000' });
+spButton((PX + 'randall'), [362.5, 960.5, 225, 95], 'Random all lanes · hold', { bgref:'#FFFFFF', ink:'#000000' });
+/* INST: ten squares, the one lit is what this sequencer plays; the arrows step through them */
+[181.0, 223.0, 263.6, 304.0, 343.0, 384.0, 423.0, 463.0, 505.3, 547.0].forEach(function(x, k){ spButton((PX + 'o') + k, [x, 1385.4, 30, 30], 'Inst: ' + SNOUT[k], { bg:'#000000' }).oi = k; });
+trButton((PX + 'oprev'), [75.5, 1425.9, 32.2, 27.4], 'Inst: back', GRN).ostep = -1; trButton((PX + 'onext'), [114.1, 1425.9, 32.2, 27.4], 'Inst: next', GRN).ostep = 1;
+/* the top row */
+trButton((PX + 'msolo'), [660.5, 21.2, 134, 68], 'Solo this instrument in your own ears', 0x3A8BFF);
+trKnob((PX + 'mmix'), 850.3, 55.3, 'serpS', '#FFFFFF', '#000000', 'Solo mix', 0);
+trButton((PX + 'pa'), [1460.5, 21.2, 134, 68], 'Pattern A', GRN).ab = 0; spButton((PX + 'pta'), [1606.5, 21.2, 134, 68], 'Pattern A on / off', { text:['ON'], size:59 }).tg = 0;
+trButton((PX + 'pb'), [1813.5, 21.2, 134, 68], 'Pattern B', GRN).ab = 1; spButton((PX + 'ptb'), [1959.5, 21.2, 134, 68], 'Pattern B on / off', { text:['OFF'], size:59 }).tg = 1;
+trButton((PX + 'pcopy'), [2226.5, 21.2, 134, 68], 'Copy a pattern', 0xFFE15A);
+SN.mon = false; SN.monMix = 0;                 /* SOLO is for the player's own ears; MIX brings the rest back underneath. Neither is saved or sent */
+/* DIRECTION and SPEED: a button for each, the chosen one in the lane's colour */
+[684.0, 790.2, 896.5, 1002.7, 1108.9].forEach(function(x, k){ spButton((PX + 'd') + k, [x, 428.3, 88.5, 88.5], 'Direction: ' + SNDIR[k], { bgref:SPGREY, ink:'#FFFFFF', bg:SPGREY }).di = k; });
+[686.5, 794.5, 898.5, 1004.7, 1111.0].forEach(function(x, k){ spButton((PX + 's') + k, [x, 579.9, 88.5, 88.5], 'Speed: ' + SNSPD[k][1], { bgref:SPGREY, ink:'#FFFFFF', bg:SPGREY }).si = k; });
+trKnob((PX + 'steps'), 748.7, 793.3, 'serp', SPPINK, '#FFFFFF', 'Steps', 1).detents = 15;
+trKnob((PX + 'shift'), 950.7, 793.3, 'serp', SPPINK, '#FFFFFF', 'Start', 0).detents = 15;
+trKnob((PX + 'shape'), 1133.3, 793.3, 'serp', SPPINK, '#FFFFFF', 'Shape', 0, { endless:true });
+spButton((PX + 'reset'), [686.5, 962.5, 233, 93], 'Clear this lane on this pattern · hold', { bgref:SPPINK, ink:'#000000', bg:SPPINK });
+spButton((PX + 'rand'), [962.5, 962.5, 233, 93], 'Random this lane · hold', { bgref:SPPINK, ink:'#000000', bg:SPPINK });
+/* the 16 cells: a knob for the lane's value, and under it the step's on/off button, which also shows the value */
+var SPCX = [1441.9, 1698.3, 1954.7, 2210.3], SPCY = [269.3, 604.9, 940.1, 1277.4], SPBX = [1360.4, 1616.4, 1872.4, 2128.4], SPBY = [369.2, 707.8, 1044.6, 1377.8];
+for (var sni = 0; sni < 16; sni++){ (function(i){ var c = trKnob((PX + 'c') + i, SPCX[i % 4], SPCY[(i / 4) | 0], 'serp', SPPINK, '#FFFFFF', 'Cell ' + (i + 1), 0); c.cell = i; })(sni); }
+for (var sgi = 0; sgi < 16; sgi++){ (function(i){ var c = trButton((PX + 'g') + i, [SPBX[i % 4], SPBY[(i / 4) | 0], 163, 68], 'Step ' + (i + 1), GRN, 'btn', true); c.gate = i; })(sgi); }
+KB = KB0;
 var SNLBL = [];
 (function(){ for (var i = 0; i < 16; i++){ var p = CT[(PX + 'g') + i], cv = mk(128, 52), tx = smoothTex(cv), pg = p.m.geometry.parameters;
-  var pl = new THREE.Mesh(new THREE.PlaneGeometry(pg.width * 0.96, pg.depth * 0.94), new THREE.MeshBasicMaterial({ map:tx, transparent:true, depthWrite:false })); pl.rotation.x = -Math.PI / 2; pl.position.y = pg.height / 2 + 0.0004; pl.userData.noShadow = true; p.m.add(pl);
-  SNLBL.push({ cv:cv, tx:tx, key:'' }); var k = CT[(PX + 'c') + i]; k.ticks = k.rot.children.filter(function(m){ return m.material && m.material.isMeshBasicMaterial; }); } })();
+  var pl = new THREE.Mesh(new THREE.PlaneGeometry(pg.width * 0.9, pg.depth * 0.84), new THREE.MeshBasicMaterial({ map:tx, transparent:true, depthWrite:false })); pl.rotation.x = -Math.PI / 2; pl.position.y = pg.height / 2 + 0.0004; pl.userData.noShadow = true; p.m.add(pl);
+  SNLBL.push({ cv:cv, tx:tx, key:'' }); } })();
 function snStepLbl(i, txt, on){ var L = SNLBL[i], key = txt + (on ? '|1' : '|0'); if (L.key === key) return; L.key = key; var g = L.cv.getContext('2d'); g.clearRect(0, 0, 128, 52);
-  g.font = 'bold 32px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = on ? '#14161A' : '#D6D4CA'; g.fillText(txt, 64, 28, 120); L.tx.needsUpdate = true; }
-function snShowCells(){ return; var gp = SN.page === 1; for (var i = 0; i < 16; i++){ var k = CT[(PX + 'c') + i], p = CT[(PX + 'g') + i]; k.g.visible = !gp; k.g.position.y = gp ? -9 : 0; p.m.visible = gp; p.m.position.y = gp ? p.y0 : -9; p.hitM.position.y = gp ? 0.009 : -9; p.gone = !gp; } }
+  g.font = '34px "Pixel Game", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#111114'; g.fillText(txt, 64, 28, 120); L.tx.needsUpdate = true; }
+if (document.fonts && document.fonts.load) document.fonts.load('34px "Pixel Game"').then(function(){ SNLBL.forEach(function(L){ L.key = ''; }); }).catch(function(){});
+function snShowCells(){}
 HOST = TRG; LX = lx; LZ = lz; DEV = null; FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
 function snSay(a, b, ms){ SN.msgA = a; SN.msgB = b == null ? '' : String(b); SN.msgUntil = performance.now() + (ms || 1500); SN.dirty = true; }
 function snNote(v){ return 24 + (RK.on ? RK.root : SN.root) + scaleQ(Math.round(v), SCALES[RK.on ? RK.scale : SN.scale][1]); }      // the room key, when it is on, wins over the Snake's own
@@ -8501,29 +8565,32 @@ function snSync(){
   var L = SN.lanes[SN.page], mx = [83, 1, 127, 127, 127][SN.page];
   for (var i = 0; i < 16; i++){ var c = CT[(PX + 'c') + i]; c.v = L.vals[i] / mx; c.detents = SN.page === 0 ? 83 : SN.page === 1 ? 1 : 0; c.step = 0.02; c.show(); }
   snShowCells();
-  CT[PX + 'root'].v = SN.root / 11; CT[PX + 'root'].show(); CT[PX + 'steps'].v = (L.len - 1) / 15; CT[PX + 'steps'].show(); CT[PX + 'shift'].v = L.shift / 15; CT[PX + 'shift'].show(); CT[PX + 'swing'].v = SN.swing; CT[PX + 'swing'].show(); CT[PX + 'out'].set(SN.out); SN.dirty = true;
+  CT[PX + 'root'].v = SN.root / 11; CT[PX + 'root'].show(); CT[PX + 'steps'].v = (L.len - 1) / 15; CT[PX + 'steps'].show(); CT[PX + 'shift'].v = L.shift / 15; CT[PX + 'shift'].show(); CT[PX + 'swing'].v = SN.swing; CT[PX + 'swing'].show(); SN.dirty = true;
 }
 snSync();
 function snLabel(c){
   var L = SN.lanes[SN.page], id = c.id;
+  if (c.di != null) return 'Direction: ' + SNDIR[c.di] + (L.dir === c.di ? ' · on' : ' · click');
+  if (c.si != null) return 'Speed: ' + SNSPD[c.si][1] + (L.speed === c.si ? ' · on' : ' · click');
+  if (c.oi != null) return 'Inst: ' + SNOUT[c.oi] + (SN.out === c.oi ? ' · playing' : ' · click');
   if (c.gate != null) return 'Step ' + (c.gate + 1) + ': ' + (SN.lanes[1].vals[c.gate] ? 'On' : 'Off') + ' · click to switch';
   if (c.cell != null) return SNLN[SN.page].charAt(0) + SNLN[SN.page].slice(1).toLowerCase() + ' ' + (c.cell + 1) + ': ' + snCellTxt(SN.page, L.vals[c.cell]) + ' · scroll or drag';
-  switch (id){ case (PX + 'root'): return 'Fundamental ' + NOTEN[SN.root] + ' · scroll or drag'; case (PX + 'scale'): return 'Scale: ' + SCALES[SN.scale][0] + ' · scroll or drag'; case (PX + 'steps'): return 'Steps ' + L.len + ' · scroll or drag'; case (PX + 'shift'): return 'Shift ' + L.shift + ' · scroll or drag';
-    case (PX + 'swing'): return 'Swing ' + Math.round(SN.swing * 100) + ' · scroll or drag'; case (PX + 'shape'): return 'Snake shape ' + (L.shape + 1) + ' · scroll or drag'; case (PX + 'dir'): return 'Direction: ' + SNDIR[L.dir] + ' · click'; case (PX + 'speed'): return 'Speed: ' + SNSPD[L.speed][1] + ' · click'; case (PX + 'out'): return 'Inst: ' + SNOUT[SN.out] + ' · click';
-    case (PX + 'pta'): case (PX + 'ptb'): return 'Page ' + 'AB'[c.tg] + ' is ' + (SN.act[c.tg] ? 'on' : 'off') + ' · click · both on plays A then B, a bar each';
+  switch (id){ case (PX + 'root'): return 'Root ' + NOTEN[SN.root] + ' · scroll or drag'; case (PX + 'scale'): return 'Scale: ' + SCALES[SN.scale][0] + ' · scroll or drag'; case (PX + 'steps'): return 'Steps ' + L.len + ' · scroll or drag'; case (PX + 'shift'): return 'Start ' + (L.shift + 1) + ' · scroll or drag';
+    case (PX + 'swing'): return 'Swing ' + Math.round(SN.swing * 100) + ' · scroll or drag'; case (PX + 'shape'): return 'Shape ' + (L.shape + 1) + ' · scroll or drag'; case (PX + 'oprev'): case (PX + 'onext'): return 'Inst: ' + SNOUT[SN.out] + ' · click to step';
+    case (PX + 'pta'): case (PX + 'ptb'): return 'Pattern ' + 'AB'[c.tg] + ' is ' + (SN.act[c.tg] ? 'on' : 'off') + ' · click · both on plays A then B, a bar each';
     case (PX + 'msolo'): return 'Solo ' + (SN.mon ? 'on' : 'off') + ' · only you hear the change · click';
     case (PX + 'mmix'): return 'Solo mix ' + Math.round(SN.monMix * 100) + '% · how much of everything else you hear while solo is on';
-    case (PX + 'pa'): case (PX + 'pb'): return 'Page ' + 'AB'[c.ab] + (SN.act[c.ab] ? ' · on' : ' · off') + (SN.copy ? (SN.copy.src == null ? ' · click to copy from it' : ' · click to paste here') : ' · click to show');
-    case (PX + 'pcopy'): return SN.copy ? 'Copy: now click A or B · click to cancel' : 'Copy a page: click, then the page to copy, then the page to paste to';
+    case (PX + 'pa'): case (PX + 'pb'): return 'Pattern ' + 'AB'[c.ab] + (SN.act[c.ab] ? ' · on' : ' · off') + (SN.copy ? (SN.copy.src == null ? ' · click to copy from it' : ' · click to paste here') : ' · click to show');
+    case (PX + 'pcopy'): return SN.copy ? 'Copy: now click A or B · click to cancel' : 'Copy a pattern: click, then the one to copy, then the one to paste to';
     }
   return c.name;
 }
 function snCtl(c){
   var L = SN.lanes[SN.page], id = c.id, v = c.v; if (id !== (PX + 'mmix')) snMark(id);
   if (c.cell != null){ var mx = [83, 1, 127, 127, 127][SN.page]; L.vals[c.cell] = SN.page === 1 ? (v >= 0.5 ? 1 : 0) : Math.round(v * mx); snSay(SNLN[SN.page] + ' ' + (c.cell + 1), snCellTxt(SN.page, L.vals[c.cell])); }
-  else if (id === (PX + 'root')){ SN.root = Math.round(v * 11); snSay('Fundamental', NOTEN[SN.root]); }
+  else if (id === (PX + 'root')){ SN.root = Math.round(v * 11); snSay('Root', NOTEN[SN.root]); }
   else if (id === (PX + 'steps')){ L.len = 1 + Math.round(v * 15); snSay(SNLN[SN.page] + ' steps', L.len); }
-  else if (id === (PX + 'shift')){ L.shift = Math.round(v * 15); snSay(SNLN[SN.page] + ' shift', L.shift); }
+  else if (id === (PX + 'shift')){ L.shift = Math.round(v * 15); snSay(SNLN[SN.page] + ' start', L.shift + 1); }
   else if (id === (PX + 'swing')){ SN.swing = v; snSay('Swing', Math.round(v * 100)); }
   else if (id === (PX + 'mmix')){ SN.monMix = v; snSay('Solo mix', Math.round(v * 100) + '%'); return; }      // yours alone: not saved, not sent
   snSaveSoon();
@@ -8580,12 +8647,14 @@ function snClrTick(){
   var h = SN.hold2; if (!h) return; if (h.done) return;
   var f = (performance.now() - h.t0) / SNCLR; if (f < 1){ var q = Math.max(0.03, Math.round(f * 30) / 30); if (q !== h.bar){ h.bar = q; h.c.repaintFace(undefined, q); } return; }
   h.done = true; h.c.repaintFace(undefined, 0); snMark();
-  if (h.all){ for (var q2 = 0; q2 < 2; q2++) for (var p2 = 0; p2 < 5; p2++) snClearLane(q2, p2); snSync(); snSay('Sequencer', 'Cleared · A and B'); }
-  else { snClearLane(SN.view, SN.page); if (SN.page === 0) snClearLane(SN.view, 1); snSync(); snSay(SNLN[SN.page], 'Cleared · page ' + 'AB'[SN.view]); }      // clearing the notes also switches the steps off
+  if (h.rnd && h.all){ for (var p3 = 0; p3 < 5; p3++) snRandom(p3); snSync(); snSay('All lanes', 'Random'); }
+  else if (h.rnd){ snRandom(SN.page); snSync(); snSay(SNLN[SN.page], 'Random'); }
+  else if (h.all){ for (var q2 = 0; q2 < 2; q2++) for (var p2 = 0; p2 < 5; p2++) snClearLane(q2, p2); snSync(); snSay('Sequencer', 'Reset · A and B'); }
+  else { snClearLane(SN.view, SN.page); if (SN.page === 0) snClearLane(SN.view, 1); snSync(); snSay(SNLN[SN.page], 'Cleared · pattern ' + 'AB'[SN.view]); }      // clearing the notes also switches the steps off
   snSaveSoon();
 }
 function snCustomClick(){ var was = SN.page === 4; SN.page = 4; snSync(); snLearn(was ? !SN.learn : !SN.cc); if (!SN.learn) snSay('CUSTOM', SN.cc ? SN.cc.name + ' · hold to clear' : 'click again to learn', 2200); }   // first click with nothing learned, or a second click, listens for a knob
-function snRelease(c){ var h2 = SN.hold2; if (h2 && h2.c === c){ SN.hold2 = null; c.repaintFace(undefined, 0); if (!h2.done) snSay('CLEAR', 'keep holding to clear', 1600); return; }
+function snRelease(c){ var h2 = SN.hold2; if (h2 && h2.c === c){ SN.hold2 = null; c.repaintFace(undefined, 0); if (!h2.done) snSay(h2.rnd ? 'RANDOM' : 'CLEAR', h2.rnd ? 'keep holding to randomise' : 'keep holding to clear', 1600); return; }
   var h = SN.hold; if (h && h.c === c){ SN.hold = null; if (!h.done) snCustomClick(); } }
 function snHoldTick(){
   var h = SN.hold, b = CT[(PX + 'pg') + 4];
@@ -8610,14 +8679,12 @@ function snPress(c){
   if (c.pg != null){
     if (c.pg === 4){ if (SN.cc && !SN.learn){ SN.hold = { c:c, t0:performance.now(), done:false }; return; } snCustomClick(); return; }       // with something learned, wait: a short click acts on release, a long hold clears it   // the custom lane: first click with nothing learned, or a second click, listens for a knob
     snLearn(false); SN.page = c.pg; snSync(); snSay(SNLN[c.pg], SN.page === 3 ? 'chance each step plays' : ''); return; }
-  if (c.sw){ snMark(); SN.out = (c.pos + 1) % 10; c.set(SN.out); SN.cv = 0; snSay('Inst', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
-  if (id === (PX + 'reset') || id === (PX + 'resetall')){ SN.hold2 = { c:c, t0:performance.now(), all:id === (PX + 'resetall'), done:false, bar:0 }; return; }      // held, not clicked: see snClrTick
+  if (id === (PX + 'reset') || id === (PX + 'resetall') || id === (PX + 'rand') || id === (PX + 'randall')){ SN.hold2 = { c:c, t0:performance.now(), all:id === (PX + 'resetall') || id === (PX + 'randall'), rnd:id === (PX + 'rand') || id === (PX + 'randall'), done:false, bar:0 }; return; }      /* held, not clicked: see snClrTick */
+  if (c.di != null){ snMark(); L.dir = c.di; snSay(SNLN[SN.page] + ' direction', SNDIR[L.dir]); snSaveSoon(); return; }
+  if (c.si != null){ snMark(); L.speed = c.si; snSay(SNLN[SN.page] + ' speed', SNSPD[L.speed][1]); snSaveSoon(); return; }
+  if (c.oi != null || c.ostep){ snMark(); SN.out = c.oi != null ? c.oi : (SN.out + c.ostep + 10) % 10; SN.cv = 0; snSay('Inst', SNOUT[SN.out] + (SN.out && !M.playing ? ' · start drums' : ''), 2200); snSaveSoon(); return; }
   snMark();
   switch (id){
-    case (PX + 'dir'): L.dir = (L.dir + 1) % 5; snSay(SNLN[SN.page] + ' direction', SNDIR[L.dir]); break;
-    case (PX + 'speed'): L.speed = (L.speed + 1) % 5; snSay(SNLN[SN.page] + ' speed', SNSPD[L.speed][1]); break;
-    case (PX + 'rand'): snRandom(SN.page); snSync(); snSay(SNLN[SN.page], 'Random'); break;
-    case (PX + 'randall'): for (var p = 0; p < 5; p++) snRandom(p); snSync(); snSay('All lanes', 'Random'); break;
   }
   snSaveSoon();
 }
@@ -8634,30 +8701,48 @@ function clock(t, N, sd, sw){                       // one call per 16th from th
   });
 }
 function onStop(){ SN.vis = []; SN.cv = 0; }
+/* the screen, drawn to the design: 514 x 211.6 design px at twice that. Its words and snake wear the lane's colour */
+var SPICON = ['M6 24 H40 M31 15 L40 24 L31 33', 'M42 24 H8 M17 15 L8 24 L17 33', 'M6 14 H33 a10 10 0 0 1 0 20 H10 M18 26 L10 34 L18 42', 'M42 14 H15 a10 10 0 0 0 0 20 H38 M30 26 L38 34 L30 42',
+  'M6 14 H13 C24 14 24 34 35 34 H41 M6 34 H13 C17 34 19 31 21 28 M27 20 C29 17 31 14 35 14 H41 M35 8 L41 14 L35 20 M35 28 L41 34 L35 40'];
 function snPaintDisp(){
-  var g = snDispC.getContext('2d'), now = performance.now(), L = SN.lanes[SN.page], a, b;
-  g.fillStyle = '#04070A'; g.fillRect(0, 0, 272, 112); g.textBaseline = 'middle'; g.textAlign = 'left';
-  if (now < SN.msgUntil){ a = SN.msgA; b = SN.msgB; } else { a = SNLN[SN.page] + '  ' + SNSPD[L.speed][1]; b = SN.page === 4 ? (SN.learn ? 'move a knob...' : SN.cc ? SN.cc.name : 'nothing learned') : RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] + ' · room' : NOTEN[SN.root] + ' ' + SCALES[SN.scale][0]; }
-  g.fillStyle = '#' + ('00000' + SNCOL[SN.page].toString(16)).slice(-6); g.font = 'bold 26px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText(a, 8, 24, 126);
-  g.fillStyle = SN.act[SN.view] ? '#3BFF6A' : '#5A6068'; g.fillRect(140, 8, 24, 28); g.fillStyle = '#04070A'; g.font = 'bold 24px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.fillText('AB'[SN.view], 152, 23); g.textAlign = 'left';
-  g.fillStyle = '#F2F2F2'; g.font = 'bold 30px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText(b, 8, 62, 160);
-  g.fillStyle = '#8FA0B0'; g.font = 'bold 18px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillText('→ ' + SNOUT[SN.out] + '   ' + SNDIR[L.dir], 8, 96, 160);
-  // the snake's path through the grid for this lane
-  var PA = SNSHAPE[L.shape], x0 = 184, y0 = 16, s = 26; g.strokeStyle = g.fillStyle = '#' + ('00000' + SNCOL[SN.page].toString(16)).slice(-6); g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath();
-  for (var k = 0; k < L.len; k++){ var cl = PA[(k + L.shift) % 16], x = x0 + (cl % 4) * s, y = y0 + ((cl / 4) | 0) * s; if (k) g.lineTo(x, y); else g.moveTo(x, y); } g.stroke();
-  var c0 = PA[L.shift % 16]; g.beginPath(); g.arc(x0 + (c0 % 4) * s, y0 + ((c0 / 4) | 0) * s, 6, 0, 7); g.fill();
-  snDispT.needsUpdate = true;
+  var g = snDispC.getContext('2d'), now = performance.now(), L = SN.lanes[SN.page], a, b, lane = spHex(SNCOL[SN.page]);
+  g.setTransform(2, 0, 0, 2, 0, 0); g.fillStyle = '#05080A'; g.fillRect(0, 0, 514, 212); g.textBaseline = 'middle'; g.textAlign = 'left';
+  if (now < SN.msgUntil){ a = SN.msgA; b = SN.msgB; } else { a = SNLN[SN.page] + ' ' + SNSPD[L.speed][1]; b = SN.page === 4 ? (SN.learn ? 'move a knob...' : SN.cc ? SN.cc.name : 'nothing learned') : RK.on ? NOTEN[RK.root] + ' ' + SCALES[RK.scale][0] + ' room' : NOTEN[SN.root] + ' ' + SCALES[SN.scale][0]; }
+  g.fillStyle = lane; g.font = '54px "Pixel Game", monospace'; g.fillText(String(a).toUpperCase(), 16, 44, 236);
+  g.fillStyle = SN.act[SN.view] ? lane : '#5A6068'; g.fillRect(264.6, 15.2, 45.4, 52.9); g.fillStyle = '#05080A'; g.font = '56px "Pixel Game", monospace'; g.textAlign = 'center'; g.fillText('AB'[SN.view], 287.3, 44); g.textAlign = 'left';
+  g.fillStyle = '#FFFFFF'; g.font = '88px "Pixel Game", monospace'; g.fillText(String(b).toUpperCase(), 16, 112, 310);
+  g.save(); g.translate(16, 165); g.scale(0.75, 0.75); g.strokeStyle = '#FFFFFF'; g.lineWidth = 4; g.lineCap = g.lineJoin = 'round'; g.stroke(new Path2D(SPICON[L.dir])); g.restore();
+  g.fillStyle = '#FFFFFF'; g.font = '42px "Merchant Copy", monospace'; g.fillText(SNDIR[L.dir].toUpperCase(), 62, 184, 260);
+  var PA = SNSHAPE[L.shape], x0 = 348, y0 = 29.6, sx2 = 49.3, sy2 = 48.7; g.strokeStyle = g.fillStyle = lane; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath();      /* the snake's path through the grid for this lane */
+  for (var k = 0; k < L.len; k++){ var cl = PA[(k + L.shift) % 16], x = x0 + (cl % 4) * sx2, y = y0 + ((cl / 4) | 0) * sy2; if (k) g.lineTo(x, y); else g.moveTo(x, y); } g.stroke();
+  var c0 = PA[L.shift % 16]; g.beginPath(); g.arc(x0 + (c0 % 4) * sx2, y0 + ((c0 / 4) | 0) * sy2, 10, 0, 7); g.fill();
+  g.setTransform(1, 0, 0, 1, 0, 0); snDispT.needsUpdate = true;
 }
+if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('54px "Pixel Game"'), document.fonts.load('42px "Merchant Copy"')]).then(function(){ SN.dirty = true; }).catch(function(){});
 function update(now, dt){
   var t = ac ? ac.currentTime : 0, i; SN.run = M.playing;
   if (ac) SN.vis = SN.vis.filter(function(e){ if (e.t > t) return true; if (e.cc != null) snTurnCC(e.cc); else if (e.cv != null) SN.cv = e.cv; else { SN.vcell = SN.vcell || [-1, -1, -1, -1, -1]; SN.vcell[e.l] = e.c; } return false; });
-  var vc = M.playing && SN.vcell && SN.playPg === SN.view ? SN.vcell : [-1, -1, -1, -1, -1], g = SN.lanes[1].vals, col = new THREE.Color();
-  for (i = 0; i < 16; i++){ col.setHex(g[i] ? 0x1E3A2A : 0x15171C); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.35); SNLED[i].color.copy(col); var kc = CT[(PX + 'c') + i]; kc.mat.color.setHex(SNCOL[SN.page]); if (!g[i]) kc.mat.color.multiplyScalar(0.34); var tk = g[i] ? 0x101114 : 0xFFFFFF; if (kc.tk !== tk){ kc.tk = tk; for (var q = 0; q < kc.ticks.length; q++) kc.ticks[q].material.color.setHex(tk); }      /* the 16 knobs wear the colour of the lane they are setting: full where the step is on, dim where it is off */
-    snStepLbl(i, snCellTxt(SN.page, SN.lanes[SN.page].vals[i]), g[i] || vc[0] === i); }
-  for (i = 0; i < 16; i++){ var gp = CT[(PX + 'g') + i], gl = (g[i] ? 0.75 : 0) + (vc[0] === i ? 0.3 : 0); if (gl !== gp.lit){ gp.lit = gl; gp.col.copy(gp.base); if (vc[0] === i && !g[i]) gp.col.setHex(0xFFFFFF); gp.paintLit(); } var gy = gp.y0 - (gp.down ? 0.003 : 0); if (gp.m.position.y !== gy) gp.m.position.y = gy; }
-  CTLIST.forEach(function(c){ if (c.dev !== DK || c.kind !== 'btn' || c.sw) return; var L = c.pg != null ? (SN.page === c.pg ? 1 : 0) : 0; if (c.pg === 4 && SN.learn) L = Math.floor(now / 160) % 2 ? 1 : 0.15;
-    if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : M.playing && SN.playPg === c.ab ? 0.5 : 0.1;
-    else if (c.id === (PX + 'pcopy')) L = SN.copy ? (Math.floor(now / 160) % 2 ? 1 : 0.15) : 0; else if (c.tg != null){ L = SN.act[c.tg] ? 0.9 : 0; var tt = SN.act[c.tg] ? 'ON' : 'OFF'; if (c.tgT !== tt){ c.tgT = tt; c.repaintFace(tt); } } else if (c.id === (PX + 'msolo')) L = SN.mon ? 1 : 0; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  var vc = M.playing && SN.vcell && SN.playPg === SN.view ? SN.vcell : [-1, -1, -1, -1, -1], g = SN.lanes[1].vals, col = new THREE.Color(), lane = spHex(SNCOL[SN.page]);
+  /* the step lights are white; the lane being shown lights its step in its colour, the other lanes faintly */
+  for (i = 0; i < 16; i++){ col.setHex(0xF2F2F2); for (var l = 0; l < 5; l++) if (l !== 1 && vc[l] === i) col.lerp(new THREE.Color(SNCOL[l]), l === SN.page ? 1 : 0.3); SNLED[i].color.copy(col);
+    CT[(PX + 'c') + i].look(lane); snStepLbl(i, snCellTxt(SN.page, SN.lanes[SN.page].vals[i]), g[i] || vc[0] === i); }
+  ['steps', 'shift', 'shape'].forEach(function(k){ CT[PX + k].look(lane); });
+  CTLIST.forEach(function(c){
+    if (c.dev !== DK || c.kind !== 'btn') return; var L = 0;
+    if (c.gate != null){ L = g[c.gate] ? (vc[0] === c.gate ? 1 : 0.85) : vc[0] === c.gate ? 0.35 : 0; }            /* a step that is on is green; the pitch snake's step glows as it passes */
+    else if (c.lane){ var sel = SN.page === c.pg; c.mat.emissiveIntensity = sel ? 0.85 : 0.58; c.mat.color.setHex(0x4D4D4D); }
+    else if (c.pg === 4){ c.setBg(SN.learn ? (Math.floor(now / 160) % 2 ? '#FFFFFF' : spHex(SNCOL[4])) : spHex(SNCOL[4])); c.mat.emissiveIntensity = SN.page === 4 ? 0.85 : 0.58; }
+    else if (c.di != null) c.setBg(SN.lanes[SN.page].dir === c.di ? lane : SPGREY);
+    else if (c.si != null) c.setBg(SN.lanes[SN.page].speed === c.si ? lane : SPGREY);
+    else if (c.oi != null) c.setBg(SN.out === c.oi ? (c.oi ? spOutCol(c.oi) : '#FFFFFF') : '#000000');
+    else if (c.id === (PX + 'reset') || c.id === (PX + 'rand')) c.setBg(lane);
+    else if (c.tg != null){ var tt = SN.act[c.tg] ? 'ON' : 'OFF'; if (c.tgT !== tt){ c.tgT = tt; c.repaintFace(tt); } c.setBg(SN.act[c.tg] ? '#3BFF6A' : '#FFFFFF'); }
+    else if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : M.playing && SN.playPg === c.ab ? 0.4 : 0;
+    else if (c.id === (PX + 'pcopy')) L = SN.copy ? (Math.floor(now / 160) % 2 ? 1 : 0.15) : 0;
+    else if (c.id === (PX + 'msolo')) L = SN.mon ? 1 : 0;
+    if (c.down) L = Math.max(L, 0.8);
+    if (!c.sp && !c.lane && L !== c.lit){ c.lit = L; c.paintLit(); }
+    var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
   snHoldTick(); snClrTick(); snBtnFace();
   if (now > SN.msgUntil && SN.msgA){ SN.msgA = ''; SN.dirty = true; }
   if (SN.dirty){ SN.dirty = false; snPaintDisp(); }
@@ -8854,8 +8939,8 @@ var SCOPECH = { mf:1, bs:2, mb:3, am:4, tp:5, sh:6, mc:7, sc:8, zk:9 };
     var arm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.1), metalMat); arm.position.set(0, -0.04, -0.075); g.add(arm);          // the bracket back to the Snake's underside
     g.traverse(function(o){ o.userData.noShadow = true; });
     // the same picture on the Snake's own panel, above its INST slider, for whoever is playing it
-    var fr = new THREE.Mesh(new THREE.PlaneGeometry(64 * SC, 33 * SC), new THREE.MeshBasicMaterial({ color:0x08090C })), own = new THREE.Mesh(new THREE.PlaneGeometry(60 * SC, 29 * SC), scr.material);
-    [fr, own].forEach(function(m, k){ m.rotation.x = -Math.PI / 2; m.position.set((41 - SNW / 2) * SC, 0.0012 + k * 0.0008, (152.5 - SND / 2) * SC); m.userData.noShadow = true; S.G.add(m); });
+    var fr = new THREE.Mesh(new THREE.PlaneGeometry(65.75 * SC, 33.9 * SC), new THREE.MeshBasicMaterial({ color:0x08090C })), own = new THREE.Mesh(new THREE.PlaneGeometry(61.64 * SC, 29.79 * SC), scr.material);
+    [fr, own].forEach(function(m, k){ m.rotation.x = -Math.PI / 2; m.position.set((40.87 - SNW / 2) * SC, 0.0012 + k * 0.0008, (152.93 - SND / 2) * SC); m.userData.noShadow = true; S.G.add(m); });
     SCOPE.list.push({ S:S, c:c, g:c.getContext('2d'), t:t, gain:4, flat:false, ch:-2 });
   });
 })();
@@ -10277,7 +10362,7 @@ DEVS.ec = { key:'ec', g:ECG, name:'Echo and reverb', stand:devStand(ECPOS), yaw:
 DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 FLOWS.forEach(function(f){ DEVS[f.key] = { key:f.key, g:f.G, name:'Video synth A', stand:devStand(f.pos), yaw:f.pos.r, pitch:-0.42, d:0.72, asp:1.9, off:0.04, lookz:0.05, hud:'hudPf' }; });
 DEVS.bz = { key:'bz', g:BZG, name:'Video synth B', stand:devStand(PGPOS), yaw:PGPOS.r, pitch:-0.42, d:0.52, asp:1.9, off:0.04, lookz:0.02, hud:'hudBz' };
-SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Snake sequencer', stand:devStand(s.hp), yaw:s.hp.r, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
+SNAKES.forEach(function(s){ DEVS[s.key] = { key:s.key, g:s.G, name:'Serpent sequencer', stand:devStand(s.hp), yaw:s.hp.r, pitch:-0.04, d:0.5, asp:1.75, off:0.05, lookz:0.02, hud:'hudSn' }; });
 var LEAN = DEVS.tr, trBlend = 0;
 /* ---- detail culling: every knob, button, key and lamp is its own draw, about 3,000 in all. On each instrument they sit on the
    front of a slanted panel, so from behind the panel the body hides them anyway, and from across the room they are specks.
@@ -10603,7 +10688,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.273 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.274 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

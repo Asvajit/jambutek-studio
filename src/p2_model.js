@@ -126,16 +126,19 @@ function pad(id, px, py, w, h, col, name){
    Knob tops are painted from the design's measurements (a dark twelve-sided body, a grey ring, a coloured cap and the pointer) and turn
    with the knob. Button and pad faces are cut straight from the design (public/tr/faces.png); a face is white until it lights, then takes
    its colour: green for most, red for CLEAR, DR-REC and the mutes. */
-var TRFACES = new Image(), TRFACEFN = [];
-TRFACES.onload = function(){ TRFACES.ok = true; TRFACEFN.forEach(function(f){ f(); }); }; TRFACES.src = 'tr/faces.png';
+function trFaces(src){ var im = new Image(); im.fn = []; im.onload = function(){ im.ok = true; im.fn.forEach(function(f){ f(); }); }; im.src = src; return im; }
+var TRFACES = trFaces('tr/faces.png');
+/* KB: where these builders put things. The DRUMBU-8 sets it to its own plate; the SERPENT sequencers point it at theirs */
+var KB = { host:TRG, x:lx, z:lz, px:DPX, faces:TRFACES };
 var TRWHITE = new THREE.Color(1, 1, 1), TRTMP = new THREE.Color(), TRSIDE = new THREE.MeshLambertMaterial({ color:0x111214 });
 function trTex(c){ var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 function dodec(g, r, fill){ g.beginPath(); for (var k = 0; k < 12; k++){ var a = Math.PI / 12 + k * Math.PI / 6; g.lineTo(Math.sin(a) * r, -Math.cos(a) * r); } g.closePath(); g.fillStyle = fill; g.fill(); }
 /* style: 'big' (125 px across), 'small' (the send knobs), 'tempo'. The cylinder's cap maps the canvas turned a quarter, hence the rotate */
-var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 } };
-function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
-  opt = opt || {}; var S = TRK[style], R = S.r * DPX, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : 6.5) * SC;
-  var cv = mk(256, 256), g = cv.getContext('2d'), s = 128 / S.r;
+var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 } };
+var TRKTEX = {};                                    /* knob tops are shared by look: a SERPENT lane change just swaps which one its knobs wear */
+function trKnobTex(style, col, ptr){
+  var key = style + col + ptr; if (TRKTEX[key]) return TRKTEX[key];
+  var S = TRK[style], cv = mk(256, 256), g = cv.getContext('2d'), s = 128 / S.r;
   g.translate(128, 128); g.rotate(-Math.PI / 2); g.scale(s, s);
   if (style === 'small'){
     g.fillStyle = '#131419'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 29, col);
@@ -144,11 +147,18 @@ function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
   } else if (style === 'tempo'){
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 96.5, '#2B2E36'); dodec(g, 90, '#3B3D47');
     g.fillStyle = ptr; g.fillRect(-10, -99, 20, 85);
+  } else if (style === 'serp' || style === 'serpS'){
+    var q = S.r / 64.7; g.fillStyle = '#0D0D0F'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49.8 * q, '#2B2E36'); dodec(g, 44.8 * q, col);
+    g.fillStyle = ptr; g.fillRect(-5.3 * q, -40 * q, 10.6 * q, 34 * q);
   } else {
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49, '#2B2E36'); dodec(g, 45.5, col);
     g.fillStyle = ptr; g.fillRect(-5.3, -51, 10.6, 47.2);
   }
-  var tex = trTex(cv), gr = new THREE.Group(); gr.position.set(lx(cx), 0, lz(cy)); TRG.add(gr);
+  return (TRKTEX[key] = trTex(cv));
+}
+function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
+  opt = opt || {}; var S = TRK[style], R = S.r * KB.px, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : style === 'serpS' ? 4.5 : 6.5) * SC;
+  var tex = trKnobTex(style, col, ptr), gr = new THREE.Group(); gr.position.set(KB.x(cx), 0, KB.z(cy)); KB.host.add(gr);
   var topM = new THREE.MeshPhongMaterial({ color:0x4D4D4D, map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.62, shininess:10, specular:0x0A0A0A });      /* less lamp, more glow: the caps keep the design's colours instead of washing out under the room lights */
   var sideM = new THREE.MeshPhongMaterial({ color:style === 'small' ? 0x131419 : 0x17171C, shininess:12, specular:0x0A0A0A, flatShading:true });
   var rot = new THREE.Group(); gr.add(rot);
@@ -156,27 +166,29 @@ function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
   var hit = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.25, R * 1.25, H + 0.012, 8), HITMAT); hit.position.y = H / 2 + 0.004; gr.add(hit);
   var c = { id:id, kind:'knob', name:name, v:def, def:def, step:opt.step || 0.02, endless:!!opt.endless, g:gr, rot:rot, mat:topM, ring:null,
     show:function(){ rot.rotation.y = c.endless ? -c.v * Math.PI * 2 : -(c.v - 0.5) * 5.2; },
-    hover:function(on){ topM.emissiveIntensity = on ? 0.85 : 0.62; sideM.emissive.setHex(on ? 0x2E6A44 : 0x000000); } };
+    hover:function(on){ topM.emissiveIntensity = on ? 0.85 : 0.62; sideM.emissive.setHex(on ? 0x2E6A44 : 0x000000); },
+    look:function(c2, p2){ var t2 = trKnobTex(style, c2, p2 || ptr); if (topM.map !== t2){ topM.map = topM.emissiveMap = t2; topM.needsUpdate = true; } } };
   c.show();
   return reg(c, [body, hit]);
 }
 /* a button or pad: r = [x, y, w, h] of its square in the design (the 5 px black edge is drawn on it, so the face takes it in) */
 function trFace(r, plain){
+  var F = KB.faces;
   var w = r[2] + 5, h = r[3] + 5, k = Math.min(3, 360 / Math.max(w, h)), cv = mk(Math.round(w * k), Math.round(h * k)), t = trTex(cv);
   function paint(){
     var g = cv.getContext('2d');
-    if (TRFACES.ok && !plain) g.drawImage(TRFACES, r[0] - 2.5, r[1] - 2.5, w, h, 0, 0, cv.width, cv.height);
+    if (F.ok && !plain) g.drawImage(F, r[0] - 2.5, r[1] - 2.5, w, h, 0, 0, cv.width, cv.height);
     else { g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = '#fff'; g.fillRect(5 * k, 5 * k, cv.width - 10 * k, cv.height - 10 * k); }
     t.needsUpdate = true;
   }
-  paint(); if (!plain) TRFACEFN.push(paint);
+  paint(); if (!plain) F.fn.push(paint);
   return t;
 }
 function trButton(id, r, name, lit, kind, plain){
-  var W2 = (r[2] + 5) * DPX, D2 = (r[3] + 5) * DPX, t = trFace(r, plain), y0 = kind === 'pad' ? 0.004 : 0.003;
+  var W2 = (r[2] + 5) * KB.px, D2 = (r[3] + 5) * KB.px, t = trFace(r, plain), y0 = kind === 'pad' ? 0.004 : 0.003;
   var topM = new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.5, shininess:10, specular:0x080808 });
-  var m = new THREE.Mesh(new THREE.BoxGeometry(W2, y0 * 2, D2), [TRSIDE, TRSIDE, topM, TRSIDE, TRSIDE, TRSIDE]); m.position.set(lx(r[0] + r[2] / 2), y0, lz(r[1] + r[3] / 2)); TRG.add(m);
-  var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); TRG.add(hit);
+  var m = new THREE.Mesh(new THREE.BoxGeometry(W2, y0 * 2, D2), [TRSIDE, TRSIDE, topM, TRSIDE, TRSIDE, TRSIDE]); m.position.set(KB.x(r[0] + r[2] / 2), y0, KB.z(r[1] + r[3] / 2)); KB.host.add(m);
+  var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); KB.host.add(hit);
   var c = { id:id, kind:kind || 'btn', name:name, m:m, mat:topM, col:new THREE.Color(lit), base:new THREE.Color(lit), lit:0, hov:false, down:0, y0:y0, flash:0, tr:true };
   /* white until lit; lit fades the face to its colour. A step pad has no white state: its colour is set each frame */
   c.paintLit = function(){
