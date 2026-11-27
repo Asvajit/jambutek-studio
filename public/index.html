@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.269</span>
+    <span id="verFps">studio v0.270</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.269</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.270</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -4805,12 +4805,11 @@ paintPanel(); panelTex = smoothTex(panelC);
   var W2 = PANEL.w * SC, D2 = PANEL.h * SC, TH = 0.11;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:panelTex, emissive:0xffffff, emissiveMap:panelTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; TRG.add(top); solid(top, 'trbody');
-  /* the body: the designer's side strip on both ends and the widened version on the front; back and base plain in the strip's ground */
+  /* the body: the designer's two end panels and front panel; back and base plain in their ground colour */
   var bodyM = new THREE.MeshPhongMaterial({ color:0x282526, shininess:30, specular:0x222222, flatShading:true });
   function art(f){ var t = new THREE.TextureLoader().load('tr/' + f); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     return new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:20, specular:0x151515 }); }
-  var sideM = art('side.jpg'), frontM = art('front.jpg');
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), [sideM, sideM, bodyM, bodyM, frontM, bodyM]); body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), [art('right.jpg'), art('left.jpg'), bodyM, bodyM, art('front.jpg'), bodyM]);      /* right end, left end (each with its dinosaur at the back), top, base, front, back */ body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
   paintPanel();
 })();
@@ -10602,7 +10601,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.269 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.270 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

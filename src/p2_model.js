@@ -47,12 +47,11 @@ paintPanel(); panelTex = smoothTex(panelC);
   var W2 = PANEL.w * SC, D2 = PANEL.h * SC, TH = 0.11;
   var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:panelTex, emissive:0xffffff, emissiveMap:panelTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; TRG.add(top); solid(top, 'trbody');
-  /* the body: the designer's side strip on both ends and the widened version on the front; back and base plain in the strip's ground */
+  /* the body: the designer's two end panels and front panel; back and base plain in their ground colour */
   var bodyM = new THREE.MeshPhongMaterial({ color:0x282526, shininess:30, specular:0x222222, flatShading:true });
   function art(f){ var t = new THREE.TextureLoader().load('tr/' + f); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     return new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:t, emissive:0xffffff, emissiveMap:t, emissiveIntensity:0.4, shininess:20, specular:0x151515 }); }
-  var sideM = art('side.jpg'), frontM = art('front.jpg');
-  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), [sideM, sideM, bodyM, bodyM, frontM, bodyM]); body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
+  var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, TH, D2 + 0.012), [art('right.jpg'), art('left.jpg'), bodyM, bodyM, art('front.jpg'), bodyM]);      /* right end, left end (each with its dinosaur at the back), top, base, front, back */ body.position.y = -TH / 2 - 0.0015; body.castShadow = true; TRG.add(body); solid(body, 'trbody');
   BLOCKS.push(devBlock(TRPOS, 0.52));
   paintPanel();
 })();
