@@ -171,6 +171,11 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpChat .log .sys{ color:rgba(216,216,216,.7); font-style:italic }
 #mpChat input{ pointer-events:auto; display:none; width:100%; box-sizing:border-box; margin-top:8px; font:inherit; font-size:16px; color:#fff; background:rgba(5,6,10,.85); border:1px solid rgba(216,216,216,.35); border-radius:6px; padding:8px 10px }
 #mpChat.open input{ display:block }
+#mpChat .emo{ display:none; gap:6px; margin-top:6px; pointer-events:auto }
+#mpChat.open .emo{ display:flex }
+#mpChat .emo button{ width:44px; height:40px; font-size:24px; line-height:1; padding:0; border-radius:6px; border:1px solid rgba(216,216,216,.35); background:rgba(5,6,10,.85); cursor:pointer; transition:transform .08s, background .12s; font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif }
+#mpChat .emo button:hover{ background:rgba(40,44,56,.95); transform:scale(1.12) }
+#mpChat .emo button:active{ transform:scale(.94) }
 #mpChat .tip{ margin-top:6px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:rgba(216,216,216,.55); text-shadow:0 1px 0 #000 }
 #mpChat.open .tip{ display:none }
 @font-face{ font-family:'Anton'; src:url(fonts/anton.woff2) format('woff2'); font-display:swap }
@@ -291,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.262</span>
+    <span id="verFps">studio v0.263</span>
   </div>
 </div>
 
@@ -323,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.262</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.263</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -340,7 +345,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
-<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="tip"><b>T</b> to chat</div></div>
+<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="emo" id="mpEmo"><button type="button" title="Fire">🔥</button><button type="button" title="Skull and crossbones">☠️</button><button type="button" title="Tongue out">😛</button><button type="button" title="Cross-eyed">😵</button><button type="button" title="Heart">❤️</button><button type="button" title="Laughing">😂</button></div><div class="tip"><b>T</b> to chat</div></div>
 <div id="toast"></div>
 <div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
 
@@ -9816,7 +9821,14 @@ var MP = (function(){
   function paintTag(P){
     var g2 = P.tg; g2.clearRect(0, 0, 256, 96); g2.font = '600 26px ui-monospace, Menlo, Consolas, monospace'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
     var w = Math.min(240, g2.measureText(P.name).width + 26); g2.fillStyle = 'rgba(8,10,14,.78)'; g2.fillRect(128 - w / 2, 54, w, 36); g2.fillStyle = P.color; g2.fillRect(128 - w / 2, 86, w, 4); g2.fillStyle = '#fff'; g2.fillText(P.name, 128, 73);
-    if (P.say){ g2.font = '20px ui-monospace, Menlo, Consolas, monospace'; var s = P.say.length > 22 ? P.say.slice(0, 21) + '…' : P.say, w2 = Math.min(250, g2.measureText(s).width + 20); g2.fillStyle = 'rgba(255,255,255,.92)'; g2.fillRect(128 - w2 / 2, 8, w2, 34); g2.fillStyle = '#0B0D12'; g2.fillText(s, 128, 26); }
+    if (P.say){                                                    /* a speech bubble with a tail; a lone emoji (the chat bar's quick ones) is drawn large */
+      var emo = !/[A-Za-z0-9]/.test(P.say) && Array.from(P.say).length <= 3, s = emo ? P.say : (P.say.length > 22 ? P.say.slice(0, 21) + '…' : P.say);
+      g2.font = emo ? '30px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' : '20px ui-monospace, Menlo, Consolas, monospace';
+      var w2 = Math.min(250, g2.measureText(s).width + (emo ? 26 : 20)), x0 = 128 - w2 / 2, y0 = 4, hb = 40, rr2 = 10;
+      g2.fillStyle = 'rgba(255,255,255,.95)'; g2.beginPath(); g2.moveTo(x0 + rr2, y0); g2.lineTo(x0 + w2 - rr2, y0); g2.quadraticCurveTo(x0 + w2, y0, x0 + w2, y0 + rr2); g2.lineTo(x0 + w2, y0 + hb - rr2); g2.quadraticCurveTo(x0 + w2, y0 + hb, x0 + w2 - rr2, y0 + hb);
+      g2.lineTo(136, y0 + hb); g2.lineTo(128, y0 + hb + 8); g2.lineTo(120, y0 + hb); g2.lineTo(x0 + rr2, y0 + hb); g2.quadraticCurveTo(x0, y0 + hb, x0, y0 + hb - rr2); g2.lineTo(x0, y0 + rr2); g2.quadraticCurveTo(x0, y0, x0 + rr2, y0); g2.closePath(); g2.fill();
+      g2.fillStyle = '#0B0D12'; g2.fillText(s, 128, y0 + hb / 2 + (emo ? 2 : 0));
+    }
     P.tt.needsUpdate = true;
   }
   function removePeer(id){ var P = Q.peers[id]; if (!P) return; Object.keys(P.held).forEach(function(k){ var a = k.split(':'); try { NOTE[a[0]][1](+a[1]); } catch (e) {} }); scene.remove(P.g); delete Q.peers[id]; paintHud(); }
@@ -10193,6 +10205,8 @@ var MP = (function(){
     else if (e.key === 'Escape'){ closeChat(); e.preventDefault(); }
   });
   input.addEventListener('keyup', function(e){ e.stopPropagation(); });
+  /* the six quick emoji under the chat bar: a click sends it straight to the chat, and it rises over your head for everyone */
+  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); try { uiPress(); } catch (x) {} closeChat(); }); });
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }
@@ -10774,7 +10788,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.262 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.263 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

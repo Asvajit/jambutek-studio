@@ -133,7 +133,14 @@ var MP = (function(){
   function paintTag(P){
     var g2 = P.tg; g2.clearRect(0, 0, 256, 96); g2.font = '600 26px ui-monospace, Menlo, Consolas, monospace'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
     var w = Math.min(240, g2.measureText(P.name).width + 26); g2.fillStyle = 'rgba(8,10,14,.78)'; g2.fillRect(128 - w / 2, 54, w, 36); g2.fillStyle = P.color; g2.fillRect(128 - w / 2, 86, w, 4); g2.fillStyle = '#fff'; g2.fillText(P.name, 128, 73);
-    if (P.say){ g2.font = '20px ui-monospace, Menlo, Consolas, monospace'; var s = P.say.length > 22 ? P.say.slice(0, 21) + '…' : P.say, w2 = Math.min(250, g2.measureText(s).width + 20); g2.fillStyle = 'rgba(255,255,255,.92)'; g2.fillRect(128 - w2 / 2, 8, w2, 34); g2.fillStyle = '#0B0D12'; g2.fillText(s, 128, 26); }
+    if (P.say){                                                    /* a speech bubble with a tail; a lone emoji (the chat bar's quick ones) is drawn large */
+      var emo = !/[A-Za-z0-9]/.test(P.say) && Array.from(P.say).length <= 3, s = emo ? P.say : (P.say.length > 22 ? P.say.slice(0, 21) + '…' : P.say);
+      g2.font = emo ? '30px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' : '20px ui-monospace, Menlo, Consolas, monospace';
+      var w2 = Math.min(250, g2.measureText(s).width + (emo ? 26 : 20)), x0 = 128 - w2 / 2, y0 = 4, hb = 40, rr2 = 10;
+      g2.fillStyle = 'rgba(255,255,255,.95)'; g2.beginPath(); g2.moveTo(x0 + rr2, y0); g2.lineTo(x0 + w2 - rr2, y0); g2.quadraticCurveTo(x0 + w2, y0, x0 + w2, y0 + rr2); g2.lineTo(x0 + w2, y0 + hb - rr2); g2.quadraticCurveTo(x0 + w2, y0 + hb, x0 + w2 - rr2, y0 + hb);
+      g2.lineTo(136, y0 + hb); g2.lineTo(128, y0 + hb + 8); g2.lineTo(120, y0 + hb); g2.lineTo(x0 + rr2, y0 + hb); g2.quadraticCurveTo(x0, y0 + hb, x0, y0 + hb - rr2); g2.lineTo(x0, y0 + rr2); g2.quadraticCurveTo(x0, y0, x0 + rr2, y0); g2.closePath(); g2.fill();
+      g2.fillStyle = '#0B0D12'; g2.fillText(s, 128, y0 + hb / 2 + (emo ? 2 : 0));
+    }
     P.tt.needsUpdate = true;
   }
   function removePeer(id){ var P = Q.peers[id]; if (!P) return; Object.keys(P.held).forEach(function(k){ var a = k.split(':'); try { NOTE[a[0]][1](+a[1]); } catch (e) {} }); scene.remove(P.g); delete Q.peers[id]; paintHud(); }
@@ -510,6 +517,8 @@ var MP = (function(){
     else if (e.key === 'Escape'){ closeChat(); e.preventDefault(); }
   });
   input.addEventListener('keyup', function(e){ e.stopPropagation(); });
+  /* the six quick emoji under the chat bar: a click sends it straight to the chat, and it rises over your head for everyone */
+  Array.prototype.forEach.call(document.querySelectorAll('#mpEmo button'), function(b){ b.addEventListener('mousedown', function(e){ e.preventDefault(); }); b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); send({ t:'chat', text:b.textContent }); try { uiPress(); } catch (x) {} closeChat(); }); });
   [nameIn, codeIn].forEach(function(el){ el.addEventListener('keydown', function(e){ e.stopPropagation(); }); el.addEventListener('keyup', function(e){ e.stopPropagation(); }); });
   document.addEventListener('keydown', function(e){
     if (Q.lobbyOpen){ e.stopPropagation(); return; }

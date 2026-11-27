@@ -171,6 +171,11 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpChat .log .sys{ color:rgba(216,216,216,.7); font-style:italic }
 #mpChat input{ pointer-events:auto; display:none; width:100%; box-sizing:border-box; margin-top:8px; font:inherit; font-size:16px; color:#fff; background:rgba(5,6,10,.85); border:1px solid rgba(216,216,216,.35); border-radius:6px; padding:8px 10px }
 #mpChat.open input{ display:block }
+#mpChat .emo{ display:none; gap:6px; margin-top:6px; pointer-events:auto }
+#mpChat.open .emo{ display:flex }
+#mpChat .emo button{ width:44px; height:40px; font-size:24px; line-height:1; padding:0; border-radius:6px; border:1px solid rgba(216,216,216,.35); background:rgba(5,6,10,.85); cursor:pointer; transition:transform .08s, background .12s; font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif }
+#mpChat .emo button:hover{ background:rgba(40,44,56,.95); transform:scale(1.12) }
+#mpChat .emo button:active{ transform:scale(.94) }
 #mpChat .tip{ margin-top:6px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:rgba(216,216,216,.55); text-shadow:0 1px 0 #000 }
 #mpChat.open .tip{ display:none }
 @font-face{ font-family:'Anton'; src:url(fonts/anton.woff2) format('woff2'); font-display:swap }
@@ -291,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.262</span>
+    <span id="verFps">studio v0.263</span>
   </div>
 </div>
 
@@ -323,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.262</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.263</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -340,7 +345,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   </div>
 </div>
 <div id="mpHud" hidden><span>Room <span class="code" id="mpCodeShow"></span></span> <span id="mpCount"></span><button type="button" id="mpCopy">Copy invite</button><ul id="mpList"></ul></div>
-<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="tip"><b>T</b> to chat</div></div>
+<div id="mpChat" hidden><div class="log" id="mpLog"></div><input id="mpInput" maxlength="160" placeholder="Say something, Enter to send, Esc to cancel"><div class="emo" id="mpEmo"><button type="button" title="Fire">🔥</button><button type="button" title="Skull and crossbones">☠️</button><button type="button" title="Tongue out">😛</button><button type="button" title="Cross-eyed">😵</button><button type="button" title="Heart">❤️</button><button type="button" title="Laughing">😂</button></div><div class="tip"><b>T</b> to chat</div></div>
 <div id="toast"></div>
 <div id="lockmsg" hidden><b>Click</b> to look around<br>Esc frees the cursor</div>
 
