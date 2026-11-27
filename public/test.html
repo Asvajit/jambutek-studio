@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.280</span>
+    <span id="verFps">studio v0.281</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.280</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.281</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -355,7 +355,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
   <div class="keys desk" id="hudBs" hidden><b>Click</b> or drag across the keys &middot; <b>scroll</b> or <b>drag</b> knobs, faders and wheels &middot; <b>click</b> switches to flip them<br><b>A W S E D F T G Y H U J K O L P</b> play notes &middot; <b>Z</b> / <b>X</b> octave &middot; <b>Space</b> arp on / off &middot; <b>Enter</b> drums &middot; <b>Esc</b> steps back</div>
   <div class="keys desk cols" id="hudMx" hidden><div><i>Mixer controls</i><b>Scroll</b> or <b>drag</b> knobs and faders<br><b>Double-click</b> a knob or fader to reset<br><b>Click</b> to toggle buttons</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>10</b>: mute <span>(0 is 10)</span><br><b>Shift</b> + <b>1</b>&ndash;<b>10</b>: solo<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: look up <span>(hold)</span><br><b>E</b> / <b>Esc</b>: step away</div></div>
   <div class="keys desk cols" id="hudSn" hidden><div><i>Sequencer controls</i><b>Scroll</b> or <b>drag</b> knobs<br><b>Double-click</b> knobs to reset<br><b>Click</b> to toggle buttons<br><b>Hold</b> reset, clear and random</div><div><i>Keyboard shortcuts</i><b>1</b>&ndash;<b>8</b>: toggle gates 1&ndash;8<br><b>Shift</b> + <b>1</b>&ndash;<b>8</b>: toggle gates 9&ndash;16<br><b>Space</b>: start / stop sequence</div><div><i>&nbsp;</i><b>Q</b>: swap to instrument<br><b>Ctrl</b> + <b>Z</b>: undo<br><b>Ctrl</b> + <b>C</b> / <b>V</b>: copy / paste the pattern<br><b>E</b> / <b>Esc</b>: step away</div></div>
-  <div class="keys desk" id="hudEc" hidden>The echo (top) is fed by <b>SEND A</b> on the mixer, the reverb (bottom) by <b>SEND B</b> &middot; reverb: low <b>DENSITY</b> gives repeats, high a wash; <b>MODE</b> picks the space &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>ON</b> stops feeding it, the tail rings out<br><b>SCENES</b>: click an empty slot (or keys <b>1</b>&ndash;<b>4</b>) to store the whole room, a stored one to switch to it (on the next bar) &middot; <b>Shift + click</b> slots to chain them &middot; <b>COPY</b>, then two slots &middot; hold <b>CLEAR</b> to empty the one you are on<br><b>Enter</b> start / stop &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
+  <div class="keys desk" id="hudEc" hidden><b>ECHO JELLY</b> (top) is fed by <b>SEND A</b> on the mixer, <b>BEEVERB</b> (bottom) by <b>SEND B</b> &middot; Beeverb: low <b>DENSITY</b> gives repeats, high a wash; <b>HALL</b> button picks the space &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>SYNC</b> locks the time to the tempo &middot; <b>BYPASS</b> (red) stops feeding it, the tail rings out<br><b>SCENES</b>: click an empty slot (or keys <b>1</b>&ndash;<b>4</b>) to store the whole room, a stored one to switch to it (on the next bar) &middot; <b>Shift + click</b> slots to chain them &middot; <b>COPY</b>, then two slots &middot; hold <b>CLEAR</b> to empty the one you are on<br><b>Enter</b> start / stop &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudBz" hidden>Video synth B, after Fosfora: it moves to the music and the drum machine&rsquo;s kick and snare &middot; the ten buttons pick the effect &middot; pots <b>A B C</b> shape it, <b>HUE</b> picks its one colour, <b>SPEED</b> sets its pace &middot; the big button freezes it<br>Its own screen shows the picture even when it is not on the roof &middot; the box on the right picks what the roof shows: <b>A</b>, <b>B</b> or <b>OFF</b> &middot; hold <b>Q</b> to look up at the room &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudZk" hidden>Four voices through one filter &middot; play it with <b>A W S E D F T G Y H U J K</b>, <b>Z</b> / <b>X</b> octave, or the four pads &middot; <b>scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> the switches: LP / BP, POLY / ACID, THIN / FAT<br><b>WAVE</b>, <b>OCTAVE</b> and <b>HOLD</b> are the three buttons on the left &middot; <b>Q</b> hops to its sequencer &middot; <b>Enter</b> start / stop &middot; <b>E</b> or <b>Esc</b> steps back</div>
   <div class="keys desk" id="hudMb" hidden><b>Scroll</b> or <b>drag</b> the knobs &middot; <b>click</b> a switch to flip it &middot; its Serpent on the shelf behind plays it<br><b>A W S E D F T G Y H U J K</b> play notes &middot; <b>Z X</b> octave &middot; <b>Space</b> starts the drums &middot; <b>Esc</b> steps back</div>
@@ -4898,7 +4898,7 @@ var TRWHITE = new THREE.Color(1, 1, 1), TRTMP = new THREE.Color(), TRSIDE = new 
 function trTex(c){ var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 function dodec(g, r, fill){ g.beginPath(); for (var k = 0; k < 12; k++){ var a = Math.PI / 12 + k * Math.PI / 6; g.lineTo(Math.sin(a) * r, -Math.cos(a) * r); } g.closePath(); g.fillStyle = fill; g.fill(); }
 /* style: 'big' (125 px across), 'small' (the send knobs), 'tempo'. The cylinder's cap maps the canvas turned a quarter, hence the rotate */
-var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 } };
+var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 }, fx:{ r:70.25, seg:12 } };
 var TRKTEX = {};                                    /* knob tops are shared by look: a SERPENT lane change just swaps which one its knobs wear */
 function trKnobTex(style, col, ptr){
   var key = style + col + ptr; if (TRKTEX[key]) return TRKTEX[key];
@@ -4911,6 +4911,9 @@ function trKnobTex(style, col, ptr){
   } else if (style === 'tempo'){
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 96.5, '#2B2E36'); dodec(g, 90, '#3B3D47');
     g.fillStyle = ptr; g.fillRect(-10, -99, 20, 85);
+  } else if (style === 'fx'){                                  /* ECHO JELLY and BEEVERB */
+    g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 54.95, '#2B2E36'); dodec(g, 51.1, col);
+    g.fillStyle = ptr; g.fillRect(-5.95, -56.85, 11.9, 52.9);
   } else if (style === 'serp' || style === 'serpS'){
     var q = S.r / 64.7; g.fillStyle = '#0D0D0F'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49.8 * q, '#2B2E36'); dodec(g, 44.8 * q, col);
     g.fillStyle = ptr; g.fillRect(-5.3 * q, -40 * q, 10.6 * q, 34 * q);
@@ -4921,7 +4924,7 @@ function trKnobTex(style, col, ptr){
   return (TRKTEX[key] = trTex(cv));
 }
 function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
-  opt = opt || {}; var S = TRK[style], R = S.r * KB.px, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : style === 'serpS' ? 4.5 : 6.5) * SC;
+  opt = opt || {}; var S = TRK[style], R = S.r * KB.px, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : style === 'serpS' ? 4.5 : style === 'fx' ? 8 : 6.5) * SC;
   var tex = trKnobTex(style, col, ptr), gr = new THREE.Group(); gr.position.set(KB.x(cx), 0, KB.z(cy)); KB.host.add(gr);
   var topM = new THREE.MeshPhongMaterial({ color:0x4D4D4D, map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.62, shininess:10, specular:0x0A0A0A });      /* less lamp, more glow: the caps keep the design's colours instead of washing out under the room lights */
   var sideM = new THREE.MeshPhongMaterial({ color:style === 'small' ? 0x131419 : 0x17171C, shininess:12, specular:0x0A0A0A, flatShading:true });
@@ -8185,24 +8188,12 @@ var EC = { p:{ time:0.42, rep:0.45, tone:0.55, level:0.7, sync:1, on:1 }, lv:0 }
 var ECDIV = [['1/16', 0.25], ['1/8', 0.5], ['1/8 dot', 0.75], ['1/4', 1], ['1/4 dot', 1.5], ['1/2', 2]];
 function ecRestore(){ try { var s = JSON.parse(store('jambutek-studio-echo-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(EC.p).forEach(function(k){ if (typeof s.p[k] === 'number') EC.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} } ecRestore();
 var ecSaveT = null; function ecSaveNow(){ store('jambutek-studio-echo-v1', JSON.stringify({ v:1, p:EC.p })); } function ecSaveSoon(){ clearTimeout(ecSaveT); ecSaveT = setTimeout(ecSaveNow, saveMs(800)); }
-var ecC = mk(ECW * 6, ECD * 6), ecTex = null;
-function paintEC(){
-  var g = ecC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  g.fillStyle = '#35C46B'; g.fillRect(0, 0, ECW, ECD);      // the green of the drum machine's delay knobs: every delay in the room is green
-  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '230,255,235') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#0B1F12'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#0B1F12'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('ECHO', 10, 15, 11, '#0B1F12', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#0B1F12', false, 'right');
-  g.fillStyle = '#0B1F12'; g.fillRect(10, 24, ECW - 20, 0.6);
-  [['TIME', 30], ['REPEAT', 67], ['TONE', 104], ['LEVEL', 141]].forEach(function(a){
-    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(11,31,18,.75)'; g.lineWidth = 0.4;
-    for (var k = 0; k <= 10; k++){ var an = (-135 + k * 27) * Math.PI / 180, r0 = 11.2, r1 = k % 5 ? 12.6 : 13.6; g.beginPath(); g.moveTo(a[1] + Math.sin(an) * r0, 48 - Math.cos(an) * r0); g.lineTo(a[1] + Math.sin(an) * r1, 48 - Math.cos(an) * r1); g.stroke(); }
-  });
-  T('TEMPO SYNC', 30, 99.5, 3.6); T('PEAK', 85, 99.5, 3.6); T('ON', 141, 99.5, 3.6);
-  g.setTransform(1, 0, 0, 1, 0, 0); if (ecTex) ecTex.needsUpdate = true;
-}
+/* the ECHO JELLY plate: the designer's artwork, 1360 x 880 px (8 px per mm), with its controls cut out (tools/make_fx.py) */
+var ecC = mk(1360, 880), ecTex = null, ecImg = new Image();
+function paintEC(){ var g = ecC.getContext('2d'); if (ecImg.ok) g.drawImage(ecImg, 0, 0); else { g.fillStyle = '#35C46B'; g.fillRect(0, 0, 1360, 880); } if (ecTex) ecTex.needsUpdate = true; }
+ecImg.onload = function(){ ecImg.ok = true; paintEC(); }; ecImg.src = 'tr/echo-jelly.jpg';
 paintEC(); ecTex = smoothTex(ecC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintEC).catch(function(){});
+var FXRED = '#FA4442', FXPTR = '#151518';
 var ECLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
@@ -8211,13 +8202,15 @@ var ECLED = {};
   devBody(ECY, 'ec');
 })();
 HOST = ECG; LX = ecx; LZ = ecz; DEV = 'ec';
-knob('ectime', 30, 48, 8.2, 'Echo time', EC.p.time, { h:11, sides:16, color:0x0E0F11 }).pk = 'time';
-knob('ecrep', 67, 48, 8.2, 'Repeats', EC.p.rep, { h:11, sides:16, color:0x0E0F11 }).pk = 'rep';
-knob('ectone', 104, 48, 8.2, 'Tone', EC.p.tone, { h:11, sides:16, color:0x0E0F11 }).pk = 'tone';
-knob('eclevel', 141, 48, 8.2, 'Echo level', EC.p.level, { h:11, sides:16, color:0x0E0F11 }).pk = 'level';
-button('ecsync', 30, 87, 20, 10, 'SYNC', 'Tempo sync', 0xF2B544).pk = 'sync';
-button('econ', 141, 87, 20, 10, 'ON', 'Echo on / off', 0x3BFF6A).pk = 'on';
-ledAt(ECLED, 'pk', 85, 87, 0.0034, 0xFF2A3C);
+var KBE = KB; KB = { host:ECG, x:function(px){ return ecx(px / 8); }, z:function(py){ return ecz(py / 8); }, px:SC / 8, faces:TRFACES };
+trKnob('ectime', 200.25, 357.25, 'fx', FXRED, FXPTR, 'Echo time', EC.p.time).pk = 'time';
+trKnob('ecrep', 200.25, 663.25, 'fx', FXRED, FXPTR, 'Repeats', EC.p.rep).pk = 'rep';
+trKnob('ectone', 1174.25, 357.25, 'fx', FXRED, FXPTR, 'Tone', EC.p.tone).pk = 'tone';
+trKnob('eclevel', 1174.25, 663.25, 'fx', FXRED, FXPTR, 'Echo level', EC.p.level).pk = 'level';
+spButton('ecsync', [462.5, 736.5, 205, 68], 'Tempo sync', { text:['SYNC ON'], size:46 }).pk = 'sync';
+spButton('econ', [718.5, 736.5, 205, 68], 'Echo on / bypass', { text:['BYPASS'], size:46 }).pk = 'on';
+KB = KBE;
+ledAt(ECLED, 'pk', 1155.5 / 8, 152.3 / 8, 0.0031, 0xFF2A3C);
 CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob') c.def = { time:0.42, rep:0.45, tone:0.55, level:0.7 }[c.pk]; });
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 
@@ -8243,18 +8236,20 @@ function ecApply(jump){
 }
 function ecLabel(c){
   if (c.id === 'ecsync') return 'Tempo sync: ' + (EC.p.sync ? 'on' : 'off') + ' · click';
-  if (c.id === 'econ') return 'Echo ' + (EC.p.on ? 'on' : 'off') + ' · click';
+  if (c.id === 'econ') return 'Echo Jelly ' + (EC.p.on ? 'on · click to bypass' : 'bypassed · click to turn on');
   if (c.id === 'ectime') return 'Echo time ' + (EC.p.sync ? ecDiv()[0] : Math.round(ecSecs() * 1000) + ' ms') + ' · scroll or drag';
   return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
 }
-function ecPress(c){ if (c.kind !== 'btn') return; EC.p[c.pk] = EC.p[c.pk] ? 0 : 1; ecAudio(); ecApply(); ecSaveSoon(); toast(c.id === 'econ' ? 'Echo ' + (EC.p.on ? 'on' : 'off') : 'Echo tempo sync ' + (EC.p.sync ? 'on' : 'off')); }
+function ecPress(c){ if (c.kind !== 'btn') return; EC.p[c.pk] = EC.p[c.pk] ? 0 : 1; ecAudio(); ecApply(); ecSaveSoon(); toast(c.id === 'econ' ? 'Echo Jelly ' + (EC.p.on ? 'on' : 'bypassed') : 'Echo tempo sync ' + (EC.p.sync ? 'on' : 'off')); }
 function ecCtl(c){ EC.p[c.pk] = c.v; ecAudio(); ecApply(); ecSaveSoon(); }
 DEVH.ec = { label:ecLabel, press:ecPress, release:NOP, ctl:ecCtl, turn:NOP };
 function ecUpdate(now, dt){
   if (!ECA) ecAudio(); else if (EC.bpm !== M.bpm && EC.p.sync) ecApply();
   var pk = 0; if (ECA){ var buf = ecUpdate.buf || (ecUpdate.buf = new Float32Array(256)); ECA.an.getFloatTimeDomainData(buf); for (var k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } }
   EC.lv = Math.max(pk, EC.lv - dt * 2.5); ledOn(ECLED.pk, clamp(EC.lv * 3, 0.06, 1));
-  ['ecsync', 'econ'].forEach(function(id){ var c = CT[id], L = EC.p[c.pk] ? 1 : 0.12; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  ['ecsync', 'econ'].forEach(function(id){ var c = CT[id], on = !!EC.p[c.pk];      /* SYNC lights green when on; BYPASS turns red when the echo is bypassed */
+    if (id === 'ecsync'){ c.repaintFace(on ? 'SYNC ON' : 'SYNC OFF'); c.setBg(on ? '#3BFF6A' : '#FFFFFF'); } else c.setBg(on ? '#FFFFFF' : '#FF2A3C');
+    c.paintLit(); var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }
 RESTORE['jambutek-studio-echo-v1'] = function(){ ecRestore(); CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob' && !c.rv){ c.v = EC.p[c.pk]; c.show(); } }); ecApply(); }; SAVENOW.push(ecSaveNow);
 
@@ -8272,20 +8267,11 @@ var RV = { p:{ size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:
 var RVMODES = [['HALL', [1, 1.31, 1.73, 2.19], 0.22], ['CLOUD', [1, 1.47, 2.11, 2.83], 0.5], ['VOID', [1, 1.62, 2.41, 3.37], 0.85]];
 function rvRestore(){ try { var s = JSON.parse(store('jambutek-studio-reverb-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(RV.p).forEach(function(k){ if (typeof s.p[k] !== 'number'){ if (k === 'hpf') RV.p.hpf = 0; else if (k === 'lpf') RV.p.lpf = 1; return; } RV.p[k] = k === 'mode' ? clamp(s.p[k] | 0, 0, 2) : k === 'on' ? (s.p[k] ? 1 : 0) : clamp(s.p[k], 0, 1); }); } catch (e) {} } rvRestore();
 var rvSaveT = null; function rvSaveNow(){ store('jambutek-studio-reverb-v1', JSON.stringify({ v:1, p:RV.p })); } function rvSaveSoon(){ clearTimeout(rvSaveT); rvSaveT = setTimeout(rvSaveNow, saveMs(800)); }
-var rvC = mk(ECW * 6, ECD * 6), rvTex = null;
-function paintRV(){
-  var g = rvC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  g.fillStyle = '#E8C63A'; g.fillRect(0, 0, ECW, ECD);      // the yellow of the drum machine's reverb knobs: every reverb in the room is yellow
-  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '40,30,0' : '255,250,220') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#1E1803'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#1E1803'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('REVERB', 10, 14, 10, '#1E1803', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#1E1803', false, 'right'); g.fillStyle = '#1E1803'; g.fillRect(10, 22, ECW - 20, 0.6);
-  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#0F3E66' : null); });
-  T('MODE', 141, 54, 3.6); T('ON', 141, 84, 3.6); T('PEAK', 141, 100.5, 3.2);
-  g.setTransform(1, 0, 0, 1, 0, 0); if (rvTex) rvTex.needsUpdate = true;
-}
+/* the BEEVERB plate: the designer's artwork, 1360 x 880 px (8 px per mm), with its controls cut out (tools/make_fx.py) */
+var rvC = mk(1360, 880), rvTex = null, rvImg = new Image();
+function paintRV(){ var g = rvC.getContext('2d'); if (rvImg.ok) g.drawImage(rvImg, 0, 0); else { g.fillStyle = '#E8C63A'; g.fillRect(0, 0, 1360, 880); } if (rvTex) rvTex.needsUpdate = true; }
+rvImg.onload = function(){ rvImg.ok = true; paintRV(); }; rvImg.src = 'tr/beeverb.jpg';
 paintRV(); rvTex = smoothTex(rvC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintRV).catch(function(){});
 var RVLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
@@ -8294,11 +8280,14 @@ var RVLED = {};
   top.userData.dev = body.userData.dev = 'ec';
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';
-[['size', 22, 42, 'Reverb size'], ['dec', 50, 42, 'Decay'], ['dens', 78, 42, 'Density'], ['hpf', 106, 42, 'Reverb HPF'], ['mod', 22, 80, 'Modulation'], ['tone', 50, 80, 'Tone'], ['level', 78, 80, 'Reverb level'], ['lpf', 106, 80, 'Reverb LPF']]
-  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:0x0E0F11 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
-var rvB1 = button('rvmode', 141, 42, 22, 11, 'HALL', 'Reverb mode', 0xB48CFF); rvB1.rv = true; rvB1.rk = 'mode';
-var rvB2 = button('rvon', 141, 72, 22, 11, 'ON', 'Reverb on / off', 0x3BFF6A); rvB2.rv = true; rvB2.rk = 'on';
-ledAt(RVLED, 'pk', 141, 94, 0.003, 0xFF2A3C);
+var KBR = KB; KB = { host:ECG, x:function(px){ return rvx(px / 8); }, z:function(py){ return rvz(py / 8); }, px:SC / 8, faces:TRFACES };
+[['size', 176.15, 357.25, 'Reverb size'], ['dec', 403.15, 357.25, 'Decay'], ['tone', 936.25, 357.25, 'Tone'], ['level', 1182.25, 357.25, 'Reverb level'],
+ ['dens', 176.15, 663.25, 'Density'], ['mod', 403.15, 663.25, 'Modulation'], ['lpf', 936.25, 663.25, 'Reverb LPF'], ['hpf', 1182.25, 663.25, 'Reverb HPF']]
+  .forEach(function(a){ var c = trKnob('rv' + a[0], a[1], a[2], 'fx', FXRED, FXPTR, a[3], RV.p[a[0]]); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
+var rvB1 = spButton('rvmode', [570.4, 230.3, 205, 68], 'Reverb mode', { text:['HALL'], size:46 }); rvB1.rv = true; rvB1.rk = 'mode';
+var rvB2 = spButton('rvon', [570.4, 328.5, 205, 68], 'Beeverb on / bypass', { text:['BYPASS'], size:46 }); rvB2.rv = true; rvB2.rk = 'on';
+KB = KBR;
+ledAt(RVLED, 'pk', 1155.5 / 8, 152.3 / 8, 0.0031, 0xFF2A3C);
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 
 var RVA = null;
@@ -8329,12 +8318,12 @@ function rvApply(jump){
   A.wet.gain.setTargetAtTime(Math.pow(P.level, 1.5) * 1.5, t, 0.03); A.inp.gain.setTargetAtTime(P.on ? 1 : 0, t, 0.015);         // switching it off stops feeding it; the tail rings out
 }
 function rvLabel(c){
-  if (c.id === 'rvmode') return 'Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase() + ' · click'; if (c.id === 'rvon') return 'Reverb ' + (RV.p.on ? 'on' : 'off') + ' · click';
+  if (c.id === 'rvmode') return 'Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase() + ' · click'; if (c.id === 'rvon') return 'Beeverb ' + (RV.p.on ? 'on · click to bypass' : 'bypassed · click to turn on');
   if (c.rk === 'hpf' || c.rk === 'lpf'){ var hz = mxHz(c.rk === 'hpf' ? 'h' : 'l', c.v), off = c.rk === 'hpf' ? c.v < 0.01 : c.v > 0.99; return c.name + ' ' + (off ? 'off' : hz >= 1000 ? (hz / 1000).toFixed(1) + ' kHz' : Math.round(hz) + ' Hz') + ' · scroll or drag'; }
   return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
 }
 function rvPress(c){
-  if (c.id === 'rvmode'){ RV.p.mode = (RV.p.mode + 1) % 3; c.repaintFace(RVMODES[RV.p.mode][0]); toast('Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase()); } else if (c.id === 'rvon'){ RV.p.on = RV.p.on ? 0 : 1; toast('Reverb ' + (RV.p.on ? 'on' : 'off')); } else return;
+  if (c.id === 'rvmode'){ RV.p.mode = (RV.p.mode + 1) % 3; c.repaintFace(RVMODES[RV.p.mode][0]); toast('Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase()); } else if (c.id === 'rvon'){ RV.p.on = RV.p.on ? 0 : 1; toast('Beeverb ' + (RV.p.on ? 'on' : 'bypassed')); } else return;
   rvAudio(); rvApply(); rvSaveSoon();
 }
 function rvCtl(c){ RV.p[c.rk] = c.v; rvAudio(); rvApply(); rvSaveSoon(); }
@@ -8343,7 +8332,8 @@ function rvUpdate(now, dt){
   if (!RVA) rvAudio();
   var pk = 0; if (RVA){ var buf = rvUpdate.buf || (rvUpdate.buf = new Float32Array(256)); RVA.an.getFloatTimeDomainData(buf); for (var k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } }
   RV.lv = Math.max(pk, RV.lv - dt * 2.5); ledOn(RVLED.pk, clamp(RV.lv * 3, 0.06, 1));
-  [rvB1, rvB2].forEach(function(c){ var L = c === rvB1 ? 0.55 : (RV.p.on ? 1 : 0.12); if (c.down) L = Math.max(L, 0.9); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  rvB2.setBg(RV.p.on ? '#FFFFFF' : '#FF2A3C');      /* BYPASS turns red while the reverb is bypassed */
+  [rvB1, rvB2].forEach(function(c){ c.paintLit(); var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }
 rvB1.repaintFace(RVMODES[RV.p.mode][0]);
 RESTORE['jambutek-studio-reverb-v1'] = function(){ rvRestore(); CTLIST.forEach(function(c){ if (c.rv && c.kind === 'knob'){ c.v = RV.p[c.rk]; c.show(); } }); rvB1.repaintFace(RVMODES[RV.p.mode][0]); rvApply(); }; SAVENOW.push(rvSaveNow);
@@ -8668,7 +8658,7 @@ function spOutCol(o){ var i = typeof MXN !== 'undefined' ? MXN.indexOf(String(SN
    on demand, so a button can be grey or the lane's colour, white or lit, and show a progress bar under its words while it is held */
 var SPMASK = {};
 function spMask(r, bgref, ink){
-  var key = r.join() + ink; if (SPMASK[key]) return SPMASK[key]; if (!SPFACES.ok) return null;
+  var key = r.join() + ink; if (SPMASK[key]) return SPMASK[key]; if (!SPFACES || !SPFACES.ok) return null;
   var w = Math.round(r[2] - 10), h = Math.round(r[3] - 10), c = mk(w, h), g = c.getContext('2d'); g.drawImage(SPFACES, r[0] + 5, r[1] + 5, w, h, 0, 0, w, h);
   var d; try { d = g.getImageData(0, 0, w, h); } catch (e) { return (SPMASK[key] = c); }      /* a page opened from disk cannot read its own pictures: show the face as drawn */
   var a = d.data, q = new THREE.Color(ink), br = a[(2 * w + 2) * 4], bg = a[(2 * w + 2) * 4 + 1], bb = a[(2 * w + 2) * 4 + 2];      /* the face's own colour, read just inside its corner: a button drawn lit in the design still gives a clean mask */
@@ -8684,7 +8674,7 @@ function spButton(id, r, name, o){
   var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); KB.host.add(hit);
   var st = { bg:o.bg || o.bgref || '#FFFFFF', prog:0, text:o.text || null, key:'' };
   function paint(){
-    var key = st.bg + '|' + st.prog + '|' + (st.text ? st.text.join('/') : '') + '|' + SPFACES.ok; if (key === st.key) return; st.key = key;
+    var key = st.bg + '|' + st.prog + '|' + (st.text ? st.text.join('/') : '') + '|' + !!(SPFACES && SPFACES.ok); if (key === st.key) return; st.key = key;
     var g = cv.getContext('2d'), W = cv.width, H = cv.height, e = 5 * k;
     g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = st.bg; g.fillRect(e, e, W - 2 * e, H - 2 * e);
     if (st.prog > 0){ g.fillStyle = '#E0193C'; g.fillRect(e, e, (W - 2 * e) * Math.min(1, st.prog), H - 2 * e); }
@@ -8696,7 +8686,7 @@ function spButton(id, r, name, o){
     } else if (o.bgref){ var mk2 = spMask(r, o.bgref, o.ink || '#000000'); if (mk2) g.drawImage(mk2, e, e, W - 2 * e, H - 2 * e); }
     t.needsUpdate = true;
   }
-  paint(); SPFACES.fn.push(function(){ st.key = ''; paint(); });
+  paint(); if (SPFACES) SPFACES.fn.push(function(){ st.key = ''; paint(); });      /* (the ECHO JELLY and BEEVERB build theirs before the SERPENT's faces exist: they use words only) */
   if (document.fonts && document.fonts.load && st.text) document.fonts.load('40px "Pixel Game"').then(function(){ st.key = ''; paint(); }).catch(function(){});
   var c = { id:id, kind:'btn', name:name, m:m, mat:topM, lit:0, hov:false, down:0, y0:y0, sp:true,
     setBg:function(hex){ if (hex !== st.bg){ st.bg = hex; paint(); } },
@@ -10626,7 +10616,7 @@ var DEVS = {
   mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.78, asp:1.63, off:0.05, lookz:0.03, hud:'hudMx' }
 };
 DEVS.mc = { key:'mc', g:MCG, name:'Chord synth', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.56, asp:2.0, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
-DEVS.ec = { key:'ec', g:ECG, name:'Echo and reverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.98, asp:0.6, off:0.04, lookz:0.2 + 0.05, hud:'hudEc' };
+DEVS.ec = { key:'ec', g:ECG, name:'Echo Jelly and Beeverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.98, asp:0.6, off:0.04, lookz:0.2 + 0.05, hud:'hudEc' };
 DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 FLOWS.forEach(function(f){ DEVS[f.key] = { key:f.key, g:f.G, name:'Video synth A', stand:devStand(f.pos), yaw:f.pos.r, pitch:-0.42, d:0.72, asp:1.9, off:0.04, lookz:0.05, hud:'hudPf' }; });
 DEVS.bz = { key:'bz', g:BZG, name:'Video synth B', stand:devStand(PGPOS), yaw:PGPOS.r, pitch:-0.42, d:0.52, asp:1.9, off:0.04, lookz:0.02, hud:'hudBz' };
@@ -10956,7 +10946,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.280 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.281 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

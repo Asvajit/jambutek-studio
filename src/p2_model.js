@@ -136,7 +136,7 @@ var TRWHITE = new THREE.Color(1, 1, 1), TRTMP = new THREE.Color(), TRSIDE = new 
 function trTex(c){ var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 function dodec(g, r, fill){ g.beginPath(); for (var k = 0; k < 12; k++){ var a = Math.PI / 12 + k * Math.PI / 6; g.lineTo(Math.sin(a) * r, -Math.cos(a) * r); } g.closePath(); g.fillStyle = fill; g.fill(); }
 /* style: 'big' (125 px across), 'small' (the send knobs), 'tempo'. The cylinder's cap maps the canvas turned a quarter, hence the rotate */
-var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 } };
+var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 }, fx:{ r:70.25, seg:12 } };
 var TRKTEX = {};                                    /* knob tops are shared by look: a SERPENT lane change just swaps which one its knobs wear */
 function trKnobTex(style, col, ptr){
   var key = style + col + ptr; if (TRKTEX[key]) return TRKTEX[key];
@@ -149,6 +149,9 @@ function trKnobTex(style, col, ptr){
   } else if (style === 'tempo'){
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 96.5, '#2B2E36'); dodec(g, 90, '#3B3D47');
     g.fillStyle = ptr; g.fillRect(-10, -99, 20, 85);
+  } else if (style === 'fx'){                                  /* ECHO JELLY and BEEVERB */
+    g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 54.95, '#2B2E36'); dodec(g, 51.1, col);
+    g.fillStyle = ptr; g.fillRect(-5.95, -56.85, 11.9, 52.9);
   } else if (style === 'serp' || style === 'serpS'){
     var q = S.r / 64.7; g.fillStyle = '#0D0D0F'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49.8 * q, '#2B2E36'); dodec(g, 44.8 * q, col);
     g.fillStyle = ptr; g.fillRect(-5.3 * q, -40 * q, 10.6 * q, 34 * q);
@@ -159,7 +162,7 @@ function trKnobTex(style, col, ptr){
   return (TRKTEX[key] = trTex(cv));
 }
 function trKnob(id, cx, cy, style, col, ptr, name, def, opt){
-  opt = opt || {}; var S = TRK[style], R = S.r * KB.px, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : style === 'serpS' ? 4.5 : 6.5) * SC;
+  opt = opt || {}; var S = TRK[style], R = S.r * KB.px, H = (style === 'small' ? 4.5 : style === 'tempo' ? 7.5 : style === 'serpS' ? 4.5 : style === 'fx' ? 8 : 6.5) * SC;
   var tex = trKnobTex(style, col, ptr), gr = new THREE.Group(); gr.position.set(KB.x(cx), 0, KB.z(cy)); KB.host.add(gr);
   var topM = new THREE.MeshPhongMaterial({ color:0x4D4D4D, map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.62, shininess:10, specular:0x0A0A0A });      /* less lamp, more glow: the caps keep the design's colours instead of washing out under the room lights */
   var sideM = new THREE.MeshPhongMaterial({ color:style === 'small' ? 0x131419 : 0x17171C, shininess:12, specular:0x0A0A0A, flatShading:true });

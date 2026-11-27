@@ -32,7 +32,7 @@ function spOutCol(o){ var i = typeof MXN !== 'undefined' ? MXN.indexOf(String(SN
    on demand, so a button can be grey or the lane's colour, white or lit, and show a progress bar under its words while it is held */
 var SPMASK = {};
 function spMask(r, bgref, ink){
-  var key = r.join() + ink; if (SPMASK[key]) return SPMASK[key]; if (!SPFACES.ok) return null;
+  var key = r.join() + ink; if (SPMASK[key]) return SPMASK[key]; if (!SPFACES || !SPFACES.ok) return null;
   var w = Math.round(r[2] - 10), h = Math.round(r[3] - 10), c = mk(w, h), g = c.getContext('2d'); g.drawImage(SPFACES, r[0] + 5, r[1] + 5, w, h, 0, 0, w, h);
   var d; try { d = g.getImageData(0, 0, w, h); } catch (e) { return (SPMASK[key] = c); }      /* a page opened from disk cannot read its own pictures: show the face as drawn */
   var a = d.data, q = new THREE.Color(ink), br = a[(2 * w + 2) * 4], bg = a[(2 * w + 2) * 4 + 1], bb = a[(2 * w + 2) * 4 + 2];      /* the face's own colour, read just inside its corner: a button drawn lit in the design still gives a clean mask */
@@ -48,7 +48,7 @@ function spButton(id, r, name, o){
   var hit = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.004, 0.02, D2 + 0.004), HITMAT); hit.position.set(m.position.x, 0.008, m.position.z); KB.host.add(hit);
   var st = { bg:o.bg || o.bgref || '#FFFFFF', prog:0, text:o.text || null, key:'' };
   function paint(){
-    var key = st.bg + '|' + st.prog + '|' + (st.text ? st.text.join('/') : '') + '|' + SPFACES.ok; if (key === st.key) return; st.key = key;
+    var key = st.bg + '|' + st.prog + '|' + (st.text ? st.text.join('/') : '') + '|' + !!(SPFACES && SPFACES.ok); if (key === st.key) return; st.key = key;
     var g = cv.getContext('2d'), W = cv.width, H = cv.height, e = 5 * k;
     g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = st.bg; g.fillRect(e, e, W - 2 * e, H - 2 * e);
     if (st.prog > 0){ g.fillStyle = '#E0193C'; g.fillRect(e, e, (W - 2 * e) * Math.min(1, st.prog), H - 2 * e); }
@@ -60,7 +60,7 @@ function spButton(id, r, name, o){
     } else if (o.bgref){ var mk2 = spMask(r, o.bgref, o.ink || '#000000'); if (mk2) g.drawImage(mk2, e, e, W - 2 * e, H - 2 * e); }
     t.needsUpdate = true;
   }
-  paint(); SPFACES.fn.push(function(){ st.key = ''; paint(); });
+  paint(); if (SPFACES) SPFACES.fn.push(function(){ st.key = ''; paint(); });      /* (the ECHO JELLY and BEEVERB build theirs before the SERPENT's faces exist: they use words only) */
   if (document.fonts && document.fonts.load && st.text) document.fonts.load('40px "Pixel Game"').then(function(){ st.key = ''; paint(); }).catch(function(){});
   var c = { id:id, kind:'btn', name:name, m:m, mat:topM, lit:0, hov:false, down:0, y0:y0, sp:true,
     setBg:function(hex){ if (hex !== st.bg){ st.bg = hex; paint(); } },

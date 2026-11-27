@@ -11,24 +11,12 @@ var EC = { p:{ time:0.42, rep:0.45, tone:0.55, level:0.7, sync:1, on:1 }, lv:0 }
 var ECDIV = [['1/16', 0.25], ['1/8', 0.5], ['1/8 dot', 0.75], ['1/4', 1], ['1/4 dot', 1.5], ['1/2', 2]];
 function ecRestore(){ try { var s = JSON.parse(store('jambutek-studio-echo-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(EC.p).forEach(function(k){ if (typeof s.p[k] === 'number') EC.p[k] = clamp(s.p[k], 0, 1); }); } catch (e) {} } ecRestore();
 var ecSaveT = null; function ecSaveNow(){ store('jambutek-studio-echo-v1', JSON.stringify({ v:1, p:EC.p })); } function ecSaveSoon(){ clearTimeout(ecSaveT); ecSaveT = setTimeout(ecSaveNow, saveMs(800)); }
-var ecC = mk(ECW * 6, ECD * 6), ecTex = null;
-function paintEC(){
-  var g = ecC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  g.fillStyle = '#35C46B'; g.fillRect(0, 0, ECW, ECD);      // the green of the drum machine's delay knobs: every delay in the room is green
-  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '230,255,235') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#0B1F12'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#0B1F12'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('ECHO', 10, 15, 11, '#0B1F12', true, 'left'); T('SEND A', ECW - 10, 15, 5, '#0B1F12', false, 'right');
-  g.fillStyle = '#0B1F12'; g.fillRect(10, 24, ECW - 20, 0.6);
-  [['TIME', 30], ['REPEAT', 67], ['TONE', 104], ['LEVEL', 141]].forEach(function(a){
-    T(a[0], a[1], 69, 4.6); g.strokeStyle = 'rgba(11,31,18,.75)'; g.lineWidth = 0.4;
-    for (var k = 0; k <= 10; k++){ var an = (-135 + k * 27) * Math.PI / 180, r0 = 11.2, r1 = k % 5 ? 12.6 : 13.6; g.beginPath(); g.moveTo(a[1] + Math.sin(an) * r0, 48 - Math.cos(an) * r0); g.lineTo(a[1] + Math.sin(an) * r1, 48 - Math.cos(an) * r1); g.stroke(); }
-  });
-  T('TEMPO SYNC', 30, 99.5, 3.6); T('PEAK', 85, 99.5, 3.6); T('ON', 141, 99.5, 3.6);
-  g.setTransform(1, 0, 0, 1, 0, 0); if (ecTex) ecTex.needsUpdate = true;
-}
+/* the ECHO JELLY plate: the designer's artwork, 1360 x 880 px (8 px per mm), with its controls cut out (tools/make_fx.py) */
+var ecC = mk(1360, 880), ecTex = null, ecImg = new Image();
+function paintEC(){ var g = ecC.getContext('2d'); if (ecImg.ok) g.drawImage(ecImg, 0, 0); else { g.fillStyle = '#35C46B'; g.fillRect(0, 0, 1360, 880); } if (ecTex) ecTex.needsUpdate = true; }
+ecImg.onload = function(){ ecImg.ok = true; paintEC(); }; ecImg.src = 'tr/echo-jelly.jpg';
 paintEC(); ecTex = smoothTex(ecC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintEC).catch(function(){});
+var FXRED = '#FA4442', FXPTR = '#151518';
 var ECLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
@@ -37,13 +25,15 @@ var ECLED = {};
   devBody(ECY, 'ec');
 })();
 HOST = ECG; LX = ecx; LZ = ecz; DEV = 'ec';
-knob('ectime', 30, 48, 8.2, 'Echo time', EC.p.time, { h:11, sides:16, color:0x0E0F11 }).pk = 'time';
-knob('ecrep', 67, 48, 8.2, 'Repeats', EC.p.rep, { h:11, sides:16, color:0x0E0F11 }).pk = 'rep';
-knob('ectone', 104, 48, 8.2, 'Tone', EC.p.tone, { h:11, sides:16, color:0x0E0F11 }).pk = 'tone';
-knob('eclevel', 141, 48, 8.2, 'Echo level', EC.p.level, { h:11, sides:16, color:0x0E0F11 }).pk = 'level';
-button('ecsync', 30, 87, 20, 10, 'SYNC', 'Tempo sync', 0xF2B544).pk = 'sync';
-button('econ', 141, 87, 20, 10, 'ON', 'Echo on / off', 0x3BFF6A).pk = 'on';
-ledAt(ECLED, 'pk', 85, 87, 0.0034, 0xFF2A3C);
+var KBE = KB; KB = { host:ECG, x:function(px){ return ecx(px / 8); }, z:function(py){ return ecz(py / 8); }, px:SC / 8, faces:TRFACES };
+trKnob('ectime', 200.25, 357.25, 'fx', FXRED, FXPTR, 'Echo time', EC.p.time).pk = 'time';
+trKnob('ecrep', 200.25, 663.25, 'fx', FXRED, FXPTR, 'Repeats', EC.p.rep).pk = 'rep';
+trKnob('ectone', 1174.25, 357.25, 'fx', FXRED, FXPTR, 'Tone', EC.p.tone).pk = 'tone';
+trKnob('eclevel', 1174.25, 663.25, 'fx', FXRED, FXPTR, 'Echo level', EC.p.level).pk = 'level';
+spButton('ecsync', [462.5, 736.5, 205, 68], 'Tempo sync', { text:['SYNC ON'], size:46 }).pk = 'sync';
+spButton('econ', [718.5, 736.5, 205, 68], 'Echo on / bypass', { text:['BYPASS'], size:46 }).pk = 'on';
+KB = KBE;
+ledAt(ECLED, 'pk', 1155.5 / 8, 152.3 / 8, 0.0031, 0xFF2A3C);
 CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob') c.def = { time:0.42, rep:0.45, tone:0.55, level:0.7 }[c.pk]; });
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 
@@ -69,17 +59,19 @@ function ecApply(jump){
 }
 function ecLabel(c){
   if (c.id === 'ecsync') return 'Tempo sync: ' + (EC.p.sync ? 'on' : 'off') + ' · click';
-  if (c.id === 'econ') return 'Echo ' + (EC.p.on ? 'on' : 'off') + ' · click';
+  if (c.id === 'econ') return 'Echo Jelly ' + (EC.p.on ? 'on · click to bypass' : 'bypassed · click to turn on');
   if (c.id === 'ectime') return 'Echo time ' + (EC.p.sync ? ecDiv()[0] : Math.round(ecSecs() * 1000) + ' ms') + ' · scroll or drag';
   return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
 }
-function ecPress(c){ if (c.kind !== 'btn') return; EC.p[c.pk] = EC.p[c.pk] ? 0 : 1; ecAudio(); ecApply(); ecSaveSoon(); toast(c.id === 'econ' ? 'Echo ' + (EC.p.on ? 'on' : 'off') : 'Echo tempo sync ' + (EC.p.sync ? 'on' : 'off')); }
+function ecPress(c){ if (c.kind !== 'btn') return; EC.p[c.pk] = EC.p[c.pk] ? 0 : 1; ecAudio(); ecApply(); ecSaveSoon(); toast(c.id === 'econ' ? 'Echo Jelly ' + (EC.p.on ? 'on' : 'bypassed') : 'Echo tempo sync ' + (EC.p.sync ? 'on' : 'off')); }
 function ecCtl(c){ EC.p[c.pk] = c.v; ecAudio(); ecApply(); ecSaveSoon(); }
 DEVH.ec = { label:ecLabel, press:ecPress, release:NOP, ctl:ecCtl, turn:NOP };
 function ecUpdate(now, dt){
   if (!ECA) ecAudio(); else if (EC.bpm !== M.bpm && EC.p.sync) ecApply();
   var pk = 0; if (ECA){ var buf = ecUpdate.buf || (ecUpdate.buf = new Float32Array(256)); ECA.an.getFloatTimeDomainData(buf); for (var k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } }
   EC.lv = Math.max(pk, EC.lv - dt * 2.5); ledOn(ECLED.pk, clamp(EC.lv * 3, 0.06, 1));
-  ['ecsync', 'econ'].forEach(function(id){ var c = CT[id], L = EC.p[c.pk] ? 1 : 0.12; if (c.down) L = Math.max(L, 0.8); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  ['ecsync', 'econ'].forEach(function(id){ var c = CT[id], on = !!EC.p[c.pk];      /* SYNC lights green when on; BYPASS turns red when the echo is bypassed */
+    if (id === 'ecsync'){ c.repaintFace(on ? 'SYNC ON' : 'SYNC OFF'); c.setBg(on ? '#3BFF6A' : '#FFFFFF'); } else c.setBg(on ? '#FFFFFF' : '#FF2A3C');
+    c.paintLit(); var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }
 RESTORE['jambutek-studio-echo-v1'] = function(){ ecRestore(); CTLIST.forEach(function(c){ if (c.dev === 'ec' && c.kind === 'knob' && !c.rv){ c.v = EC.p[c.pk]; c.show(); } }); ecApply(); }; SAVENOW.push(ecSaveNow);

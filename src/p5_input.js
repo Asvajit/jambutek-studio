@@ -34,7 +34,7 @@ var DEVS = {
   mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.78, asp:1.63, off:0.05, lookz:0.03, hud:'hudMx' }
 };
 DEVS.mc = { key:'mc', g:MCG, name:'Chord synth', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.56, asp:2.0, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
-DEVS.ec = { key:'ec', g:ECG, name:'Echo and reverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.98, asp:0.6, off:0.04, lookz:0.2 + 0.05, hud:'hudEc' };
+DEVS.ec = { key:'ec', g:ECG, name:'Echo Jelly and Beeverb', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.98, asp:0.6, off:0.04, lookz:0.2 + 0.05, hud:'hudEc' };
 DEVS.sc = { key:'sc', g:SCG, name:'Scratch box', stand:devStand(SCPOS), yaw:SCPOS.r, pitch:-0.42, d:0.62, asp:0.95, off:0.04, lookz:0.03, hud:'hudSc', keys:{ down:skKbDown, up:skKbUp, play:function(){ toggleSeq(); } } };
 FLOWS.forEach(function(f){ DEVS[f.key] = { key:f.key, g:f.G, name:'Video synth A', stand:devStand(f.pos), yaw:f.pos.r, pitch:-0.42, d:0.72, asp:1.9, off:0.04, lookz:0.05, hud:'hudPf' }; });
 DEVS.bz = { key:'bz', g:BZG, name:'Video synth B', stand:devStand(PGPOS), yaw:PGPOS.r, pitch:-0.42, d:0.52, asp:1.9, off:0.04, lookz:0.02, hud:'hudBz' };
@@ -364,7 +364,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.280 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.281 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

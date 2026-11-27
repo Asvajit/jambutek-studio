@@ -11,20 +11,11 @@ var RV = { p:{ size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:
 var RVMODES = [['HALL', [1, 1.31, 1.73, 2.19], 0.22], ['CLOUD', [1, 1.47, 2.11, 2.83], 0.5], ['VOID', [1, 1.62, 2.41, 3.37], 0.85]];
 function rvRestore(){ try { var s = JSON.parse(store('jambutek-studio-reverb-v1') || 'null'); if (s && s.v === 1 && s.p) Object.keys(RV.p).forEach(function(k){ if (typeof s.p[k] !== 'number'){ if (k === 'hpf') RV.p.hpf = 0; else if (k === 'lpf') RV.p.lpf = 1; return; } RV.p[k] = k === 'mode' ? clamp(s.p[k] | 0, 0, 2) : k === 'on' ? (s.p[k] ? 1 : 0) : clamp(s.p[k], 0, 1); }); } catch (e) {} } rvRestore();
 var rvSaveT = null; function rvSaveNow(){ store('jambutek-studio-reverb-v1', JSON.stringify({ v:1, p:RV.p })); } function rvSaveSoon(){ clearTimeout(rvSaveT); rvSaveT = setTimeout(rvSaveNow, saveMs(800)); }
-var rvC = mk(ECW * 6, ECD * 6), rvTex = null;
-function paintRV(){
-  var g = rvC.getContext('2d'); g.setTransform(6, 0, 0, 6, 0, 0);
-  g.fillStyle = '#E8C63A'; g.fillRect(0, 0, ECW, ECD);      // the yellow of the drum machine's reverb knobs: every reverb in the room is yellow
-  for (var i = 0; i < 900; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '40,30,0' : '255,250,220') + ',' + rnd(.03, .08) + ')'; g.fillRect(Math.random() * ECW, Math.random() * ECD, .5, .3); }
-  function T(s, x, y, size, col, anton, al){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#1E1803'; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-  g.strokeStyle = '#1E1803'; g.lineWidth = 0.6; g.strokeRect(4, 4, ECW - 8, ECD - 8);
-  T('REVERB', 10, 14, 10, '#1E1803', true, 'left'); T('SEND B', ECW - 10, 14, 5, '#1E1803', false, 'right'); g.fillStyle = '#1E1803'; g.fillRect(10, 22, ECW - 20, 0.6);
-  [['SIZE', 22, 42], ['DECAY', 50, 42], ['DENSITY', 78, 42], ['HPF', 106, 42], ['MOD', 22, 80], ['TONE', 50, 80], ['LEVEL', 78, 80], ['LPF', 106, 80]].forEach(function(a){ T(a[0], a[1], a[2] + 14.5, 4, a[0] === 'HPF' || a[0] === 'LPF' ? '#0F3E66' : null); });
-  T('MODE', 141, 54, 3.6); T('ON', 141, 84, 3.6); T('PEAK', 141, 100.5, 3.2);
-  g.setTransform(1, 0, 0, 1, 0, 0); if (rvTex) rvTex.needsUpdate = true;
-}
+/* the BEEVERB plate: the designer's artwork, 1360 x 880 px (8 px per mm), with its controls cut out (tools/make_fx.py) */
+var rvC = mk(1360, 880), rvTex = null, rvImg = new Image();
+function paintRV(){ var g = rvC.getContext('2d'); if (rvImg.ok) g.drawImage(rvImg, 0, 0); else { g.fillStyle = '#E8C63A'; g.fillRect(0, 0, 1360, 880); } if (rvTex) rvTex.needsUpdate = true; }
+rvImg.onload = function(){ rvImg.ok = true; paintRV(); }; rvImg.src = 'tr/beeverb.jpg';
 paintRV(); rvTex = smoothTex(rvC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintRV).catch(function(){});
 var RVLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
@@ -33,11 +24,14 @@ var RVLED = {};
   top.userData.dev = body.userData.dev = 'ec';
 })();
 HOST = ECG; LX = rvx; LZ = rvz; DEV = 'ec';
-[['size', 22, 42, 'Reverb size'], ['dec', 50, 42, 'Decay'], ['dens', 78, 42, 'Density'], ['hpf', 106, 42, 'Reverb HPF'], ['mod', 22, 80, 'Modulation'], ['tone', 50, 80, 'Tone'], ['level', 78, 80, 'Reverb level'], ['lpf', 106, 80, 'Reverb LPF']]
-  .forEach(function(a){ var c = knob('rv' + a[0], a[1], a[2], 7.6, a[3], RV.p[a[0]], { h:11, sides:16, color:0x0E0F11 }); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
-var rvB1 = button('rvmode', 141, 42, 22, 11, 'HALL', 'Reverb mode', 0xB48CFF); rvB1.rv = true; rvB1.rk = 'mode';
-var rvB2 = button('rvon', 141, 72, 22, 11, 'ON', 'Reverb on / off', 0x3BFF6A); rvB2.rv = true; rvB2.rk = 'on';
-ledAt(RVLED, 'pk', 141, 94, 0.003, 0xFF2A3C);
+var KBR = KB; KB = { host:ECG, x:function(px){ return rvx(px / 8); }, z:function(py){ return rvz(py / 8); }, px:SC / 8, faces:TRFACES };
+[['size', 176.15, 357.25, 'Reverb size'], ['dec', 403.15, 357.25, 'Decay'], ['tone', 936.25, 357.25, 'Tone'], ['level', 1182.25, 357.25, 'Reverb level'],
+ ['dens', 176.15, 663.25, 'Density'], ['mod', 403.15, 663.25, 'Modulation'], ['lpf', 936.25, 663.25, 'Reverb LPF'], ['hpf', 1182.25, 663.25, 'Reverb HPF']]
+  .forEach(function(a){ var c = trKnob('rv' + a[0], a[1], a[2], 'fx', FXRED, FXPTR, a[3], RV.p[a[0]]); c.rk = a[0]; c.rv = true; c.def = { size:0.45, dec:0.7, dens:0.7, mod:0.35, tone:0.6, level:0.7, hpf:0, lpf:1 }[a[0]]; });
+var rvB1 = spButton('rvmode', [570.4, 230.3, 205, 68], 'Reverb mode', { text:['HALL'], size:46 }); rvB1.rv = true; rvB1.rk = 'mode';
+var rvB2 = spButton('rvon', [570.4, 328.5, 205, 68], 'Beeverb on / bypass', { text:['BYPASS'], size:46 }); rvB2.rv = true; rvB2.rk = 'on';
+KB = KBR;
+ledAt(RVLED, 'pk', 1155.5 / 8, 152.3 / 8, 0.0031, 0xFF2A3C);
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 
 var RVA = null;
@@ -68,12 +62,12 @@ function rvApply(jump){
   A.wet.gain.setTargetAtTime(Math.pow(P.level, 1.5) * 1.5, t, 0.03); A.inp.gain.setTargetAtTime(P.on ? 1 : 0, t, 0.015);         // switching it off stops feeding it; the tail rings out
 }
 function rvLabel(c){
-  if (c.id === 'rvmode') return 'Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase() + ' · click'; if (c.id === 'rvon') return 'Reverb ' + (RV.p.on ? 'on' : 'off') + ' · click';
+  if (c.id === 'rvmode') return 'Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase() + ' · click'; if (c.id === 'rvon') return 'Beeverb ' + (RV.p.on ? 'on · click to bypass' : 'bypassed · click to turn on');
   if (c.rk === 'hpf' || c.rk === 'lpf'){ var hz = mxHz(c.rk === 'hpf' ? 'h' : 'l', c.v), off = c.rk === 'hpf' ? c.v < 0.01 : c.v > 0.99; return c.name + ' ' + (off ? 'off' : hz >= 1000 ? (hz / 1000).toFixed(1) + ' kHz' : Math.round(hz) + ' Hz') + ' · scroll or drag'; }
   return c.name + ' ' + Math.round(c.v * 100) + ' · scroll or drag';
 }
 function rvPress(c){
-  if (c.id === 'rvmode'){ RV.p.mode = (RV.p.mode + 1) % 3; c.repaintFace(RVMODES[RV.p.mode][0]); toast('Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase()); } else if (c.id === 'rvon'){ RV.p.on = RV.p.on ? 0 : 1; toast('Reverb ' + (RV.p.on ? 'on' : 'off')); } else return;
+  if (c.id === 'rvmode'){ RV.p.mode = (RV.p.mode + 1) % 3; c.repaintFace(RVMODES[RV.p.mode][0]); toast('Reverb mode: ' + RVMODES[RV.p.mode][0].toLowerCase()); } else if (c.id === 'rvon'){ RV.p.on = RV.p.on ? 0 : 1; toast('Beeverb ' + (RV.p.on ? 'on' : 'bypassed')); } else return;
   rvAudio(); rvApply(); rvSaveSoon();
 }
 function rvCtl(c){ RV.p[c.rk] = c.v; rvAudio(); rvApply(); rvSaveSoon(); }
@@ -82,7 +76,8 @@ function rvUpdate(now, dt){
   if (!RVA) rvAudio();
   var pk = 0; if (RVA){ var buf = rvUpdate.buf || (rvUpdate.buf = new Float32Array(256)); RVA.an.getFloatTimeDomainData(buf); for (var k = 0; k < 256; k += 2){ var a = Math.abs(buf[k]); if (a > pk) pk = a; } }
   RV.lv = Math.max(pk, RV.lv - dt * 2.5); ledOn(RVLED.pk, clamp(RV.lv * 3, 0.06, 1));
-  [rvB1, rvB2].forEach(function(c){ var L = c === rvB1 ? 0.55 : (RV.p.on ? 1 : 0.12); if (c.down) L = Math.max(L, 0.9); if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
+  rvB2.setBg(RV.p.on ? '#FFFFFF' : '#FF2A3C');      /* BYPASS turns red while the reverb is bypassed */
+  [rvB1, rvB2].forEach(function(c){ c.paintLit(); var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty; });
 }
 rvB1.repaintFace(RVMODES[RV.p.mode][0]);
 RESTORE['jambutek-studio-reverb-v1'] = function(){ rvRestore(); CTLIST.forEach(function(c){ if (c.rv && c.kind === 'knob'){ c.v = RV.p[c.rk]; c.show(); } }); rvB1.repaintFace(RVMODES[RV.p.mode][0]); rvApply(); }; SAVENOW.push(rvSaveNow);
