@@ -237,19 +237,19 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
 #mpLobby.v3 .card{ position:relative; width:520px; box-sizing:border-box; background:rgba(0,0,0,.56); /* the design's grey #707070 laid over the room on "multiply": every colour behind it is darkened to 44%, which is exactly what black at 56% does */ border:0; border-radius:11px; padding:17px 24px 20px; box-shadow:0 18px 50px rgba(0,0,0,.45) }
 #mpLobby.v3 label, #mpLobby.v3 h2{ display:block; font-family:'Merchant Copy', ui-monospace, monospace; font-weight:normal; color:#FFF200; text-transform:uppercase; letter-spacing:.04em; font-size:30px; line-height:1; margin:0 0 8px; white-space:nowrap; text-shadow:none }
 #mpLobby.v3 h2{ font-size:79px; letter-spacing:.06em; margin:0 0 10px }
-#mpLobby.v3 input{ display:block; width:100%; box-sizing:border-box; height:60px; margin:0 0 15px; padding:7px 12px 0; background:transparent; border:2px solid #fff; border-radius:0; box-shadow:none; outline:0; color:#fff;
+#mpLobby.v3 input{ display:block; width:100%; box-sizing:border-box; height:60px; margin:0 0 15px; padding:7px 12px 0; background:transparent; border:2px solid #fff; border-radius:9px; box-shadow:none; outline:0; color:#fff;
   font-family:'Pixel Game', 'Anton', sans-serif; font-size:60px; line-height:1; letter-spacing:.03em; text-transform:uppercase; caret-color:#FFF200 }
 #mpLobby.v3 input::placeholder{ color:#fff; opacity:1 } #mpLobby.v3 input:focus::placeholder{ opacity:.35 }
 #mpLobby.v3 input:focus{ border-color:#FFF200 }
-#mpLobby.v3 .card button{ display:block; width:100%; box-sizing:border-box; height:59px; margin:0; padding:6px 8px 0; border:0; border-radius:0; color:#fff; cursor:pointer; text-transform:uppercase; white-space:nowrap;
+#mpLobby.v3 .card button{ display:block; width:100%; box-sizing:border-box; height:59px; margin:0; padding:6px 8px 0; border:4px solid #000; border-radius:9px; color:#fff; cursor:pointer; text-transform:uppercase; white-space:nowrap;
   font-family:'Pixel Game', 'Anton', sans-serif; font-size:52px; line-height:1; letter-spacing:.02em; text-shadow:none; box-shadow:none; transition:filter .1s, transform .1s }
 #mpLobby.v3 .card button:hover{ filter:brightness(1.18); transform:translateY(-2px) } #mpLobby.v3 .card button:active{ filter:brightness(.88); transform:translateY(1px) }
-#mpLobby.v3 #mpCreate, #mpLobby.v3 #mpGo{ background:#23B54A; margin-bottom:21px }
+#mpLobby.v3 #mpCreate, #mpLobby.v3 #mpGo{ background:#FB1874; margin-bottom:21px }
 #mpLobby.v3 .row{ display:flex; gap:17px; margin:4px 0 20px; align-items:stretch } #mpLobby.v3 .row input{ width:161px; flex:none; margin:0; padding:7px 4px 0; text-align:center }
-#mpLobby.v3 #mpJoin{ width:112px; flex:none; background:#0F6EDC } #mpLobby.v3 #mpSpec{ flex:1; background:#7020CD }
+#mpLobby.v3 #mpJoin{ width:112px; flex:none; background:#3270E7 } #mpLobby.v3 #mpSpec{ flex:1; background:#54398E }
 #mpLobby.v3 #mpSolo{ height:72px; font-size:62px; padding-top:7px; background:#242335 }
 #mpLobby.v3 .ver{ margin:13px 0 0; text-align:center; font-family:'Merchant Copy', ui-monospace, monospace; font-size:32px; line-height:1; letter-spacing:-.045em; color:#A9A7A8; filter:none; text-transform:none; white-space:nowrap }
-#mpLobby.v3 .ver button{ display:inline; width:auto; height:auto; padding:0; margin:0; background:none; color:#A9A7A8; font:inherit; letter-spacing:inherit; text-transform:none; border-bottom:2px solid #A9A7A8; transform:none }
+#mpLobby.v3 .ver button{ display:inline; width:auto; height:auto; padding:0; margin:0; border:0; border-radius:0; background:none; color:#A9A7A8; font:inherit; letter-spacing:inherit; text-transform:none; border-bottom:2px solid #A9A7A8; transform:none }
 #mpLobby.v3 .ver button:hover{ color:#fff; border-color:#fff; filter:none; transform:none }
 #mpLobby.v3 .err{ position:absolute; left:0; right:0; top:100%; margin:12px 0 0; min-height:0; text-align:center; font-family:'Merchant Copy', ui-monospace, monospace; font-size:27px; letter-spacing:.06em; text-transform:uppercase; color:#FF5A4D; text-shadow:0 2px 0 #000 }
 #mpLobby.v3 .err.ok{ color:#7DFF8E }
@@ -296,7 +296,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.281</span>
+    <span id="verFps">studio v0.282</span>
   </div>
 </div>
 
@@ -328,7 +328,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.281</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.282</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -10946,7 +10946,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.281 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.282 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
