@@ -19,11 +19,13 @@ var TRY = new THREE.Group(); TRY.position.set(TRPOS.x, 0, TRPOS.z); TRY.rotation
 var TRG = new THREE.Group(); TRG.position.set(0, TRH, 0); TRG.rotation.x = TILT; TRY.add(TRG);
 var CT = {}, CTLIST = [];                            /* every control, by id */
 
-/* ---- the printed plate, one image per skin (public/tr/<skin>.jpg). The choice is this player's own and is kept in this browser ---- */
+/* ---- the printed plate, one image per skin (public/tr/<skin>.jpg). The skin belongs to the room: whoever changes it changes it for everyone ---- */
 var panelC = mk(3072, 2284), panelTex = null;
 var TRSKINS = [['black', 'BLACK'], ['navy', 'NAVY'], ['blue', 'BLUE'], ['purple', 'PURPLE'], ['green', 'GREEN']];
-var TRSKIN = { i:0, img:{} };
-(function(){ try { var k = localStorage.getItem('jbtr-skin'); TRSKINS.forEach(function(s, i){ if (s[0] === k) TRSKIN.i = i; }); } catch (e) {} })();
+var TRSKIN = { i:0, img:{} }, TRSKINKEY = 'jambutek-studio-trskin-v1';
+function trSkinRead(){ var k = store(TRSKINKEY); if (!k){ try { k = localStorage.getItem('jbtr-skin'); } catch (e) {} } TRSKINS.forEach(function(s, i){ if (s[0] === k) TRSKIN.i = i; }); }      /* (jbtr-skin: where a skin was kept while it was each player's own) */
+trSkinRead();
+RESTORE[TRSKINKEY] = function(){ trSkinRead(); paintPanel(); };      /* someone in the room changed it */
 function trSkinImg(i){
   var k = TRSKINS[i][0]; if (TRSKIN.img[k]) return TRSKIN.img[k];
   var im = new Image(); im.onload = function(){ im.ok = true; if (TRSKIN.i === i) paintPanel(); }; im.src = 'tr/' + k + '.jpg'; TRSKIN.img[k] = im; return im;
@@ -37,7 +39,7 @@ function paintPanel(){
 }
 function trSkin(step){                                             /* the SKIN SELECT arrows */
   var n = TRSKINS.length; TRSKIN.i = (TRSKIN.i + step + n) % n;
-  try { localStorage.setItem('jbtr-skin', TRSKINS[TRSKIN.i][0]); } catch (e) {}
+  store(TRSKINKEY, TRSKINS[TRSKIN.i][0]);
   paintPanel(); trSkinImg((TRSKIN.i + step + n) % n);                 /* and fetch the next one along, so the next press is instant */
   return TRSKINS[TRSKIN.i][1];
 }
