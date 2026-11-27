@@ -330,7 +330,7 @@ function update(now, dt){
     else if (c.si != null) c.setBg(SN.lanes[SN.page].speed === c.si ? lane : SPGREY);
     else if (c.oi != null) c.setBg(SN.out === c.oi ? (c.oi ? spOutCol(c.oi) : '#FFFFFF') : '#000000');
     else if (c.id === (PX + 'reset') || c.id === (PX + 'rand')) c.setBg(lane);
-    else if (c.tg != null){ var tt = SN.act[c.tg] ? 'ON' : 'OFF'; if (c.tgT !== tt){ c.tgT = tt; c.repaintFace(tt); } c.setBg(SN.act[c.tg] ? '#3BFF6A' : '#FFFFFF'); }
+    else if (c.tg != null){ var tt = SN.act[c.tg] ? 'ON' : 'OFF'; if (c.tgT !== tt){ c.tgT = tt; c.repaintFace(tt); } c.setBg(SN.act[c.tg] ? '#3BFF6A' : '#FF2A3C');      /* green ON, red OFF */ }
     else if (c.ab != null) L = (SN.copy && SN.copy.src === c.ab) ? (Math.floor(now / 110) % 2 ? 1 : 0.3) : SN.view === c.ab ? 1 : M.playing && SN.playPg === c.ab ? 0.4 : 0;
     else if (c.id === (PX + 'pcopy')) L = SN.copy ? (Math.floor(now / 160) % 2 ? 1 : 0.15) : 0;
     else if (c.id === (PX + 'msolo')) L = SN.mon ? 1 : 0;
