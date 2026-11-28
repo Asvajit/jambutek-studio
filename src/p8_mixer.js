@@ -62,8 +62,8 @@ MXX.forEach(function(x, i){
   if (i) trKnob('mxsc' + i, (x + 3) * 8, 9.6 * 8, 'mxsc', '#FFFFFF', MXPTR, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc).ch = i;
   trKnob('mxsa' + i, (x + 3) * 8, 157 * 8, 'mxsend', '#5CFFAD', MXPTR, MXN[i] + ' send A (echo)', MX.ch[i].sa).ch = i;
   trKnob('mxsb' + i, (x + 3) * 8, 186 * 8, 'mxsend', '#FFFF61', MXPTR, MXN[i] + ' send B (reverb)', MX.ch[i].sb).ch = i;
-  mxBtn('mxmute' + i, x - 9.6, 213.5, 135.9, 134.7, 'MUTE', 62, MXN[i] + ' mute', '#69C369').ch = i;
-  var so = mxBtn('mxsolo' + i, x + 9.6, 213.5, 135.9, 134.7, 'SOLO', 62, MXN[i] + ' solo', '#3270E7'); so.ch = i; so.solo = true;
+  mxBtn('mxmute' + i, x - 9.6, 213.5, 135.9, 134.7, 'MUTE', 62, MXN[i] + ' mute', '#FFFFFF').ch = i;
+  var so = mxBtn('mxsolo' + i, x + 9.6, 213.5, 135.9, 134.7, 'SOLO', 62, MXN[i] + ' solo', '#FFFFFF'); so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { color:new THREE.Color(MXCOL[i]).getHex(), stripe:0x1A1C21, w:0.0242, edge:true }).ch = i;
 });
 spButton('mxclra', [MXMX * 8 - 97.5, 1222.5, 202, 80], 'Clear send A on every channel', { bg:'#57FFA8', text:['CLEAR'], size:66 }).clr = 'sa';      /* send A feeds the echo */
@@ -147,8 +147,8 @@ function mxUpdate(now, dt){
   ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ sink(CT[id], 0.003); });
   for (i = 0; i < MXNC; i++){
     CT['mxfh' + i].setBg(MX.fh[i] ? '#F3A15F' : '#FFFFFF'); sink(CT['mxfh' + i], 0.002); CT['mxfl' + i].setBg(MX.fl[i] ? '#5CB3F1' : '#FFFFFF'); sink(CT['mxfl' + i], 0.002);
-    CT['mxmute' + i].setBg(MX.ch[i].mute ? '#FF4B3D' : '#69C369'); sink(CT['mxmute' + i], 0.003);      /* MUTE: green while the channel is open, red while it is muted */
-    CT['mxsolo' + i].setBg(MX.ch[i].solo ? '#FFFFFF' : '#3270E7'); sink(CT['mxsolo' + i], 0.003);      /* SOLO: blue, lit white while soloed */
+    CT['mxmute' + i].setBg(MX.ch[i].mute ? '#FF4B3D' : '#FFFFFF'); sink(CT['mxmute' + i], 0.003);      /* MUTE: white, red while the channel is muted */
+    CT['mxsolo' + i].setBg(MX.ch[i].solo ? '#3270E7' : '#FFFFFF'); sink(CT['mxsolo' + i], 0.003);      /* SOLO: white, blue while soloed */
   }
 }
 var NOP = function(){};

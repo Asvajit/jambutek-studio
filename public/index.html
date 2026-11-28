@@ -298,7 +298,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.291</span>
+    <span id="verFps">studio v0.292</span>
   </div>
 </div>
 
@@ -330,7 +330,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.291</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.292</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -6829,8 +6829,8 @@ MXX.forEach(function(x, i){
   if (i) trKnob('mxsc' + i, (x + 3) * 8, 9.6 * 8, 'mxsc', '#FFFFFF', MXPTR, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc).ch = i;
   trKnob('mxsa' + i, (x + 3) * 8, 157 * 8, 'mxsend', '#5CFFAD', MXPTR, MXN[i] + ' send A (echo)', MX.ch[i].sa).ch = i;
   trKnob('mxsb' + i, (x + 3) * 8, 186 * 8, 'mxsend', '#FFFF61', MXPTR, MXN[i] + ' send B (reverb)', MX.ch[i].sb).ch = i;
-  mxBtn('mxmute' + i, x - 9.6, 213.5, 135.9, 134.7, 'MUTE', 62, MXN[i] + ' mute', '#69C369').ch = i;
-  var so = mxBtn('mxsolo' + i, x + 9.6, 213.5, 135.9, 134.7, 'SOLO', 62, MXN[i] + ' solo', '#3270E7'); so.ch = i; so.solo = true;
+  mxBtn('mxmute' + i, x - 9.6, 213.5, 135.9, 134.7, 'MUTE', 62, MXN[i] + ' mute', '#FFFFFF').ch = i;
+  var so = mxBtn('mxsolo' + i, x + 9.6, 213.5, 135.9, 134.7, 'SOLO', 62, MXN[i] + ' solo', '#FFFFFF'); so.ch = i; so.solo = true;
   vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { color:new THREE.Color(MXCOL[i]).getHex(), stripe:0x1A1C21, w:0.0242, edge:true }).ch = i;
 });
 spButton('mxclra', [MXMX * 8 - 97.5, 1222.5, 202, 80], 'Clear send A on every channel', { bg:'#57FFA8', text:['CLEAR'], size:66 }).clr = 'sa';      /* send A feeds the echo */
@@ -6914,8 +6914,8 @@ function mxUpdate(now, dt){
   ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ sink(CT[id], 0.003); });
   for (i = 0; i < MXNC; i++){
     CT['mxfh' + i].setBg(MX.fh[i] ? '#F3A15F' : '#FFFFFF'); sink(CT['mxfh' + i], 0.002); CT['mxfl' + i].setBg(MX.fl[i] ? '#5CB3F1' : '#FFFFFF'); sink(CT['mxfl' + i], 0.002);
-    CT['mxmute' + i].setBg(MX.ch[i].mute ? '#FF4B3D' : '#69C369'); sink(CT['mxmute' + i], 0.003);      /* MUTE: green while the channel is open, red while it is muted */
-    CT['mxsolo' + i].setBg(MX.ch[i].solo ? '#FFFFFF' : '#3270E7'); sink(CT['mxsolo' + i], 0.003);      /* SOLO: blue, lit white while soloed */
+    CT['mxmute' + i].setBg(MX.ch[i].mute ? '#FF4B3D' : '#FFFFFF'); sink(CT['mxmute' + i], 0.003);      /* MUTE: white, red while the channel is muted */
+    CT['mxsolo' + i].setBg(MX.ch[i].solo ? '#3270E7' : '#FFFFFF'); sink(CT['mxsolo' + i], 0.003);      /* SOLO: white, blue while soloed */
   }
 }
 var NOP = function(){};
@@ -10692,7 +10692,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.291 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.292 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
