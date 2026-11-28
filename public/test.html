@@ -298,7 +298,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.295</span>
+    <span id="verFps">studio v0.296</span>
   </div>
 </div>
 
@@ -330,7 +330,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.295</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.296</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -7983,8 +7983,10 @@ function mcChord(c, r, on){                                    // c: the root, 0
   else { delete MC.hold[key]; if (!MC.cont && !Object.keys(MC.hold).length) mcSilence(); }
 }
 function mcSeqAt(n, vel, t, dur){                              // a Snake step: its note is the root, and the whole chord plays for the length of the gate
-  if (!mcAudio()) return; var A = MCA, P = MCPRE[MC.preset]; MC.root = ((n % 12) + 12) % 12; MC.dirty = true; mcTune(t, true);
-  A.vca.gain.cancelScheduledValues(t); A.vca.gain.setTargetAtTime(0.5 + vel * 0.5, t, P.ca * Math.pow(4, MC.atk * 2 - 1) / 3 + 0.002); A.vca.gain.setTargetAtTime(0, t + dur, P.cr / 3 + 0.01); MC.sounding = false; MC.pulse = 1;
+  if (!mcAudio()) return; var A = MCA, P = MCPRE[MC.preset]; MC.root = ((n % 12) + 12) % 12; MC.dirty = true; mcTune(t, !MC.seqHeld);
+  A.vca.gain.cancelScheduledValues(t); A.vca.gain.setTargetAtTime(0.5 + vel * 0.5, t, P.ca * Math.pow(4, MC.atk * 2 - 1) / 3 + 0.002); MC.pulse = 1;
+  if (MC.cont){ MC.seqHeld = true; MC.sounding = true; return; }      /* PERFORM on: the chord rings on, through the empty steps, until the next step with a note (or the sequence stops) */
+  A.vca.gain.setTargetAtTime(0, t + dur, P.cr / 3 + 0.01); MC.sounding = false; MC.seqHeld = false;
 }
 function mcSilence(){ if (!MCA) return; var t = ac.currentTime + 0.003; MCA.vca.gain.cancelScheduledValues(t); MCA.vca.gain.setTargetAtTime(0, t, MCPRE[MC.preset].cr / 3 + 0.01); MC.sounding = false; }
 function mcPluckAt(n, vel, t){
@@ -8029,6 +8031,7 @@ function mcRelease(c){ if (c.root != null){ c.down = 0; mcChord(c.root, 0, 0); }
 function mcCtl(c){ if (!c.mk) return; MC[c.mk] = c.v; mcApply(); if (c.mk === 'voice' || c.mk === 'bvoice'){ MC.dirty = true; if (MCA && MC.sounding) mcTune(ac.currentTime, false); } mcSaveSoon(); }
 DEVH.mc = { label:mcLabel, press:mcPress, release:mcRelease, ctl:mcCtl, turn:NOP };
 function mcUpdate(now, dt){
+  if (MC.seqHeld && (!M.playing || !MC.cont)){ MC.seqHeld = false; if (!Object.keys(MC.hold).length) mcSilence(); }      /* a chord the sequencer was holding ends when the sequence stops, or PERFORM goes off */
   var P = MCPRE[MC.preset]; MC.pulse = Math.max(0, MC.pulse - dt * 2.2); if (MC.dirty){ MC.dirty = false; mcPaintDisp(); }
   MC.lamp.color.setHex(P.col); MC.lamp.intensity = 0.3 * (0.4 + (MC.sounding ? 0.2 : 0) + MC.pulse * 0.45);
   CTLIST.forEach(function(c){ if (c.dev !== 'mc' || c.kind === 'knob') return; var L;
@@ -10994,7 +10997,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.295 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio TEST v0.296 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -11116,7 +11119,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { texLod:function(){ return TEXLOD; }, TRSKIN:TRSKIN, RK:RK, hit:hit, unlock:unlock, pat:pat, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, SIT:SIT, SEATS:SEATS, STK:STK, stkTake:stkTake, stkPlace:stkPlace, act:act, iaOf:iaOf, labelFor:labelFor, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { mcSeqAt:mcSeqAt, mcGain:function(){ return MCA ? MCA.vca.gain.value : -1; }, texLod:function(){ return TEXLOD; }, TRSKIN:TRSKIN, RK:RK, hit:hit, unlock:unlock, pat:pat, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, SIT:SIT, SEATS:SEATS, STK:STK, stkTake:stkTake, stkPlace:stkPlace, act:act, iaOf:iaOf, labelFor:labelFor, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 
 /* ================= TEST ROOM ONLY: forget the machines that were taken away ================= */
 (function(){

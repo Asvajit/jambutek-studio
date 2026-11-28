@@ -103,8 +103,10 @@ function mcChord(c, r, on){                                    // c: the root, 0
   else { delete MC.hold[key]; if (!MC.cont && !Object.keys(MC.hold).length) mcSilence(); }
 }
 function mcSeqAt(n, vel, t, dur){                              // a Snake step: its note is the root, and the whole chord plays for the length of the gate
-  if (!mcAudio()) return; var A = MCA, P = MCPRE[MC.preset]; MC.root = ((n % 12) + 12) % 12; MC.dirty = true; mcTune(t, true);
-  A.vca.gain.cancelScheduledValues(t); A.vca.gain.setTargetAtTime(0.5 + vel * 0.5, t, P.ca * Math.pow(4, MC.atk * 2 - 1) / 3 + 0.002); A.vca.gain.setTargetAtTime(0, t + dur, P.cr / 3 + 0.01); MC.sounding = false; MC.pulse = 1;
+  if (!mcAudio()) return; var A = MCA, P = MCPRE[MC.preset]; MC.root = ((n % 12) + 12) % 12; MC.dirty = true; mcTune(t, !MC.seqHeld);
+  A.vca.gain.cancelScheduledValues(t); A.vca.gain.setTargetAtTime(0.5 + vel * 0.5, t, P.ca * Math.pow(4, MC.atk * 2 - 1) / 3 + 0.002); MC.pulse = 1;
+  if (MC.cont){ MC.seqHeld = true; MC.sounding = true; return; }      /* PERFORM on: the chord rings on, through the empty steps, until the next step with a note (or the sequence stops) */
+  A.vca.gain.setTargetAtTime(0, t + dur, P.cr / 3 + 0.01); MC.sounding = false; MC.seqHeld = false;
 }
 function mcSilence(){ if (!MCA) return; var t = ac.currentTime + 0.003; MCA.vca.gain.cancelScheduledValues(t); MCA.vca.gain.setTargetAtTime(0, t, MCPRE[MC.preset].cr / 3 + 0.01); MC.sounding = false; }
 function mcPluckAt(n, vel, t){
@@ -149,6 +151,7 @@ function mcRelease(c){ if (c.root != null){ c.down = 0; mcChord(c.root, 0, 0); }
 function mcCtl(c){ if (!c.mk) return; MC[c.mk] = c.v; mcApply(); if (c.mk === 'voice' || c.mk === 'bvoice'){ MC.dirty = true; if (MCA && MC.sounding) mcTune(ac.currentTime, false); } mcSaveSoon(); }
 DEVH.mc = { label:mcLabel, press:mcPress, release:mcRelease, ctl:mcCtl, turn:NOP };
 function mcUpdate(now, dt){
+  if (MC.seqHeld && (!M.playing || !MC.cont)){ MC.seqHeld = false; if (!Object.keys(MC.hold).length) mcSilence(); }      /* a chord the sequencer was holding ends when the sequence stops, or PERFORM goes off */
   var P = MCPRE[MC.preset]; MC.pulse = Math.max(0, MC.pulse - dt * 2.2); if (MC.dirty){ MC.dirty = false; mcPaintDisp(); }
   MC.lamp.color.setHex(P.col); MC.lamp.intensity = 0.3 * (0.4 + (MC.sounding ? 0.2 : 0) + MC.pulse * 0.45);
   CTLIST.forEach(function(c){ if (c.dev !== 'mc' || c.kind === 'knob') return; var L;
