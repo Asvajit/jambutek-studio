@@ -128,10 +128,10 @@ function scUpdate(now, dt){
     if (j >= 0){ SCN.slots[j] = null; scSlotSave(j); var ix = SCN.chain.indexOf(j); if (ix >= 0) SCN.chain.splice(ix, 1); SCN.cur = -1; SCN.next = -1; scMetaSave(); toast('Scene ' + (j + 1) + ' cleared'); } }
   var bl = Math.sin(now * 0.016) > 0 ? 1 : 0, sl = 0.45 + Math.sin(now * 0.006) * 0.35;
   var beat = 1; if (M.playing && ac){ var sdb = stepDur(), ph = (((SEQ.n16 - (SEQ.nextT - ac.currentTime) / sdb) / 4) % 1 + 1) % 1; beat = ph < 0.5 ? 1 : 0; }      // on for the first half of every beat
-  var PALE = '#BFE6BF', GREEN = '#69C369', ORANGE = '#FFA83D';
-  SCBTN.forEach(function(c){ var j = c.slot, has = !!SCN.slots[j], bg = has ? PALE : '#FFFFFF';          /* empty: white. stored: pale green. the one that is on: green, flashing on the beat while the sequence plays */
-    if (j === SCN.cur && has) bg = beat ? GREEN : PALE;
-    if (j === SCN.next) bg = bl ? GREEN : '#FFFFFF'; else if (SCN.chain.indexOf(j) >= 0 && j !== SCN.cur) bg = sl > 0.45 ? '#93D593' : PALE;      /* waiting to switch: blinks. in the chain: a slow pulse */
+  var PALE = '#FF6AB0', GREEN = '#69C369', ORANGE = '#FFA83D';      /* (PALE: a stored scene is pink) */
+  SCBTN.forEach(function(c){ var j = c.slot, has = !!SCN.slots[j], bg = has ? PALE : '#FFFFFF';          /* empty: white. stored: pink. the one that is on: green, flashing on the beat while the sequence plays */
+    if (j === SCN.cur && has) bg = beat ? GREEN : '#A9DDA9';
+    if (j === SCN.next) bg = bl ? GREEN : '#FFFFFF'; else if (SCN.chain.indexOf(j) >= 0 && j !== SCN.cur) bg = sl > 0.45 ? '#FF9CCB' : PALE;      /* waiting to switch: blinks. in the chain: a slow pulse */
     if (SCN.copy === 1 && has) bg = bl ? ORANGE : '#FFFFFF'; else if (SCN.copy === 2) bg = j === SCN.src ? ORANGE : (bl ? '#FFD49E' : '#FFFFFF');
     c.setBg(bg); c.paintLit(); var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
   scCopyB.setBg(SCN.copy && !bl ? '#FFFFFF' : ORANGE);

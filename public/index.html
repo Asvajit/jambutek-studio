@@ -298,7 +298,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.292</span>
+    <span id="verFps">studio v0.293</span>
   </div>
 </div>
 
@@ -330,7 +330,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.292</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.293</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -8265,10 +8265,10 @@ function scUpdate(now, dt){
     if (j >= 0){ SCN.slots[j] = null; scSlotSave(j); var ix = SCN.chain.indexOf(j); if (ix >= 0) SCN.chain.splice(ix, 1); SCN.cur = -1; SCN.next = -1; scMetaSave(); toast('Scene ' + (j + 1) + ' cleared'); } }
   var bl = Math.sin(now * 0.016) > 0 ? 1 : 0, sl = 0.45 + Math.sin(now * 0.006) * 0.35;
   var beat = 1; if (M.playing && ac){ var sdb = stepDur(), ph = (((SEQ.n16 - (SEQ.nextT - ac.currentTime) / sdb) / 4) % 1 + 1) % 1; beat = ph < 0.5 ? 1 : 0; }      // on for the first half of every beat
-  var PALE = '#BFE6BF', GREEN = '#69C369', ORANGE = '#FFA83D';
-  SCBTN.forEach(function(c){ var j = c.slot, has = !!SCN.slots[j], bg = has ? PALE : '#FFFFFF';          /* empty: white. stored: pale green. the one that is on: green, flashing on the beat while the sequence plays */
-    if (j === SCN.cur && has) bg = beat ? GREEN : PALE;
-    if (j === SCN.next) bg = bl ? GREEN : '#FFFFFF'; else if (SCN.chain.indexOf(j) >= 0 && j !== SCN.cur) bg = sl > 0.45 ? '#93D593' : PALE;      /* waiting to switch: blinks. in the chain: a slow pulse */
+  var PALE = '#FF6AB0', GREEN = '#69C369', ORANGE = '#FFA83D';      /* (PALE: a stored scene is pink) */
+  SCBTN.forEach(function(c){ var j = c.slot, has = !!SCN.slots[j], bg = has ? PALE : '#FFFFFF';          /* empty: white. stored: pink. the one that is on: green, flashing on the beat while the sequence plays */
+    if (j === SCN.cur && has) bg = beat ? GREEN : '#A9DDA9';
+    if (j === SCN.next) bg = bl ? GREEN : '#FFFFFF'; else if (SCN.chain.indexOf(j) >= 0 && j !== SCN.cur) bg = sl > 0.45 ? '#FF9CCB' : PALE;      /* waiting to switch: blinks. in the chain: a slow pulse */
     if (SCN.copy === 1 && has) bg = bl ? ORANGE : '#FFFFFF'; else if (SCN.copy === 2) bg = j === SCN.src ? ORANGE : (bl ? '#FFD49E' : '#FFFFFF');
     c.setBg(bg); c.paintLit(); var y = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== y) c.m.position.y = y; });
   scCopyB.setBg(SCN.copy && !bl ? '#FFFFFF' : ORANGE);
@@ -9759,7 +9759,7 @@ var MP = (function(){
   };
   function trMeta(s){
     if (!s) return; if (typeof s.bpm === 'number' && Math.abs(s.bpm - M.bpm) > 0.01) setBpm(s.bpm, true);
-    var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; } var ev = M.editVar; if (trVars(s)) M.editVar = ev;      /* the chain is shared; which variation each player is editing is their own */
+    var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; } var ev = M.editVar; if (trVars(s) && !Q.joining && M.varSel.indexOf(ev) >= 0) M.editVar = ev;      /* the chain is shared; which variation each player is editing is their own, but someone coming in starts on the room's, and nobody is left on one that is not playing */
     if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
     Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number' && Math.abs(c.v - v) > 0.0005){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
     applyMix(); dispDirty = true;
@@ -9970,7 +9970,7 @@ var MP = (function(){
         MPON = true; MPHOST = !m.players.length; hud.hidden = false; chat.hidden = false; paintHud();
         try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
         if (MPHOST){ if (M.playing) stopSeq(true); Q.force = true; SAVENOW.forEach(function(f){ try { f(); } catch (e) {} }); Q.force = false; }   // first in: this browser's machines become the room's
-        else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); ks.forEach(function(k){ applySet(k, w[k]); }); if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
+        else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); Q.joining = true; ks.forEach(function(k){ applySet(k, w[k]); }); Q.joining = false; if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
         if (hadDbg2 && !Q.dbg) dbgPlayers(true);               // and the rest of the room gets them too
         if (Q.guest){ toast('Room ' + Q.code + ' is full: you are in as a guest', 4200); line('The six places are taken, so you joined room <b>' + esc(Q.code) + '</b> as a <b>guest</b>: walk, sit, chat, emote and place stickers. You get a place when one of the six leaves.', true); }
         else { toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
@@ -10692,7 +10692,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.292 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.293 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 

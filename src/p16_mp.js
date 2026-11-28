@@ -171,7 +171,7 @@ var MP = (function(){
   };
   function trMeta(s){
     if (!s) return; if (typeof s.bpm === 'number' && Math.abs(s.bpm - M.bpm) > 0.01) setBpm(s.bpm, true);
-    var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; } var ev = M.editVar; if (trVars(s)) M.editVar = ev;      /* the chain is shared; which variation each player is editing is their own */
+    var pt = clamp(s.pat | 0, 0, 15); if (pt !== M.pat){ M.pat = pt; M.nextPat = -1; M.varSel = [0]; M.varIx = 0; M.editVar = 0; } var ev = M.editVar; if (trVars(s) && !Q.joining && M.varSel.indexOf(ev) >= 0) M.editVar = ev;      /* the chain is shared; which variation each player is editing is their own, but someone coming in starts on the room's, and nobody is left on one that is not playing */
     if (Array.isArray(s.mutes) && s.mutes.length === 11) M.mutes = s.mutes; M.fxOn = !!s.fxOn; M.fillOn = !!s.fillOn;
     Object.keys(s.kn || {}).forEach(function(id){ var c = CT[id], v = s.kn[id]; if (c && !c.dev && typeof v === 'number' && Math.abs(c.v - v) > 0.0005){ c.v = clamp(v, 0, 1); try { onCtl(c); } catch (e) {} c.show(); } });
     applyMix(); dispDirty = true;
@@ -382,7 +382,7 @@ var MP = (function(){
         MPON = true; MPHOST = !m.players.length; hud.hidden = false; chat.hidden = false; paintHud();
         try { history.replaceState(null, '', '#' + Q.code); } catch (e) {}
         if (MPHOST){ if (M.playing) stopSeq(true); Q.force = true; SAVENOW.forEach(function(f){ try { f(); } catch (e) {} }); Q.force = false; }   // first in: this browser's machines become the room's
-        else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); ks.forEach(function(k){ applySet(k, w[k]); }); if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
+        else { var w = m.world || {}, ks = Object.keys(w).filter(function(k){ return k !== 'transport'; }).sort(); Q.joining = true; ks.forEach(function(k){ applySet(k, w[k]); }); Q.joining = false; if (M.playing && !(w.transport && w.transport.on)) stopSeq(true); if (w.transport) transport(w.transport); }
         if (hadDbg2 && !Q.dbg) dbgPlayers(true);               // and the rest of the room gets them too
         if (Q.guest){ toast('Room ' + Q.code + ' is full: you are in as a guest', 4200); line('The six places are taken, so you joined room <b>' + esc(Q.code) + '</b> as a <b>guest</b>: walk, sit, chat, emote and place stickers. You get a place when one of the six leaves.', true); }
         else { toast(m.players.length ? 'Joined room ' + Q.code + ' · ' + (m.players.length + 1) + ' here' : 'Room ' + Q.code + ' is open. Send friends the code.');
