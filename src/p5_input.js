@@ -293,7 +293,9 @@ canvas.addEventListener('wheel', function(e){
   var dy0 = e.deltaY || e.deltaX, dy = e.deltaMode === 1 ? dy0 * 33 : dy0;          // with Shift held most browsers report the wheel sideways
   if (wheelOn !== c){ wheelOn = c; wheelAcc = 0; }
   if (c.endless || c.detents){
-    wheelAcc += dy; var n = Math.trunc(wheelAcc / 50); if (!n) return; wheelAcc -= n * 50;
+    var n;
+    if (Math.abs(dy) >= 50 && c.dev !== 'mf'){ n = dy > 0 ? 1 : -1; wheelAcc = 0; }      /* a mouse wheel's click (100 or so) is one notch: it used to count as two, so every other note was skipped. (The MiniFreak's knobs are left as they were) */
+    else { wheelAcc += dy; n = Math.trunc(wheelAcc / 50); if (!n) return; wheelAcc -= n * 50; }      /* a trackpad's small movements add up */
     if (c.endless) turnCtl(c, -n); else setCtl(c, Math.round((c.v - n / c.detents) * c.detents) / c.detents);
   } else setCtl(c, c.v - dy / 100 * 0.04 * (e.shiftKey ? 0.15 : 1));      // Shift: fine steps
 }, { passive:false });
@@ -399,7 +401,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.296 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.297 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
