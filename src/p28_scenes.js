@@ -103,7 +103,7 @@ scImg.onload = function(){ scImg.ok = true; paintSC(); }; scImg.src = 'tr/scenes
 paintSC(); scTex = smoothTex(scC);
 (function(){
   var W2 = ECW * SC, D2 = SCD * SC;
-  var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:scTex, emissive:0xffffff, emissiveMap:scTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; top.position.z = SCOFF; ECG.add(top);
+  var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x404040, map:scTex, emissive:0xffffff, emissiveMap:scTex, emissiveIntensity:0.78, shininess:8, specular:0x000000 })); top.rotation.x = -Math.PI / 2; top.position.z = SCOFF; ECG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x14151B, shininess:30, specular:0x222222, flatShading:true })); body.position.set(0, -ECTH / 2 - 0.0015, SCOFF); ECG.add(body);
   solid(top, 'trbody'); solid(body, 'trbody'); top.userData.dev = body.userData.dev = 'ec';
 })();

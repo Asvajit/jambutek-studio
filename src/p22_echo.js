@@ -20,7 +20,7 @@ var FXRED = '#FA4442', FXPTR = '#151518';
 var ECLED = {};
 (function(){
   var W2 = ECW * SC, D2 = ECD * SC;
-  var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x8C8C8C, map:ecTex, emissive:0xffffff, emissiveMap:ecTex, emissiveIntensity:0.5, shininess:8, specular:0x0A0A0A })); top.rotation.x = -Math.PI / 2; ECG.add(top);
+  var top = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2), new THREE.MeshPhongMaterial({ color:0x404040, map:ecTex, emissive:0xffffff, emissiveMap:ecTex, emissiveIntensity:0.78, shininess:8, specular:0x000000 })); top.rotation.x = -Math.PI / 2; ECG.add(top);
   var body = new THREE.Mesh(new THREE.BoxGeometry(W2 + 0.012, ECTH, D2 + 0.012), new THREE.MeshPhongMaterial({ color:0x1E7A43, shininess:30, specular:0x222222, flatShading:true })); body.position.y = -ECTH / 2 - 0.0015; ECG.add(body);
   devBody(ECY, 'ec');
 })();
