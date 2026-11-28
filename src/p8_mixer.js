@@ -17,8 +17,7 @@ var MXTAG = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBIKA', 'TAPE', 'SHRUTHI', 'CHO
 var MXPPM = 7.6, mxC = mk(Math.round(MXW * MXPPM), Math.round(MXD * MXPPM)), mxTex = null;      /* 7.6 px per mm keeps the picture under 4096 px wide */
 function paintMX(){
   var g = mxC.getContext('2d'); g.setTransform(MXPPM, 0, 0, MXPPM, 0, 0);
-  g.fillStyle = '#1A1C21'; g.fillRect(0, 0, MXW, MXD);
-  for (var i = 0; i < 3000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * MXW, Math.random() * MXD, .5, .3); }
+  g.fillStyle = '#131313'; g.fillRect(0, 0, MXW, MXD);      /* the plate: the same flat black as the DRUMBU-8's black skin */
   function T(s, x, y, size, col, font){ g.font = size + 'px ' + (font === 'px' ? '"Pixel Game", monospace' : '"Merchant Copy", "Courier New", monospace'); g.fillStyle = col || '#E6E6E2'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
   function rr(x, y, w, h, r){ g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   T('JBMX-10', MXMX, 11, 12, '#E6E6E2', 'px');
