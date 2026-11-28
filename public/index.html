@@ -298,7 +298,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
     <span class="desk"><b>Middle click</b> ping</span>
     <span class="desk"><b>Enter</b> start / stop</span>
     <span class="touch">Drag to look &middot; tap the floor to walk &middot; tap an instrument to lean in</span>
-    <span id="verFps">studio v0.293</span>
+    <span id="verFps">studio v0.294</span>
   </div>
 </div>
 
@@ -330,7 +330,7 @@ body.spec #xh, body.spec #hint, body.spec #mpChat .tip, body.spec #mpCopy{ displ
       <label for="mpCode">Or enter room code to join &nbsp;or spectate</label>
       <div class="row"><input id="mpCode" class="code" maxlength="6" placeholder="XXXX" autocomplete="off" spellcheck="false"><button type="button" class="alt" id="mpJoin">Join</button><button type="button" class="alt watch" id="mpSpec" title="Watch the room from the cameras without being in it">Watch</button></div>
       <button type="button" class="ghost" id="mpSolo">Play solo</button>
-      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.293</div>
+      <div class="ver">Jambutek Recordings 2026 - <button type="button" id="mpCred">Credits</button> - v0.294</div>
       <div class="err" id="mpErr"></div>
     </div>
   </div>
@@ -10397,6 +10397,41 @@ function lodUpdate(){
     if (on !== L.on){ L.on = on; L.det.visible = on; }
   }
 }
+/* ---- lighter pictures for instruments you are not near ----
+   Each instrument's panel is one big picture (the mixer's is 4074 x 2493). The graphics card holds every one of them unpacked, about
+   200 MB in all, though from across the room a panel covers a few hundred pixels. So a panel more than about 2 m from the eye is
+   swapped for a copy at most 1024 px across and the full one is dropped from the card; walking up to it brings the full one back.
+   Spectators keep every panel at full size (their cameras cut between close-ups). The MiniFreak and the two video synths are left alone. */
+var TEXLOD = [], texLodAt = 0;
+function texLodBuild(){
+  var by = [];
+  Object.keys(DEVS).forEach(function(k){
+    if (k === 'mf' || k === 'pf' || k === 'bz') return; var g = DEVS[k].g; if (!g) return; var pos = new THREE.Vector3(); g.getWorldPosition(pos);
+    g.traverse(function(o){ if (!o.isMesh) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach(function(m){
+      var t = m && m.map; if (!t || !t.image || !t.image.getContext || t.image.width * t.image.height < 1e6) return;      /* a painted panel of a megapixel or more */
+      var E = null; for (var i = 0; i < by.length; i++) if (by[i].big === t) E = by[i];
+      if (!E){ E = { big:t, small:null, cv:null, ver:-1, mats:[], at:[], far:false }; by.push(E); }
+      if (E.at.indexOf(pos) < 0) E.at.push(pos);
+      ['map', 'emissiveMap'].forEach(function(sl){ if (m[sl] === t && !E.mats.some(function(x){ return x[0] === m && x[1] === sl; })) E.mats.push([m, sl]); });
+    }); });
+  });
+  TEXLOD = by;
+}
+function texLodUpdate(now){
+  if (now - texLodAt < 250) return; texLodAt = now; if (!TEXLOD.length) texLodBuild();
+  var c = camera.position;
+  for (var i = 0; i < TEXLOD.length; i++){
+    var E = TEXLOD[i], d2 = 1e9; for (var j = 0; j < E.at.length; j++){ var q = E.at[j], dx = c.x - q.x, dy = c.y - q.y, dz = c.z - q.z; d2 = Math.min(d2, dx * dx + dy * dy + dz * dz); }
+    var far = !SPEC.on && d2 > (E.far ? 3.6 : 5.3);      /* out past 2.3 m, back in under 1.9 m, so it does not flap at the edge */
+    if (far && (!E.far || E.ver !== E.big.version)){      /* going far, or the panel was repainted while far: make the small copy afresh */
+      var im = E.big.image, k = Math.min(1, 1024 / Math.max(im.width, im.height));
+      if (!E.cv){ E.cv = mk(Math.max(1, Math.round(im.width * k)), Math.max(1, Math.round(im.height * k))); E.small = new THREE.CanvasTexture(E.cv); E.small.minFilter = E.big.minFilter; E.small.magFilter = E.big.magFilter; E.small.anisotropy = E.big.anisotropy; E.small.encoding = E.big.encoding; E.small.flipY = E.big.flipY; E.small.wrapS = E.big.wrapS; E.small.wrapT = E.big.wrapT; }
+      var g2 = E.cv.getContext('2d'); g2.clearRect(0, 0, E.cv.width, E.cv.height); g2.drawImage(im, 0, 0, E.cv.width, E.cv.height); E.small.needsUpdate = true; E.ver = E.big.version;
+    }
+    if (far !== E.far){ E.far = far; var t = far ? E.small : E.big; E.mats.forEach(function(x){ x[0][x[1]] = t; });
+      if (far) E.big.dispose(); else E.small.dispose(); }      /* dispose only frees the copy on the graphics card: it is sent again the next time it is drawn */
+  }
+}
 function trPose(eye, look){
   var d = LEAN.d * Math.max(1, LEAN.asp / camera.aspect);
   eye.set(0, d, LEAN.off * d / 0.7); LEAN.g.localToWorld(eye); look.set(0, 0, LEAN.lookz); LEAN.g.localToWorld(look);
@@ -10692,7 +10727,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.293 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.294 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
@@ -10757,7 +10792,7 @@ function frame(now){
   }
   hintUpdate(now);
   var wf = MP.specFov() || baseFov; if (Math.abs(camera.fov - wf) > 0.01){ camera.fov = Math.abs(camera.fov - wf) < 0.3 ? wf : lerp(camera.fov, wf, 1 - Math.exp(-dt * 12)); camera.updateProjectionMatrix(); }      // the top camera has its own, wider lens
-  camera.position.set(ex, ey, ez); camera.lookAt(lx2, ly2, lz2); camera.updateMatrixWorld(); lodUpdate(); stkTick();
+  camera.position.set(ex, ey, ez); camera.lookAt(lx2, ly2, lz2); camera.updateMatrixWorld(); lodUpdate(); texLodUpdate(now); stkTick();
 
   /* what the crosshair (or mouse) is on */
   var cen = centred(), xs = cen && mode === 'walk'; if (xh.hidden === xs) xh.hidden = !xs;
@@ -10814,7 +10849,7 @@ function ready(){
   MP.check();
 }
 setTimeout(ready, 4000);                          // never sit on the loading screen if an image is slow
-window.__studio = { TRSKIN:TRSKIN, RK:RK, hit:hit, unlock:unlock, pat:pat, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, SIT:SIT, SEATS:SEATS, STK:STK, stkTake:stkTake, stkPlace:stkPlace, act:act, iaOf:iaOf, labelFor:labelFor, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
+window.__studio = { texLod:function(){ return TEXLOD; }, TRSKIN:TRSKIN, RK:RK, hit:hit, unlock:unlock, pat:pat, mxDuck:mxDuck, scopeUpdate:scopeUpdate, SCOPE:SCOPE, skSeqAt:skSeqAt, skA:function(){ return SKA; }, bzUpdate:bzUpdate, flowUpdate:flowUpdate, snUpdate:snUpdate, updateTR:updateTR, mxUpdate:mxUpdate, FX:FX, RV:RV, rvA:function(){ return RVA; }, ZK:ZK, zkA:function(){ return ZKA; }, JAMS:JAMS, loadJam:loadJam, jamOpen:jamOpen, VID:VID, BZ:BZ, vidSet:vidSet, LOD:LOD, renderer:renderer, scene:scene, startCtl:startCtl, endCtl:endCtl, M:M, auCh:function(i){ return AU.ch[i]; }, press:press, release:release, EC:EC, ecA:function(){ return ECA; }, setCtl:setCtl, SK:SK, MC:MC, PF:PF, logoGlow:logoGlow, MP:MP, SEQ:SEQ, ac:function(){ return ac; }, shKeyDown:function(n){ shKeyDown(n); }, shKeyUp:function(n){ shKeyUp(n); }, setBpm:function(b){ setBpm(b); }, patternDump:patternDump, mode:function(){ return mode; }, lean:function(){ return LEAN && LEAN.key; }, PATS:function(){ return PAT; }, AM:AM, TP:TP, amKeyDown:amKeyDown, amKeyUp:amKeyUp, tpKeyDown:tpKeyDown, tpKeyUp:tpKeyUp, SNAKES:SNAKES, MB:MB, SH:SH, mbNoteAt:mbNoteAt, shNoteAt:shNoteAt, BS:BS, MX:MX, bsKeyDown:bsKeyDown, bsKeyUp:bsKeyUp, mxMute:mxMute, MF:MF, DEVS:DEVS, mfKeyDown:mfKeyDown, mfKeyUp:mfKeyUp, mfAudio:mfAudio, MFA:function(){ return MFA; }, mfLoad:mfLoad, MFG:MFG, CTLIST:CTLIST, renderVoice:function(i, tone, p){ var real = ac, off = new OfflineAudioContext(1, Math.round(real.sampleRate * 2.5), real.sampleRate), err = null; ac = off; AU.openHat = null; try { VOICES[i](off.destination, 0.01, 0.8, p || { tune:0.5, decay:0.5, ctrl:0.5 }, tone); } catch (e) { err = String(e); } ac = real; AU.openHat = null; return off.startRendering().then(function(b){ var d = b.getChannelData(0), pk = 0, sq = 0, bad = 0, lastLoud = 0; for (var k = 0; k < d.length; k++){ var a = Math.abs(d[k]); if (!(a >= 0)) bad++; if (a > pk) pk = a; sq += a * a; if (a > 0.003) lastLoud = k; } return { err:err, peak:+pk.toFixed(3), rms:+Math.sqrt(sq / d.length).toFixed(4), bad:bad, len:+(lastLoud / real.sampleRate).toFixed(2) }; }); }, aim:aim, pointer:pointer,  M:M, CT:CT, SEQ:SEQ, PAT:PAT, SIT:SIT, SEATS:SEATS, STK:STK, stkTake:stkTake, stkPlace:stkPlace, act:act, iaOf:iaOf, labelFor:labelFor, cam:cam, press:press, release:release, setCtl:setCtl, turnCtl:turnCtl, enterTR:enterTR, leaveTR:leaveTR, start:startSeq, stop:stopSeq, AU:AU, TRG:TRG, camera:camera };
 })();
 
 </script>
