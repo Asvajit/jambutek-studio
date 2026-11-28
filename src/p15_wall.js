@@ -136,6 +136,7 @@ function nowUpdate(){
 }
 function loadJam(J, name){                                       // a jam is the same shape as the factory set, so it goes in the same way
   if (!J || typeof J !== 'object' || !Array.isArray(J.drums) || J.drums.length !== 16){ toast('That file is not a Jambutek Studio jam'); return false; }
+  if (typeof MP !== 'undefined' && MP) MP.inputAt = performance.now();      /* loading a jam is this player's own doing, so it goes to the whole room: a file takes longer to pick than the few seconds a click counts for */
   if (J.state && typeof J.state === 'object'){ var got = 0; try { got = roomLoad(J.state); } catch (e) {} if (got){ jamNamed(name || J.name); toast((name || 'Jam') + ' loaded · patterns, sounds and settings', 3200); return true; } }      // a full jam: everything comes back
   var keep = DEF; DEF = J; try { allPatterns(true, name || 'Jam'); } catch (e) { DEF = keep; toast('Could not load that jam'); return false; } DEF = keep; jamNamed(name || J.name); return true;
 }
