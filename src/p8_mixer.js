@@ -31,8 +31,8 @@ function paintMX(){
     g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k = 0; k <= 10; k++){ var yy = 234 + k * 7.6; g.beginPath(); g.moveTo(x - 10, yy); g.lineTo(x - (k % 5 ? 5.5 : 4), yy); g.stroke(); }
     T('0', x - 13.5, 234 + 2.5 * 7.6, 5, '#C8C8C4');
   });
-  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 31, 9.5, '#E6E6E2', 'px');
-  T('HPF', MXMX, 38, 5.4, '#F3A15F'); T('LPF', MXMX, 90, 5.4, '#5CB3F1'); T('SEND A', MXMX, 147, 5.4, '#57FFA8'); T('SEND B', MXMX, 176, 5.4, '#FFFF5E'); T('OUT', MXMX, 220, 6.6);
+  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#FFFFFF'; g.fillRect(MXMX - 19, 19, 38, 2.5); rr(MXMX - 16.4, 25.2, 32.8, 10.9, 1.6); g.fillStyle = '#FFFFFF'; g.fill(); g.lineWidth = 0.62; g.strokeStyle = '#000'; g.stroke(); T('MASTER', MXMX, 31, 9.5, '#000', 'px');      /* a white tag, like the channels' */
+  T('HPF', MXMX, 42, 5.4, '#F3A15F'); T('LPF', MXMX, 90, 5.4, '#5CB3F1'); T('SEND A', MXMX, 147, 5.4, '#57FFA8'); T('SEND B', MXMX, 176, 5.4, '#FFFF5E'); T('OUT', MXMX, 220, 6.6);
   g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k2 = 0; k2 <= 10; k2++){ var y2 = 234 + k2 * 7.6; g.beginPath(); g.moveTo(MXMX - 10, y2); g.lineTo(MXMX - (k2 % 5 ? 5.5 : 4), y2); g.stroke(); }
   g.setTransform(1, 0, 0, 1, 0, 0); if (mxTex) mxTex.needsUpdate = true;
 }
@@ -70,10 +70,10 @@ spButton('mxclra', [MXMX * 8 - 97.5, 1222.5, 202, 80], 'Clear send A on every ch
 spButton('mxclrb', [MXMX * 8 - 97.5, 1457, 202, 80], 'Clear send B on every channel', { bg:'#FFFF5E', text:['CLEAR'], size:66 }).clr = 'sb';      /* send B feeds the reverb */
 /* the two master filters, above the sends: a knob each, and under it two rows of five small numbered buttons that switch the filter in
    for those channels (white when off, lit in the filter's colour when on) */
-trKnob('mxhpf', (MXMX - 7) * 8, 49.05 * 8, 'mxf', '#F3A15F', MXPTR, 'Master high-pass', MX.hpf); trKnob('mxlpf', (MXMX - 7) * 8, 101 * 8, 'mxf', '#5CB3F1', MXPTR, 'Master low-pass', MX.lpf);
-spButton('mxfrh', [MXMX * 8 + 24, 356.5, 105.5, 71], 'Reset the high-pass', { bg:'#F3A15F', text:['RESET'], size:41 }).frst = 'h';
+trKnob('mxhpf', (MXMX - 7) * 8, 53.05 * 8, 'mxf', '#F3A15F', MXPTR, 'Master high-pass', MX.hpf);      /* (the HPF section sits 4 mm lower, clear of the MASTER tag) */ trKnob('mxlpf', (MXMX - 7) * 8, 101 * 8, 'mxf', '#5CB3F1', MXPTR, 'Master low-pass', MX.lpf);
+spButton('mxfrh', [MXMX * 8 + 24, 388.5, 105.5, 71], 'Reset the high-pass', { bg:'#F3A15F', text:['RESET'], size:41 }).frst = 'h';
 spButton('mxfrl', [MXMX * 8 + 24, 778.5, 105.5, 71], 'Reset the low-pass', { bg:'#5CB3F1', text:['RESET'], size:41 }).frst = 'l';
-[['fh', 61.5, 'High-pass on '], ['fl', 113.5, 'Low-pass on ']].forEach(function(F){
+[['fh', 65.5, 'High-pass on '], ['fl', 113.5, 'Low-pass on ']].forEach(function(F){
   for (var fi = 0; fi < MXNC; fi++){ var fb = mxBtn('mx' + F[0] + fi, MXMX + ((fi % 5) - 2) * 7.1, F[1] + Math.floor(fi / 5) * 8.2, 50.4, 56, String(fi + 1), 40, F[2] + MXN[fi], '#FFFFFF'); fb.ch = fi; fb.flt = F[0]; }
 });
 KB = KBM;
