@@ -51,7 +51,7 @@ function spButton(id, r, name, o){
     var key = st.bg + '|' + st.prog + '|' + (st.text ? st.text.join('/') : '') + '|' + !!(SPFACES && SPFACES.ok); if (key === st.key) return; st.key = key;
     var g = cv.getContext('2d'), W = cv.width, H = cv.height, e = 5 * k;
     g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = st.bg; g.fillRect(e, e, W - 2 * e, H - 2 * e);
-    if (st.prog > 0){ g.fillStyle = '#E0193C'; g.fillRect(e, e, (W - 2 * e) * Math.min(1, st.prog), H - 2 * e); }
+    if (st.prog > 0){ g.fillStyle = o.progCol || '#E0193C'; g.fillRect(e, e, (W - 2 * e) * Math.min(1, st.prog), H - 2 * e); }
     if (st.text){
       var n = st.text.length, fs = (o.size || 54) * k * (n > 1 ? Math.min(0.78, 0.92 * (r[3] - 10) / n / (o.size || 54)) : 1); g.font = Math.round(fs) + 'px "Pixel Game", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
       st.text.forEach(function(s, i){ var y = H / 2 + (i - (n - 1) / 2) * fs * 0.95 + fs * 0.06;
