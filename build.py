@@ -48,7 +48,7 @@ T['p11_ambika.js'] = patch(T['p11_ambika.js'], 'MFENG[', 'MFENG0[', 4)
 m8 = T['p8_mixer.js']
 m8 = patch(m8, "var MXN = ['DRUMS', 'SYNTH', 'BASS', 'BLIP',", "var MXN = ['DRUMS', 'PLAITS', 'TEST 2', 'TEST 3',")
 m8 = patch(m8, 'MXX = [32, 80, 128, 176, 224, 272, 320, 368, 416, 464], MXMX = 510, MXNC = 10;', 'MXX = [32, 80, 128, 176], MXMX = 222, MXNC = 4;')
-m8 = patch(m8, 'var MXW = 536,', 'var MXW = 248,'); m8 = patch(m8, 'var mxC = mk(2144, 1312)', 'var mxC = mk(992, 1312)'); m8 = patch(m8, "T('MIX-10',", "T('MIX-4',")
+m8 = patch(m8, 'var MXW = 536,', 'var MXW = 248,'); m8 = patch(m8, "T('JBMX-10',", "T('JBMX-4',")
 m8 = patch(m8, 'function mxMute(i){ var c = MX.ch[i];', 'function mxMute(i){ var c = MX.ch[i]; if (!c) return;')
 T['p8_mixer.js'] = m8
 t24 = T['p24_tables.js']; t24 = patch(t24, 'var TBL = { L:(MXPOS.x', 'var TBL = { L:0.62 + (MXPOS.x')

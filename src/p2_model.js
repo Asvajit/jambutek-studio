@@ -136,7 +136,9 @@ var TRWHITE = new THREE.Color(1, 1, 1), TRTMP = new THREE.Color(), TRSIDE = new 
 function trTex(c){ var t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; }
 function dodec(g, r, fill){ g.beginPath(); for (var k = 0; k < 12; k++){ var a = Math.PI / 12 + k * Math.PI / 6; g.lineTo(Math.sin(a) * r, -Math.cos(a) * r); } g.closePath(); g.fillStyle = fill; g.fill(); }
 /* style: 'big' (125 px across), 'small' (the send knobs), 'tempo'. The cylinder's cap maps the canvas turned a quarter, hence the rotate */
-var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 }, fx:{ r:70.25, seg:12 } };
+var TRK = { big:{ r:62.75, seg:12 }, small:{ r:36, seg:24 }, tempo:{ r:123.5, seg:12 }, serp:{ r:64.7, seg:12 }, serpS:{ r:34.3, seg:12 }, fx:{ r:70.25, seg:12 },
+  mxeq:{ r:65.35, seg:12, ring:51.1, cap:47.5, pw:11.1, pt:52.85, pl:49.2 }, mxf:{ r:61.4, seg:12, ring:48, cap:44.65, pw:10.4, pt:49.7, pl:46.2 },      /* the JBMX-10 mixer */
+  mxsc:{ r:36.2, seg:12, ring:28.3, cap:26.35, pw:6.1, pt:29.3, pl:27.3 }, mxsend:{ r:52, seg:12, ring:0, cap:43, pw:8.5, pt:41, pl:36 } };
 var TRKTEX = {};                                    /* knob tops are shared by look: a SERPENT lane change just swaps which one its knobs wear */
 function trKnobTex(style, col, ptr){
   var key = style + col + ptr; if (TRKTEX[key]) return TRKTEX[key];
@@ -152,6 +154,9 @@ function trKnobTex(style, col, ptr){
   } else if (style === 'fx'){                                  /* ECHO JELLY and BEEVERB */
     g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 54.95, '#2B2E36'); dodec(g, 51.1, col);
     g.fillStyle = ptr; g.fillRect(-5.95, -56.85, 11.9, 52.9);
+  } else if (S.cap){                                         /* the JBMX-10's knobs: a dark rim, a darker ring, the coloured cap and a black pointer */
+    g.fillStyle = '#17171C'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); if (S.ring) dodec(g, S.ring, '#2B2E36'); dodec(g, S.cap, col);
+    g.fillStyle = ptr; g.fillRect(-S.pw / 2, -S.pt, S.pw, S.pl);
   } else if (style === 'serp' || style === 'serpS'){
     var q = S.r / 64.7; g.fillStyle = '#0D0D0F'; g.beginPath(); g.arc(0, 0, S.r + 2, 0, 7); g.fill(); dodec(g, 49.8 * q, '#2B2E36'); dodec(g, 44.8 * q, col);
     g.fillStyle = ptr; g.fillRect(-5.3 * q, -40 * q, 10.6 * q, 34 * q);

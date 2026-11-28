@@ -4,13 +4,15 @@ function vfader(id, px, pyT, pyB, name, def, opt){
   opt = opt || {};
   var zT = LZ(pyT), zB = LZ(pyB), g = new THREE.Group(); g.position.set(LX(px), 0, 0); HOST.add(g);
   var slot = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.002, zB - zT + 0.012), new THREE.MeshBasicMaterial({ color:0x050608 })); slot.position.set(0, 0.001, (zT + zB) / 2); slot.userData.noShadow = true; g.add(slot);
-  var capM = new THREE.MeshPhongMaterial({ color:opt.color || 0x9A9A96, shininess:30, specular:0x222222, flatShading:true, emissive:0x000000 });
+  var capE = opt.edge ? new THREE.Color(opt.color).multiplyScalar(0.5).getHex() : 0x000000;      /* the outlined (JBMX-10) caps glow a little in their own colour, so the lamps do not wash them white */
+  var capM = new THREE.MeshPhongMaterial({ color:opt.edge ? new THREE.Color(opt.color).multiplyScalar(0.55).getHex() : (opt.color || 0x9A9A96), shininess:opt.edge ? 6 : 30, specular:opt.edge ? 0x080808 : 0x222222, flatShading:true, emissive:capE });
   var cap = new THREE.Mesh(new THREE.BoxGeometry(opt.w || 0.022, opt.h || 0.011, opt.d || 0.014), capM); g.add(cap);
+  if (opt.edge){ var edge = new THREE.Mesh(new THREE.BoxGeometry((opt.w || 0.022) + 0.0012, (opt.h || 0.011) * 0.96, (opt.d || 0.014) + 0.0012), new THREE.MeshBasicMaterial({ color:0x050505 })); cap.add(edge); }      /* a thin black outline round the cap */
   var stripe = new THREE.Mesh(new THREE.BoxGeometry((opt.w || 0.022) + 0.0005, (opt.h || 0.011) + 0.0005, 0.002), new THREE.MeshBasicMaterial({ color:opt.stripe || 0x15171A })); cap.add(stripe);
   var hit = new THREE.Mesh(new THREE.BoxGeometry((opt.w || 0.022) + 0.012, 0.024, zB - zT + 0.03), HITMAT); hit.position.set(0, 0.011, (zT + zB) / 2); g.add(hit);
   var c = { id:id, kind:'fader', name:name, v:def, def:def, step:0.04, mat:capM, cap:cap,
     show:function(){ cap.position.set(0, (opt.h || 0.011) / 2 + 0.001, lerp(zB, zT, c.v)); },
-    hover:function(on){ capM.emissive.setHex(on ? 0x2E6A44 : 0x000000); } };
+    hover:function(on){ capM.emissive.setHex(on ? 0x2E6A44 : capE); } };
   c.show(); return reg(c, [cap, hit]);
 }
 function slide(id, px, py, n, vert, name, len){

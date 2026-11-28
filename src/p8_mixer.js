@@ -12,28 +12,33 @@ var MX = { ch:MXX.map(function(){ return { hi:0.5, mid:0.5, lo:0.5, sa:0, sb:0, 
 function mxRestore(){ try { var s = JSON.parse(store('jambutek-studio-mix-v1') || 'null'); if (s && s.v === 1 && Array.isArray(s.ch)){ s.ch.forEach(function(c, i){ if (!c || !MX.ch[i]) return; ['hi', 'mid', 'lo', 'sa', 'sb', 'vol'].forEach(function(k){ if (typeof c[k] === 'number') MX.ch[i][k] = clamp(c[k], 0, 1); }); MX.ch[i].mute = c.mute ? 1 : 0; MX.ch[i].solo = c.solo ? 1 : 0; MX.ch[i].sc = i && typeof c.sc === 'number' ? clamp(c.sc, 0, 1) : 0; }); if (typeof s.master === 'number') MX.master = clamp(s.master, 0, 1);
   MX.hpf = typeof s.hpf === 'number' ? clamp(s.hpf, 0, 1) : 0; MX.lpf = typeof s.lpf === 'number' ? clamp(s.lpf, 0, 1) : 1; var fnew = s.fv === 2; for (var fi = 0; fi < 10; fi++){ MX.fh[fi] = !fnew || (s.fh && s.fh[fi]) ? 1 : 0; MX.fl[fi] = !fnew || (s.fl && s.fl[fi]) ? 1 : 0; }      /* anything saved before the filters had this layout starts with every channel switched in */ } } catch (e) {} } mxRestore();
 var mxSaveT = null; function mxSaveNow(){ store('jambutek-studio-mix-v1', JSON.stringify({ v:1, ch:MX.ch, master:MX.master, hpf:MX.hpf, lpf:MX.lpf, fh:MX.fh, fl:MX.fl, fv:2 })); } function mxSaveSoon(){ clearTimeout(mxSaveT); mxSaveT = setTimeout(mxSaveNow, saveMs(800)); }
-var mxC = mk(2144, 1312), mxTex = null;
+/* the JBMX-10's panel, painted here: small labels in Merchant Copy, the channel name tags, MASTER and the name in Pixel Game */
+var MXTAG = ['DRUMS', 'SYNTH', 'BASS', 'BLIP', 'AMBIKA', 'TAPE', 'SHRUTHI', 'CHORD', 'SCRATCH', 'KIT'], MXTAGC = ['#CF2736', '#FF8A2A', '#4AA8FF', '#F85849', '#C8C8FF', '#F8DB58', '#58C8FF', '#FF6AB0', '#35D8B8', '#F5C518'];
+var MXPPM = 7.6, mxC = mk(Math.round(MXW * MXPPM), Math.round(MXD * MXPPM)), mxTex = null;      /* 7.6 px per mm keeps the picture under 4096 px wide */
 function paintMX(){
-  var g = mxC.getContext('2d'); g.setTransform(4, 0, 0, 4, 0, 0);
+  var g = mxC.getContext('2d'); g.setTransform(MXPPM, 0, 0, MXPPM, 0, 0);
   g.fillStyle = '#1A1C21'; g.fillRect(0, 0, MXW, MXD);
   for (var i = 0; i < 3000; i++){ g.fillStyle = 'rgba(' + (Math.random() < .5 ? '0,0,0' : '120,130,150') + ',' + rnd(.02, .07) + ')'; g.fillRect(Math.random() * MXW, Math.random() * MXD, .5, .3); }
-  function T(s, x, y, size, col, anton){ g.font = anton ? size + 'px ' + FONT : 'bold ' + size + 'px "Helvetica Neue", Helvetica, Arial, sans-serif'; g.fillStyle = col || '#E6E6E2'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
-   T('MIX-10', MXMX, 11, 6, '#E0193C', true);
+  function T(s, x, y, size, col, font){ g.font = size + 'px ' + (font === 'px' ? '"Pixel Game", monospace' : '"Merchant Copy", "Courier New", monospace'); g.fillStyle = col || '#E6E6E2'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y); }
+  function rr(x, y, w, h, r){ g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  T('JBMX-10', MXMX, 11, 12, '#E6E6E2', 'px');
   MXX.forEach(function(x, i){
     g.fillStyle = '#23262C'; g.fillRect(x - 21, 19, 42, 302); g.fillStyle = MXCOL[i]; g.fillRect(x - 21, 19, 42, 2.5);
-    if (i){ T('SIDE', x - 13, 7.4, 2.7, '#B8B8B4'); T('CHAIN', x - 13, 11.2, 2.7, '#B8B8B4'); g.fillStyle = '#FF2A3C'; g.fillRect(x + 2.7, 2.6, 0.6, 1.4); }
-    g.fillStyle = '#E6E6E2'; g.fillRect(x - 17, 25, 34, 11); T(MXN[i], x, 30.8, 6.2, '#111318', true); T(String(i + 1), x - 15, 313, 7, MXCOL[i], true);
-    [['HI', 52], ['MID', 88], ['LOW', 124]].forEach(function(a){ T(a[0], x, a[1] + 15, 4.2); g.fillStyle = '#B8B8B4'; g.fillRect(x - 0.3, a[1] - 13, 0.6, 2); });
-    [['A', 157, '#35C46B'], ['B', 186, '#E8C63A']].forEach(function(a){ T('SEND', x - 12.5, a[1] - 3, 2.9, '#B8B8B4'); T(a[0], x - 12.5, a[1] + 2.6, 5.4, a[2], true); g.fillStyle = a[2]; g.fillRect(x - 0.3, a[1] - 9.6, 0.6, 1.6); });
+    if (i){ T('SIDE', x - 12.5, 6.8, 4.6, '#C8C8C4'); T('CHAIN', x - 12.5, 11.6, 4.6, '#C8C8C4'); }
+    rr(x - 16.4, 25.2, 32.8, 10.9, 1.6); g.fillStyle = MXTAGC[i]; g.fill(); g.lineWidth = 0.62; g.strokeStyle = '#000'; g.stroke();      /* the name tag */
+    T(MXTAG[i], x, 31, 9.5, '#000', 'px'); T(String(i + 1), x - 15, 313, 8.5, MXCOL[i]);
+    [['HI', 52], ['MID', 88], ['LOW', 124]].forEach(function(a){ T(a[0], x, a[1] + 14.4, 6.6); g.fillStyle = '#B8B8B4'; g.fillRect(x - 0.3, a[1] - 13, 0.6, 2); });
+    [['A', 157, '#57FFA8'], ['B', 186, '#FFFF5E']].forEach(function(a){ T('SEND', x - 13, a[1] - 3.4, 4.6, '#C8C8C4'); T(a[0], x - 13, a[1] + 2.8, 7, a[2]); });
     g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k = 0; k <= 10; k++){ var yy = 234 + k * 7.6; g.beginPath(); g.moveTo(x - 10, yy); g.lineTo(x - (k % 5 ? 5.5 : 4), yy); g.stroke(); }
-    T('0', x - 13.5, 234 + 2.5 * 7.6, 3.4, '#B8B8B4');
+    T('0', x - 13.5, 234 + 2.5 * 7.6, 5, '#C8C8C4');
   });
-  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 30.8, 6.2, '#E6E6E2', true); T('HPF', MXMX, 37.6, 3.4, '#FF9A5A'); T('LPF', MXMX, 89.6, 3.4, '#7FD0FF'); T('SEND A', MXMX, 147.5, 3.2, '#35C46B'); T('SEND B', MXMX, 176.5, 3.2, '#E8C63A'); T('OUT', MXMX, 220, 4);
+  g.fillStyle = '#23262C'; g.fillRect(MXMX - 19, 19, 38, 302); g.fillStyle = '#E0193C'; g.fillRect(MXMX - 19, 19, 38, 2.5); T('MASTER', MXMX, 31, 9.5, '#E6E6E2', 'px');
+  T('HPF', MXMX, 38, 5.4, '#F3A15F'); T('LPF', MXMX, 90, 5.4, '#5CB3F1'); T('SEND A', MXMX, 147, 5.4, '#57FFA8'); T('SEND B', MXMX, 176, 5.4, '#FFFF5E'); T('OUT', MXMX, 220, 6.6);
   g.strokeStyle = 'rgba(216,216,216,.4)'; g.lineWidth = 0.3; for (var k2 = 0; k2 <= 10; k2++){ var y2 = 234 + k2 * 7.6; g.beginPath(); g.moveTo(MXMX - 10, y2); g.lineTo(MXMX - (k2 % 5 ? 5.5 : 4), y2); g.stroke(); }
   g.setTransform(1, 0, 0, 1, 0, 0); if (mxTex) mxTex.needsUpdate = true;
 }
 paintMX(); mxTex = smoothTex(mxC);
-if (document.fonts && document.fonts.load) document.fonts.load('20px Anton').then(paintMX).catch(function(){});
+if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('20px "Pixel Game"'), document.fonts.load('20px "Merchant Copy"')]).then(paintMX).catch(function(){});
 var MXMET = [];
 (function(){
   var W2 = MXW * SC, D2 = MXD * SC, TH = NTTH;
@@ -49,26 +54,31 @@ var MXMET = [];
   MXX.concat([MXMX]).forEach(function(x, i){ var segs = []; for (var k = 0; k < 10; k++){ var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0x15171C })); m.position.set(qx(x + 13), 0.0012, qz(308 - k * 7.6)); m.userData.noShadow = true; MXG.add(m); segs.push(m.material); } MXMET.push(segs); });
 })();
 HOST = MXG; LX = qx; LZ = qz; DEV = 'mx';
+/* the JBMX-10's controls, from the designer's sheet (8 px per mm): textured knobs, word buttons in Pixel Game with a black edge */
+var KBM = KB; KB = { host:MXG, x:function(px){ return qx(px / 8); }, z:function(py){ return qz(py / 8); }, px:SC / 8, faces:TRFACES };
+var MXPTR = '#0B0B0D';
+function mxBtn(id, cx, cy, w, h, text, size, name, bg){ return spButton(id, [cx * 8 - w / 2, cy * 8 - h / 2, w, h], name, { bg:bg, text:[text], size:size }); }
 MXX.forEach(function(x, i){
-  knob('mxhi' + i, x, 52, 6.2, MXN[i] + ' high', MX.ch[i].hi, { h:8 }).ch = i; knob('mxmid' + i, x, 88, 6.2, MXN[i] + ' mid', MX.ch[i].mid, { h:8 }).ch = i; knob('mxlo' + i, x, 124, 6.2, MXN[i] + ' low', MX.ch[i].lo, { h:8 }).ch = i;
-  if (i) knob('mxsc' + i, x + 3, 9.6, 3.9, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc, { h:6, color:0x3A1216 }).ch = i;
-  knob('mxsa' + i, x + 3, 157, 5, MXN[i] + ' send A (echo)', MX.ch[i].sa, { h:7, color:0x35C46B, tick:0x0A150E }).ch = i; knob('mxsb' + i, x + 3, 186, 5, MXN[i] + ' send B (reverb)', MX.ch[i].sb, { h:7, color:0xE8C63A, tick:0x15130A }).ch = i;
-  button('mxmute' + i, x - 9.6, 213.5, 17.5, 16, 'MUTE', MXN[i] + ' mute', 0xFF2A3C).ch = i; var so = button('mxsolo' + i, x + 9.6, 213.5, 17.5, 16, 'SOLO', MXN[i] + ' solo', 0x3A8BFF); /* blue, like a soloed channel's meter */ so.ch = i; so.solo = true;
-  vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { stripe:new THREE.Color(MXCOL[i]).getHex() }).ch = i;
+  [['hi', 52, ' high'], ['mid', 88, ' mid'], ['lo', 124, ' low']].forEach(function(a){ trKnob('mx' + a[0] + i, x * 8, a[1] * 8, 'mxeq', MXCOL[i], MXPTR, MXN[i] + a[2], MX.ch[i][a[0]]).ch = i; });
+  if (i) trKnob('mxsc' + i, (x + 3) * 8, 9.6 * 8, 'mxsc', '#FFFFFF', MXPTR, MXN[i] + ' sidechain (ducks to the kick)', MX.ch[i].sc).ch = i;
+  trKnob('mxsa' + i, (x + 3) * 8, 157 * 8, 'mxsend', '#5CFFAD', MXPTR, MXN[i] + ' send A (echo)', MX.ch[i].sa).ch = i;
+  trKnob('mxsb' + i, (x + 3) * 8, 186 * 8, 'mxsend', '#FFFF61', MXPTR, MXN[i] + ' send B (reverb)', MX.ch[i].sb).ch = i;
+  mxBtn('mxmute' + i, x - 9.6, 213.5, 135.9, 134.7, 'MUTE', 62, MXN[i] + ' mute', '#69C369').ch = i;
+  var so = mxBtn('mxsolo' + i, x + 9.6, 213.5, 135.9, 134.7, 'SOLO', 62, MXN[i] + ' solo', '#3270E7'); so.ch = i; so.solo = true;
+  vfader('mxvol' + i, x, 234, 310, MXN[i] + ' volume', MX.ch[i].vol, { color:new THREE.Color(MXCOL[i]).getHex(), stripe:0x1A1C21, w:0.0242, edge:true }).ch = i;
 });
-FACE = { bg:'#35C46B', fg:'#0A150E' }; button('mxclra', MXMX, 157, 26, 10, 'CLEAR', 'Clear send A on every channel', 0x35C46B).clr = 'sa';      /* send A feeds the echo: green, like every delay in the room */
-FACE = { bg:'#E8C63A', fg:'#15130A' }; button('mxclrb', MXMX, 186, 26, 10, 'CLEAR', 'Clear send B on every channel', 0xE8C63A).clr = 'sb';      /* send B feeds the reverb: yellow, like every reverb */
+spButton('mxclra', [MXMX * 8 - 97.5, 1222.5, 202, 80], 'Clear send A on every channel', { bg:'#57FFA8', text:['CLEAR'], size:66 }).clr = 'sa';      /* send A feeds the echo */
+spButton('mxclrb', [MXMX * 8 - 97.5, 1457, 202, 80], 'Clear send B on every channel', { bg:'#FFFF5E', text:['CLEAR'], size:66 }).clr = 'sb';      /* send B feeds the reverb */
 /* the two master filters, above the sends: a knob each, and under it two rows of five small numbered buttons that switch the filter in
-   for those channels */
-knob('mxhpf', MXMX - 7, 48.5, 5.6, 'Master high-pass', MX.hpf, { h:7, color:0x3A2010 }); knob('mxlpf', MXMX - 7, 100.5, 5.6, 'Master low-pass', MX.lpf, { h:7, color:0x12303F });
-FACE = { bg:'#FF9A5A', fg:'#0B0B0D' }; button('mxfrh', MXMX + 9.5, 48.5, 13, 8, 'RESET', 'Reset the high-pass', 0xFF9A5A).frst = 'h';
-FACE = { bg:'#7FD0FF', fg:'#06131B' }; button('mxfrl', MXMX + 9.5, 100.5, 13, 8, 'RESET', 'Reset the low-pass', 0x7FD0FF).frst = 'l';
-[['fh', 61.5, 0xFF8A2A, '#FF9A5A', 'High-pass on '], ['fl', 113.5, 0x4AB8FF, '#7FD0FF', 'Low-pass on ']].forEach(function(F){
-  FACE = { bg:'#6E727C', fg:'#0B0B0D' };      // a mid-grey face: dark enough to read as off, light enough for the lamp colour to show when on
-  for (var fi = 0; fi < MXNC; fi++){ var fb = button('mx' + F[0] + fi, MXMX + ((fi % 5) - 2) * 7.1, F[1] + Math.floor(fi / 5) * 8.2, 6.3, 7, String(fi + 1), F[4] + MXN[fi], F[2]); fb.ch = fi; fb.flt = F[0]; }
+   for those channels (white when off, lit in the filter's colour when on) */
+trKnob('mxhpf', (MXMX - 7) * 8, 49.05 * 8, 'mxf', '#F3A15F', MXPTR, 'Master high-pass', MX.hpf); trKnob('mxlpf', (MXMX - 7) * 8, 101 * 8, 'mxf', '#5CB3F1', MXPTR, 'Master low-pass', MX.lpf);
+spButton('mxfrh', [MXMX * 8 + 24, 356.5, 105.5, 71], 'Reset the high-pass', { bg:'#F3A15F', text:['RESET'], size:41 }).frst = 'h';
+spButton('mxfrl', [MXMX * 8 + 24, 778.5, 105.5, 71], 'Reset the low-pass', { bg:'#5CB3F1', text:['RESET'], size:41 }).frst = 'l';
+[['fh', 61.5, 'High-pass on '], ['fl', 113.5, 'Low-pass on ']].forEach(function(F){
+  for (var fi = 0; fi < MXNC; fi++){ var fb = mxBtn('mx' + F[0] + fi, MXMX + ((fi % 5) - 2) * 7.1, F[1] + Math.floor(fi / 5) * 8.2, 50.4, 56, String(fi + 1), 40, F[2] + MXN[fi], '#FFFFFF'); fb.ch = fi; fb.flt = F[0]; }
 });
-FACE = { bg:'#C9C7C0', fg:'#0B0B0D' };
-vfader('mxmaster', MXMX, 234, 310, 'Master volume', MX.master, { color:0xC8343A, stripe:0xFFFFFF });
+KB = KBM;
+vfader('mxmaster', MXMX, 234, 310, 'Master volume', MX.master, { color:0xFFFFFF, stripe:0x1A1C21, w:0.0242, edge:true });
 CTLIST.forEach(function(c){ if (c.dev === 'mx' && c.kind === 'knob') c.def = /^mxs[ab]/.test(c.id) || c.id === 'mxhpf' ? 0 : c.id === 'mxlpf' ? 1 : 0.5; else if (c.dev === 'mx' && c.kind === 'fader') c.def = c.id === 'mxmaster' ? 0.8 : 0.75; });
 HOST = TRG; LX = lx; LZ = lz; DEV = null;
 function mxDb(v){ var d = Math.round((v - 0.5) * 30); return (d > 0 ? '+' : '') + d + ' dB'; }
@@ -134,11 +144,13 @@ function mxUpdate(now, dt){
     var db = MX.lv[i] > 0.0005 ? 20 * Math.log10(MX.lv[i]) : -90, n = clamp(Math.round((db + 42) / 4.2), 0, 10), segs = MXMET[i];
     for (k = 0; k < 10; k++) segs[k].color.setHex(k < n ? (off ? 0xFF2A3C : solo ? 0x3A8BFF : k >= 9 ? 0xFF2A3C : k >= 7 ? 0xFFE15A : 0x3BFF6A) : 0x15171C);
   }
-  ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ var b = CT[id], bl = b.down ? 0.9 : 0.25; if (bl !== b.lit){ b.lit = bl; b.paintLit(); } var by = b.y0 - (b.down ? 0.003 : 0); if (b.m.position.y !== by) b.m.position.y = by; });
-  for (i = 0; i < MXNC; i++){ ['fh', 'fl'].forEach(function(w){ var fb = CT['mx' + w + i], FL = MX[w][i] ? 1.9 : 0; if (fb.down) FL = Math.max(FL, 0.8); if (FL !== fb.lit){ fb.lit = FL; fb.paintLit(); } var fy = fb.y0 - (fb.down ? 0.002 : 0); if (fb.m.position.y !== fy) fb.m.position.y = fy; }); }
-  for (i = 0; i < MXNC; i++){ var c = CT['mxmute' + i], mu = !!MX.ch[i].mute, L = mu ? 1 : 0.5; if (c.down) L = Math.max(L, 0.8);      /* MUTE: green while the channel is open, red while it is muted */
-    if (c.mu !== mu){ c.mu = mu; c.col.setHex(mu ? 0xFF2A3C : 0x3BFF6A); c.lit = -1; } if (L !== c.lit){ c.lit = L; c.paintLit(); } var ty = c.y0 - (c.down ? 0.003 : 0); if (c.m.position.y !== ty) c.m.position.y = ty;
-    var so = CT['mxsolo' + i], SL = MX.ch[i].solo ? 1 : 0; if (so.down) SL = Math.max(SL, 0.8); if (SL !== so.lit){ so.lit = SL; so.paintLit(); } var sy = so.y0 - (so.down ? 0.003 : 0); if (so.m.position.y !== sy) so.m.position.y = sy; }
+  function sink(b, d){ b.paintLit(); var by = b.y0 - (b.down ? d : 0); if (b.m.position.y !== by) b.m.position.y = by; }
+  ['mxclra', 'mxclrb', 'mxfrh', 'mxfrl'].forEach(function(id){ sink(CT[id], 0.003); });
+  for (i = 0; i < MXNC; i++){
+    CT['mxfh' + i].setBg(MX.fh[i] ? '#F3A15F' : '#FFFFFF'); sink(CT['mxfh' + i], 0.002); CT['mxfl' + i].setBg(MX.fl[i] ? '#5CB3F1' : '#FFFFFF'); sink(CT['mxfl' + i], 0.002);
+    CT['mxmute' + i].setBg(MX.ch[i].mute ? '#FF4B3D' : '#69C369'); sink(CT['mxmute' + i], 0.003);      /* MUTE: green while the channel is open, red while it is muted */
+    CT['mxsolo' + i].setBg(MX.ch[i].solo ? '#FFFFFF' : '#3270E7'); sink(CT['mxsolo' + i], 0.003);      /* SOLO: blue, lit white while soloed */
+  }
 }
 var NOP = function(){};
 var DEVH = { mf:{ label:mfLabel, press:mfPress, release:mfRelease, ctl:mfCtl, turn:mfTurn }, bs:{ label:bsLabel, press:bsPress, release:bsRelease, ctl:bsCtl, turn:bsTurn }, mx:{ label:mxLabel, press:mxPress, release:NOP, ctl:mxCtl, turn:NOP },

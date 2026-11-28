@@ -31,7 +31,7 @@ var DEVS = {
   sh:{ key:'sh', g:SHG, name:'Shru synth', stand:devStand(SHPOS), yaw:SHPOS.r, pitch:-0.42, d:0.37, asp:1.25, off:0.04, lookz:0.005, hud:'hudSh', keys:{ down:shKbDown, up:shKbUp, play:function(){ toggleSeq(); } } },
   am:{ key:'am', g:AMG, name:'Ambi synth', stand:devStand(AMPOS), yaw:AMPOS.r, pitch:-0.42, d:0.46, asp:1.78, off:0.04, lookz:0.01, hud:'hudAm', keys:{ down:amKbDown, up:amKbUp, play:function(){ CT.amenc.click(); } } },
   tp:{ key:'tp', g:TPG, name:'Tape sampler', stand:devStand(TPPOS), yaw:TPPOS.r, pitch:-0.42, d:0.27, asp:2.75, off:0.04, lookz:-0.012, hud:'hudTp', keys:{ down:tpKbDown, up:tpKbUp, play:function(){ press(CT.tpplay); release(CT.tpplay); } } },
-  mx:{ key:'mx', g:MXG, name:'mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.78, asp:1.63, off:0.05, lookz:0.03, hud:'hudMx' }
+  mx:{ key:'mx', g:MXG, name:'JBMX-10 mixer', stand:devStand(MXPOS), yaw:MXPOS.r, pitch:-0.42, d:0.78, asp:1.63, off:0.05, lookz:0.03, hud:'hudMx' }
 };
 DEVS.mc = { key:'mc', g:MCG, name:'Chord synth', stand:devStand(MCPOS), yaw:MCPOS.r, pitch:-0.42, d:0.56, asp:2.0, off:0.04, lookz:0.03, hud:'hudMc', keys:{ down:mcKbDown, up:mcKbUp, play:function(){ toggleSeq(); } } };
 DEVS.ec = { key:'ec', g:ECG, name:'Echo Jelly, Beeverb and Scenester', stand:devStand(ECPOS), yaw:ECPOS.r, pitch:-0.42, d:0.84, asp:0.6, off:0.04, lookz:0.2 + 0.05, hud:'hudEc' };
@@ -364,7 +364,7 @@ function hintUpdate(now){
 }
 function frame(now){
   requestAnimationFrame(frame);
-  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.288 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
+  fpsN++; if (now - fpsAt > 500){ verFps.textContent = 'studio v0.289 · ' + Math.round(fpsN * 1000 / (now - fpsAt)) + ' FPS'; fpsN = 0; fpsAt = now; }
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   var tsec = now / 1000;
 
